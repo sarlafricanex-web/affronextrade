@@ -1,0 +1,76 @@
+# Workspace History
+
+> Journal chronologique de toutes les sessions et décisions importantes.
+> Le plus récent en haut. Mis à jour automatiquement par Claude.
+>
+> **Comment ça marche :** Quand je lance la commande `/update` après une session importante, ou quand je raconte un changement significatif, Claude ajoute une entrée ici automatiquement. Je n'ai pas à écrire ce fichier manuellement.
+
+---
+
+## 2026-11-03
+
+### Organisation du workspace et sécurisation des clefs d'API
+- Dossier `livrable/` créé à la racine, avec les sous-dossiers `siteweb/` (site internet), `application/` (outils, scripts, automatisations) et `chaines-youtube/` (briefs, vidéos, scripts, calendrier de publication)
+- Dossier `secrets/` créé avec `.env` (emplacements vides pour Google, Anthropic, OpenAI, Notion, Stripe, YouTube, Vercel, GitHub) et `.env.example` (modèle public sans valeurs)
+- `.gitignore` créé à la racine : exclut `.env` et variantes, `*.key`, `*.pem`, `node_modules/`, dossiers de build, éditeurs, logs et temporaires
+- CLAUDE.md mis à jour : structure du workspace, règle de rangement des livrables, consigne de ne jamais lire ni exposer `secrets/.env`
+- À faire : le workspace n'est pas encore un dépôt Git, le `.gitignore` ne protège qu'après un `git init`
+- Section « Who I Am » de CLAUDE.md alignée sur CONTEXT.md : jalons court terme (MVP novembre 2026, 80 producteurs et 20 M DZD d'ici avril 2027) distingués du cap moyen terme de 5 M USD en 2027
+
+---
+
+## 2026-10-22
+
+### Correction des objectifs
+- Objectif de 5 M USD de CA sur l'exercice 2027 déplacé des objectifs court terme vers une nouvelle section « moyen terme (horizon fin 2027) », pour cohérence avec l'horizon 3 à 6 mois
+- Jalons court terme ajoutés : lancement MVP en novembre 2026, 80 producteurs inscrits d'ici avril 2027, CA export de 20 M DZD (environ 150 000 USD) d'ici avril 2027
+
+---
+
+## 2026-10-06 (Session 3)
+
+### Compléments au contexte
+- Périmètre précisé : tous produits et services, hors hydrocarbures ; Afrique d'abord, puis marché mondial
+- Marchés prioritaires : Côte d'Ivoire, Sénégal, Nigéria, Centrafrique, Éthiopie
+- Équipe documentée : Omar (directeur technique), Hamza (directeur commercial), Mehdi (CFO)
+- Partenaire financier clé : banque AFG
+- Sujets de la veille /morning définis : matières premières, fret, DZD/EUR et DZD/USD, appels d'offres africains, salons et foires, ZLECAf
+
+---
+
+## 2026-10-06 (Session 2)
+
+### Validation des informations officielles de l'entreprise
+- Informations officielles validées et confirmées exactes :
+  - N° Registre de Commerce : 19/00 - 0096919 B 26
+  - NIF : 002619009691970
+  - Adresse : Cité 50 LSP + 18, Locaux RDC, Bâtiment 4, Bloc 1, n° 52, Sétif
+  - Téléphone : 0770 96 02 70
+- Prêtes à être utilisées dans les communications officielles
+
+---
+
+## 2026-10-06
+
+### Documentation de l'entreprise
+- Informations officielles de l'entreprise documentées dans CONTEXT.md :
+  - N° Registre de Commerce : 19/00 - 0096919 B 26
+  - NIF : 002619009691970
+  - Adresse : Cité 50 LSP + 18, Locaux RDC, Bâtiment 4, Bloc 1, n° 52, Sétif
+  - Téléphone : 0770 96 02 70
+- Fichiers logo supprimés
+
+---
+
+## 2026-10-05
+
+### Installation initiale du Jarvis
+- Workspace personnalisé pour Adlene, basé à Sétif, Algérie
+- Profil principal : Entrepreneur
+- Activité : CEO de SARL AFRICA NEX, plateforme B2B export-trading connectant producteurs algériens et marchés internationaux
+- Objectifs court terme identifiés : Produire MVP (site + app), développer plateforme B2B avec agents IA, atteindre 5M USD CA en 2027
+- Vision long terme : Devenir leader du B2B export africain et développer expertise en IA
+- Projets actifs au démarrage : MVP, plateforme B2B avec SaaS IA, accompagnement clients IA
+- Domaine d'aide prioritaire : Stratégie, productivité, apprentissage, communication, recherche
+- Style de communication choisi : Adapté au contexte (direct/efficace ou détaillé selon besoin)
+- Outils principaux : Excel, Google Workspace

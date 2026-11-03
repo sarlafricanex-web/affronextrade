@@ -1,0 +1,63 @@
+# =============================================================================
+# .gitignore : empeche les secrets et fichiers inutiles d'arriver sur Git
+# =============================================================================
+
+# --- Secrets et variables d'environnement ---
+.env
+.env.*
+*.env
+!.env.example
+secrets/*
+!secrets/.env.example
+
+# --- Clefs, certificats et identifiants ---
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+id_rsa
+id_ed25519
+credentials.json
+service-account*.json
+client_secret*.json
+
+# --- Systeme ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Dependances ---
+node_modules/
+
+# --- Dossiers de build ---
+dist/
+build/
+.next/
+next/
+out/
+.vercel/
+
+# --- Editeurs ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Logs ---
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Fichiers temporaires ---
+*.tmp
+*.temp
+*.bak
+tmp/
+temp/
+
+# --- Parametres locaux de Claude Code ---
+.claude/settings.local.json
