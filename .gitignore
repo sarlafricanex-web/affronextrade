@@ -61,3 +61,6 @@ temp/
 
 # --- Parametres locaux de Claude Code ---
 .claude/settings.local.json
+
+# --- Repos MCP clones localement ---
+scrapegraph-mcp/

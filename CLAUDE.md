@@ -84,10 +84,13 @@ Une fois que je confirme, Claude met à jour le fichier en question et ajoute un
 │   │   ├── update.md            # /update pour mettre à jour le contexte
 │   │   ├── morning.md           # /morning pour démarrer la journée
 │   │   ├── commit.md            # /commit pour sauvegarder dans Git
-│   │   └── install-safe.md     # /install-safe pour installer un repo après audit
+│   │   ├── install-safe.md     # /install-safe pour installer un repo après audit
+│   │   └── scrape.md           # /scrape pour scraper/extraire des données web
 │   └── skills/
 │       ├── recherche-actualites/ # Skill veille personnalisée
-│       └── audit-github/        # Skill audit sécurité repos GitHub
+│       ├── audit-github/        # Skill audit sécurité repos GitHub
+│       └── scrapegraph/         # Skill web scraping via ScrapeGraphAI
+├── scrapegraph-mcp/             # Serveur MCP ScrapeGraphAI (installé)
 └── module-installs/
     └── jarvis-install/          # Module d'installation initial
 ```
@@ -100,6 +103,7 @@ Une fois que je confirme, Claude met à jour le fichier en question et ajoute un
 | `secrets/` | Clefs d'API et tokens. `.env` est privé, `.env.example` est le modèle public |
 | `.claude/commands/` | Commandes personnalisées de mon Jarvis |
 | `.claude/skills/` | Skills (super-pouvoirs) de mon Jarvis |
+| `scrapegraph-mcp/` | Serveur MCP ScrapeGraphAI pour le web scraping |
 | `module-installs/` | Modules d'installation (initial et futurs) |
 
 ---
@@ -133,6 +137,12 @@ Crée un commit avec tous les changements en cours. Claude vérifie Git, montre 
 
 Lance un audit de sécurité complet AVANT de cloner ou installer quoi que ce soit. Selon le score, Claude recommande ou déconseille l'installation, et guide chaque étape avec validation. Usage : `/install-safe https://github.com/user/repo`
 
+### /scrape
+
+**Objectif :** Scraper, extraire ou rechercher des données sur le web.
+
+Utilise le serveur MCP ScrapeGraphAI. Supporte : scraping de page, extraction structurée par IA, recherche web, crawl multi-pages, monitoring planifié. Usage : `/scrape https://example.com` ou `/scrape recherche les fournisseurs de dattes`
+
 ### /morning
 
 **Objectif :** Démarrer ma journée avec une veille personnalisée en 30 secondes.
@@ -154,6 +164,12 @@ L'avantage : pas de bruit. Seulement ce qui me concerne vraiment, vu mes objecti
 Skill d'audit sécurité pour les repos GitHub. Analyse un dépôt en lecture seule et produit un rapport HTML avec score de confiance, détail des risques par catégorie et verdict clair. Activée quand je demande "vérifie ce repo", "audite ce GitHub", "c'est safe ?", ou que je donne une URL GitHub à analyser.
 
 Les 9 points vérifiés : exécution auto, code suspect, réseau, vol de données, secrets exposés, binaires, dépendances, GitHub Actions, réputation.
+
+### scrapegraph
+
+Skill de web scraping intelligent via le serveur MCP ScrapeGraphAI. Activée quand je demande "scrape ce site", "extrais les données de", "recherche sur le web", "crawle ce site", ou via la commande `/scrape`.
+
+Outils disponibles : scrape (contenu de page), extract (extraction structurée IA), search (recherche web), crawl (multi-pages), monitor (surveillance planifiée), credits/history (compte). Necessite une cle API ScrapeGraphAI (`SGAI_API_KEY`).
 
 ---
 

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "scrapegraph": {
+      "command": "python",
+      "args": ["-m", "scrapegraph_mcp.server"],
+      "cwd": "scrapegraph-mcp",
+      "env": {
+        "SGAI_API_KEY": "${SGAI_API_KEY}"
+      }
+    }
+  }
+}

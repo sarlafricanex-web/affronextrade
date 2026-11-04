@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit Securite - ScrapeGraphAI/scrapegraph-mcp</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8fafc;color:#1e293b;line-height:1.6;padding:16px;max-width:900px;margin:0 auto}
+.header{background:#fff;border-radius:16px;padding:32px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.1);margin-bottom:24px}
+.header h1{font-size:1.4em;margin-bottom:8px;word-break:break-all}
+.header a{color:#3b82f6;text-decoration:none}
+.score{font-size:4em;font-weight:800;margin:16px 0}
+.score.green{color:#22c55e}
+.score.orange{color:#f59e0b}
+.score.red{color:#ef4444}
+.verdict{font-size:1.5em;font-weight:700;padding:8px 24px;border-radius:50px;display:inline-block;margin-bottom:8px}
+.verdict.orange{background:#fef3c7;color:#92400e}
+.meta{color:#64748b;font-size:.9em;margin-top:8px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:24px}
+.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.1);border-left:4px solid}
+.card.green{border-color:#22c55e}
+.card.orange{border-color:#f59e0b}
+.card.red{border-color:#ef4444}
+.card h3{font-size:1em;margin-bottom:6px}
+.card .status{font-size:1.2em;margin-right:6px}
+.card p{font-size:.9em;color:#475569}
+.risks{background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.1);margin-bottom:24px}
+.risks h2{font-size:1.2em;margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:.85em}
+th{background:#f1f5f9;padding:10px 12px;text-align:left;font-weight:600}
+td{padding:10px 12px;border-top:1px solid #e2e8f0;vertical-align:top}
+.sev{padding:3px 10px;border-radius:20px;font-size:.8em;font-weight:600;white-space:nowrap}
+.sev.faible{background:#dcfce7;color:#166534}
+.sev.moyen{background:#fef3c7;color:#92400e}
+.sev.critique{background:#fee2e2;color:#991b1b}
+code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:.85em;word-break:break-all}
+.conclusion{background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.conclusion h2{font-size:1.2em;margin-bottom:12px}
+.conclusion .answer{font-size:1.1em;font-weight:700;margin:12px 0}
+.conclusion .answer.green{color:#22c55e}
+.conclusion .answer.orange{color:#d97706}
+.conclusion ol{padding-left:20px;margin-top:12px}
+.conclusion li{margin-bottom:8px;font-size:.95em}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><a href="https://github.com/ScrapeGraphAI/scrapegraph-mcp" target="_blank">ScrapeGraphAI/scrapegraph-mcp</a></h1>
+  <div class="score orange">78/100</div>
+  <div class="verdict orange">&#x1F7E0; Prudence</div>
+  <div class="meta">Audit du 4 novembre 2026 | MIT License | Python | 120 etoiles | 7 contributeurs</div>
+</div>
+
+<div class="cards">
+
+  <div class="card green">
+    <h3><span class="status">&#x1F7E2;</span> 1. Execution automatique</h3>
+    <p>Aucun script pre/postinstall dans pyproject.toml. Pas de Makefile, install.sh ou bootstrap.sh. Pas de .devcontainer ni de hooks Git commites.</p>
+  </div>
+
+  <div class="card green">
+    <h3><span class="status">&#x1F7E2;</span> 2. Code suspect</h3>
+    <p>Aucun eval(), exec(), base64 ou code obfusque. Le code est lisible et standard. Utilisation de json.loads pour le parsing.</p>
+  </div>
+
+  <div class="card green">
+    <h3><span class="status">&#x1F7E2;</span> 3. Reseau</h3>
+    <p>URLs en dur limitees a l'API officielle ScrapeGraphAI (v2-api.scrapegraphai.com) et la documentation. Aucun webhook Discord/Telegram.</p>
+  </div>
+
+  <div class="card green">
+    <h3><span class="status">&#x1F7E2;</span> 4. Vol de donnees</h3>
+    <p>Aucun acces a ~/.ssh, .env local, cookies, wallets ou presse-papiers. La seule donnee sensible manipulee est la cle API fournie par l'utilisateur.</p>
+  </div>
+
+  <div class="card green">
+    <h3><span class="status">&#x1F7E2;</span> 5. Secrets exposes</h3>
+    <p>.env.example ne contient que des placeholders. Aucune cle API reelle commite. Le .gitignore exclut .env et .env.local.</p>
+  </div>
+
+  <div class="card green">
+    <h3><span class="status">&#x1F7E2;</span> 6. Binaires</h3>
+    <p>Aucun fichier .exe, .dll, .so ou archive suspecte. Le dossier assets/ contient probablement des images pour le README.</p>
+  </div>
+
+  <div class="card orange">
+    <h3><span class="status">&#x1F7E0;</span> 7. Dependances</h3>
+    <p>5 dependances runtime, toutes legitimes (fastmcp, httpx, uvicorn, pydantic, smithery). Versions avec plancher (>=) mais sans plafond, ce qui expose a des mises a jour non testees.</p>
+  </div>
+
+  <div class="card orange">
+    <h3><span class="status">&#x1F7E0;</span> 8. GitHub Actions</h3>
+    <p>Actions epinglees sur des tags mutables (v3, v4) et non sur des SHA. Pas de bloc permissions: explicite. Pas de pull_request_target, pas de secrets exposes.</p>
+  </div>
+
+  <div class="card orange">
+    <h3><span class="status">&#x1F7E0;</span> 9. Reputation</h3>
+    <p>Organisation avec 672 followers, 29 repos publics, site web officiel. Mais organisation non verifiee sur GitHub. Dernier commit en juillet 2026 (4 mois sans activite). URL LinkedIn collee par erreur dans le .gitignore.</p>
+  </div>
+
+</div>
+
+<div class="risks">
+  <h2>Tableau des risques</h2>
+  <table>
+    <thead>
+      <tr><th>Fichier / Zone</th><th>Detail</th><th>Explication</th><th>Severite</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>pyproject.toml</code></td>
+        <td>Versions <code>&gt;=X.Y.Z</code> sans plafond</td>
+        <td>Une dependance pourrait publier une version majeure avec des changements non compatibles ou compromis. Preferer des versions epinglees ou un lockfile.</td>
+        <td><span class="sev moyen">Moyen</span></td>
+      </tr>
+      <tr>
+        <td><code>.github/workflows</code></td>
+        <td><code>actions/checkout@v3</code>, <code>actions/setup-python@v4</code></td>
+        <td>Tags mutables, pas de SHA. Un compromis du tag (rare sur les actions officielles) pourrait injecter du code dans le CI.</td>
+        <td><span class="sev moyen">Moyen</span></td>
+      </tr>
+      <tr>
+        <td><code>.github/workflows</code></td>
+        <td>Pas de bloc <code>permissions:</code></td>
+        <td>Le GITHUB_TOKEN herite des permissions par defaut du repo. Ajouter <code>permissions: contents: read</code> limiterait la surface d'attaque.</td>
+        <td><span class="sev faible">Faible</span></td>
+      </tr>
+      <tr>
+        <td><code>server.py</code></td>
+        <td>Variable <code>SGAI_API_URL</code> redirige toute l'API</td>
+        <td>Si cette variable est definie par un attaquant, la cle API serait envoyee a un serveur tiers. S'assurer que seul l'operateur la controle.</td>
+        <td><span class="sev moyen">Moyen</span></td>
+      </tr>
+      <tr>
+        <td><code>server.py</code></td>
+        <td>Erreurs upstream exposees au client</td>
+        <td><code>response.text</code> renvoye tel quel. Pourrait exposer des details internes du serveur distant.</td>
+        <td><span class="sev faible">Faible</span></td>
+      </tr>
+      <tr>
+        <td><code>server.py</code></td>
+        <td>httpx.Client jamais ferme</td>
+        <td>Fuite de connexions a long terme. Pas un risque de securite direct mais un probleme de fiabilite.</td>
+        <td><span class="sev faible">Faible</span></td>
+      </tr>
+      <tr>
+        <td><code>.gitignore</code></td>
+        <td>URL LinkedIn collee par erreur</td>
+        <td>Signe d'un copier-coller negligent. Pas dangereux mais revele un manque d'attention aux details dans la maintenance.</td>
+        <td><span class="sev faible">Faible</span></td>
+      </tr>
+      <tr>
+        <td>Organisation GitHub</td>
+        <td>Non verifiee, 4 mois sans commit</td>
+        <td>L'organisation existe depuis 2024 avec un site officiel, mais l'absence de verification GitHub et l'inactivite recente sont a noter.</td>
+        <td><span class="sev faible">Faible</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="conclusion">
+  <h2>Conclusion</h2>
+  <p><strong>Peut-on cloner et lancer ce repo ?</strong></p>
+  <p class="answer orange">Oui, avec precautions</p>
+  <p>Le code source est propre et ne contient aucun pattern malveillant. C'est un serveur MCP standard qui sert de proxy vers l'API ScrapeGraphAI. Les risques identifies sont des problemes de hygiene, pas des menaces actives.</p>
+  <ol>
+    <li><strong>Epingler les dependances</strong> : utiliser <code>uv.lock</code> (deja present) plutot que les versions plancher de pyproject.toml lors de l'installation.</li>
+    <li><strong>Ne pas definir SGAI_API_URL</strong> sauf si vous savez exactement ce que vous faites, car cette variable redirige votre cle API.</li>
+    <li><strong>Fournir la cle API via variable d'environnement</strong>, jamais en dur dans le code ou les fichiers de config.</li>
+    <li><strong>Utiliser dans un environnement isole</strong> (Docker ou venv) pour limiter l'impact en cas de probleme.</li>
+    <li><strong>Verifier les mises a jour</strong> regulierement, le repo est inactif depuis juillet 2026.</li>
+  </ol>
+</div>
+
+</body>
+</html>
