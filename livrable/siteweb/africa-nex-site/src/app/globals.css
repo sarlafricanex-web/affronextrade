@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+/* ── Tokens ── */
+:root {
+  --font-sans: var(--font-plus-jakarta);
+
+  /* Brand palette */
+  --ground: #faf9f7;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --accent: #10b981;
+  --accent-warm: #f97316;
+  --field-a: #f1f0ec;
+  --field-b: #e8e6e1;
+
+  /* Type scale: 5 steps */
+  --step-display: clamp(3rem, 6vw, 5.5rem);
+  --step-title: clamp(2rem, 3.6vw, 3.5rem);
+  --step-heading: clamp(1.5rem, 2.4vw, 2rem);
+  --step-body: 1.0625rem;
+  --step-small: 0.8125rem;
+
+  /* Spacing */
+  --page-margin: clamp(1rem, 3vw, 2rem);
+  --section-gap: clamp(7.5rem, 15vw, 15rem);
+
+  /* Corners: square (direction says no rounded corners except photos) */
+  --radius: 0px;
+}
+
+/* ── Reset & base ── */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-size: var(--step-body);
+  line-height: 1.55;
+}
+
+[dir="rtl"] {
+  text-align: right;
+}
+
+/* ── Type ── */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.025em;
+  line-height: 0.95;
+  font-weight: 800;
+}
+
+p {
+  max-width: 60ch;
+}
+
+/* ── Links & buttons ── */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── Selection ── */
+::selection {
+  background: var(--accent);
+  color: white;
+}
+
+/* ── Motion: section entrances ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-1 { transition-delay: 70ms; }
+.reveal-delay-2 { transition-delay: 140ms; }
+.reveal-delay-3 { transition-delay: 210ms; }
+.reveal-delay-4 { transition-delay: 280ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ── Hero crossfade ── */
+.hero-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 1.6s ease;
+}
+
+/* ── Utility ── */
+.text-muted { color: var(--muted); }
+.text-accent { color: var(--accent); }
+.bg-field { background: var(--field-a); }
+.bg-field-alt { background: var(--field-b); }

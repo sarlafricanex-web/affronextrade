@@ -1,8 +1,16 @@
 {
+  "permissions": {
+    "allow": [
+      "PowerShell($env:Path = [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"User\"\\); Set-Location \"C:\\\\Users\\\\DELL\\\\Desktop\\\\jarvis-starter-kit\"; node .agents/skills/design-taste-frontend/scripts/draw.mjs --sector ecommerce --brief \"AFRICA NEX, B2B marketplace connecting Algerian producers to African and international buyers. Export trading platform for olive oil, dates, crafts, industrial goods. Based in Setif, Algeria. Brand: emerald green, orange, dark slate. Plus Jakarta Sans font.\" --sections features,showcase,stats,how-it-works,cta,about,contact,footer --tone bold --keep palette,type --options 3)",
+      "PowerShell($env:Path = [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"User\"\\); Set-Location \"C:\\\\Users\\\\DELL\\\\Desktop\\\\jarvis-starter-kit\"; node .agents/skills/design-taste-frontend/scripts/assets.mjs --get openverse:4e46d5ad-e7f6-4546-b848-588888deb6a4,met:548941)"
+    ]
+  },
   "mcpServers": {
     "scrapegraph": {
       "command": "C:\\Users\\DELL\\.local\\bin\\uvx.exe",
-      "args": ["scrapegraph-mcp@1.0.1"],
+      "args": [
+        "scrapegraph-mcp@1.0.1"
+      ],
       "env": {
         "SGAI_API_KEY": "${SGAI_API_KEY}"
       }
