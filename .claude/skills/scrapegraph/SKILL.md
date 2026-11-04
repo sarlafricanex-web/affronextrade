@@ -1,98 +1,102 @@
 ---
 name: scrapegraph
-description: Skill de web scraping intelligent via le serveur MCP ScrapeGraphAI. Quand l'utilisateur demande "scrape ce site", "extrais les donnees de", "recherche sur le web", "crawle ce site", ou donne une URL a analyser, cette skill utilise le serveur MCP scrapegraph-mcp pour recuperer et structurer les donnees.
+description: Skill de web scraping et prospection. Quand l'utilisateur demande "scrape ce site", "extrais les donnees de", "recherche sur le web", "trouve des entreprises", "prospection", ou donne une URL a analyser, cette skill utilise WebSearch/WebFetch (toujours disponibles) ou les outils MCP ScrapeGraphAI (si le reseau le permet).
 ---
 
-# Skill : ScrapeGraph - Web Scraping Intelligent
+# Skill : Web Scraping et Prospection
 
 ## Mission
 
-Utiliser le serveur MCP ScrapeGraphAI pour scraper, extraire, rechercher et crawler des donnees web de maniere intelligente. Cette skill est le point d'entree pour toute operation de collecte de donnees sur le web.
-
-**Prerequis : la cle API `SGAI_API_KEY` doit etre configuree dans l'environnement du serveur MCP.**
+Scraper, extraire, rechercher et prospecter sur le web. Cette skill est le point d'entree pour toute operation de collecte de donnees web.
 
 ---
 
-## Outils disponibles
+## Backends disponibles
 
-Le serveur MCP expose ces outils :
+### Backend 1 : WebSearch + WebFetch (toujours disponible)
 
-| Outil | Usage | Cout (credits) |
-|-------|-------|----------------|
-| `scrape` | Recuperer le contenu d'une page (markdown, html, screenshot, liens, images, resume, branding) | 1-2 |
-| `extract` | Extraction structuree par IA (URL + prompt, schema optionnel) | 10 |
-| `search` | Recherche web avec extraction IA (1-20 resultats) | 10/site |
-| `crawl_start` | Crawl multi-pages asynchrone | 2-10/page |
-| `crawl_get_status` | Verifier le statut d'un crawl en cours | 0 |
-| `schema` | Generer un schema JSON a partir d'un prompt | variable |
-| `credits` | Verifier le solde de credits restants | 0 |
-| `history` | Historique des requetes API | 0 |
-| `monitor_create` | Creer un job de monitoring planifie | variable |
+Ces outils fonctionnent cote serveur Anthropic, pas de contrainte reseau.
+
+| Outil | Usage |
+|-------|-------|
+| `WebSearch` | Recherche web, prospection, trouver des entreprises/contacts |
+| `WebFetch` | Scraper le contenu d'une page, extraire des donnees structurees |
+
+### Backend 2 : ScrapeGraphAI MCP (si reseau disponible)
+
+Necessite un acces a `api.scrapegraphai.com` et la cle `SGAI_API_KEY`.
+
+| Outil | Usage |
+|-------|-------|
+| `smartscraper` | Scraping intelligent avec prompt |
+| `searchscraper` | Recherche web avec extraction IA |
+| `markdownify` | Convertir une page en markdown |
+| `sitemap` | Obtenir le plan du site |
+| `smartcrawler_initiate` | Crawl multi-pages asynchrone |
+| `smartcrawler_fetch_results` | Recuperer les resultats d'un crawl |
+| `agentic_scrapper` | Scraping agentique avance |
 
 ---
 
-## Quand utiliser quel outil
+## Selection du backend
 
-### Pour recuperer le contenu d'une page
-**Outil : `scrape`**
+Au lancement de la skill :
+1. Tester si ScrapeGraph repond (appel rapide)
+2. Si oui : utiliser ScrapeGraph pour les operations avancees
+3. Si non : utiliser WebSearch/WebFetch automatiquement, sans message d'erreur
+
+---
+
+## Comment utiliser WebSearch + WebFetch
+
+### Recherche web / Prospection
+**Outil : `WebSearch`**
+```
+query: "importateurs produits alimentaires Cote d'Ivoire"
+mode: "standard"  (ou "extended" pour recherche approfondie)
+```
+
+### Scraper une page
+**Outil : `WebFetch`**
+```
+url: "https://example.com/produits"
+prompt: "Extrais le nom, le prix et la description de chaque produit. Presente les resultats sous forme de tableau."
+```
+
+### Prospection multi-etapes
+1. `WebSearch` pour trouver des entreprises/sites pertinents
+2. `WebFetch` sur chaque resultat pour extraire les details (contacts, emails, adresses)
+3. Compiler les resultats dans un fichier structure
+
+---
+
+## Comment utiliser ScrapeGraph (si disponible)
+
+### Scraping intelligent
+**Outil : `smartscraper`**
 ```
 website_url: "https://example.com"
-output_format: "markdown"  (ou html, screenshot, links, images, summary, branding)
+user_prompt: "Extrais les produits avec nom et prix"
 ```
 
-### Pour extraire des donnees structurees
-**Outil : `extract`**
-```
-website_url: "https://example.com/produits"
-user_prompt: "Extrais le nom, le prix et la disponibilite de chaque produit"
-output_schema: {"type": "object", "properties": {...}, "required": []}
-```
-
-### Pour rechercher sur le web
-**Outil : `search`**
+### Recherche web
+**Outil : `searchscraper`**
 ```
 user_prompt: "Producteurs de dattes en Algerie export"
-num_results: 5
 ```
 
-### Pour crawler un site entier
-**Outil : `crawl_start`** puis **`crawl_get_status`**
-```
-url: "https://example.com"
-extraction_mode: "markdown"
-max_pages: 20
-depth: 2
-```
-
-### Pour surveiller une page dans le temps
-**Outil : `monitor_create`**
-```
-url: "https://example.com/prix"
-prompt: "Extrais les prix actuels"
-interval: "0 9 * * *"  (tous les jours a 9h)
-```
-
----
-
-## Modes de fetch
-
-| Mode | Description | Vitesse |
-|------|-------------|---------|
-| `auto` | Selection automatique (defaut) | variable |
-| `fast` | HTTP direct, pas de JavaScript | rapide |
-| `js` | Navigateur headless, execute le JS | lent |
-
-Ajouter `stealth: true` pour les sites avec detection de bots (+5 credits).
+### Crawler un site
+**Outil : `smartcrawler_initiate`** puis **`smartcrawler_fetch_results`**
 
 ---
 
 ## Regles importantes
 
-- **Toujours verifier les credits** avant une operation couteuse (crawl large, search multiple)
-- **Commencer petit** : tester avec 1-2 pages avant de lancer un crawl de 100 pages
-- **Etre precis dans les prompts** : "Extrais nom, prix, description" est meilleur que "Extrais tout"
-- **Utiliser un schema** pour les extractions repetitives ou complexes
-- **Ne jamais exposer la cle API** dans les reponses ou les livrables
+- **Toujours confirmer** l'action avant d'executer
+- **Etre precis dans les prompts** : "Extrais nom, prix, contact" est meilleur que "Extrais tout"
+- **Inclure les sources** (URLs) dans tous les resultats
+- **Ne jamais exposer** de cle API dans les reponses ou les livrables
+- **Sauvegarder** les resultats volumineux dans `livrable/application/`
 - **Communication en francais** systematique
 - **Pas de tirets longs** (em dashes)
 
@@ -100,13 +104,11 @@ Ajouter `stealth: true` pour les sites avec detection de bots (+5 credits).
 
 ## Gestion des erreurs
 
-Si le serveur MCP n'est pas connecte :
-1. Verifier que le serveur est configure dans les settings Claude Code
-2. Verifier que `SGAI_API_KEY` est definie
-3. Relancer avec `scrapegraph-mcp` en mode stdio
+Si ScrapeGraph ne repond pas (erreur SSL/reseau) :
+- Basculer automatiquement sur WebSearch/WebFetch
+- Ne pas afficher d'erreur technique, juste utiliser le backend disponible
 
-Si une requete echoue :
-1. Verifier le format de l'URL (doit inclure http:// ou https://)
-2. Essayer avec `mode: "js"` si le site est dynamique
-3. Ajouter `stealth: true` si le site bloque les bots
-4. Verifier les credits restants avec l'outil `credits`
+Si WebFetch echoue sur une URL :
+1. Verifier que l'URL est complete (https://)
+2. Certains sites bloquent le scraping, essayer une autre source
+3. Utiliser WebSearch pour trouver des pages alternatives

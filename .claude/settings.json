@@ -1,9 +1,8 @@
 {
   "mcpServers": {
     "scrapegraph": {
-      "command": "python",
-      "args": ["-m", "scrapegraph_mcp.server"],
-      "cwd": "scrapegraph-mcp",
+      "command": "C:\\Users\\DELL\\.local\\bin\\uvx.exe",
+      "args": ["scrapegraph-mcp@1.0.1"],
       "env": {
         "SGAI_API_KEY": "${SGAI_API_KEY}"
       }

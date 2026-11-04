@@ -1,6 +1,17 @@
 # /scrape
 
-> Commande pour scraper, extraire ou rechercher des donnees sur le web via ScrapeGraphAI.
+> Commande pour scraper, extraire ou rechercher des donnees sur le web.
+
+---
+
+## Strategie d'outils
+
+Cette commande utilise deux backends selon la disponibilite :
+
+1. **Backend principal (WebSearch + WebFetch)** : outils integres Claude, fonctionnent toujours (cote serveur Anthropic)
+2. **Backend avance (ScrapeGraphAI MCP)** : outils MCP avances, necessite acces reseau a api.scrapegraphai.com
+
+Au lancement, tester si les outils MCP ScrapeGraph repondent. Si non, utiliser WebSearch/WebFetch automatiquement.
 
 ---
 
@@ -12,12 +23,12 @@ Quand je lance `/scrape [URL ou instruction]`, execute la sequence suivante :
 
 Analyser ce que l'utilisateur veut faire :
 
-- **URL seule** : scraper le contenu en markdown
-- **URL + instruction** : extraire des donnees structurees
+- **URL seule** : scraper le contenu de la page
+- **URL + instruction** : extraire des donnees specifiques
 - **Question sans URL** : recherche web
-- **"crawl" + URL** : crawler le site multi-pages
-- **"monitor" + URL** : creer un monitoring planifie
-- **"credits"** : verifier le solde
+- **"crawl" + URL** : crawler le site multi-pages (ScrapeGraph uniquement)
+- **"monitor" + URL** : creer un monitoring planifie (ScrapeGraph uniquement)
+- **"credits"** : verifier le solde ScrapeGraph
 
 ### Etape 2 : Confirmer l'action
 
@@ -26,17 +37,23 @@ Presenter l'action prevue avant de l'executer :
 ```
 Je vais [action] sur [cible].
 
-Outil : [nom de l'outil MCP]
-Cout estime : [X credits]
+Outil : [WebFetch/WebSearch ou ScrapeGraph]
 
 On lance ?
 ```
 
 ### Etape 3 : Executer
 
-Lancer l'outil MCP appropriate via le serveur scrapegraph-mcp.
+**Avec WebSearch (recherche) :**
+- Utiliser WebSearch avec une requete precise
+- Mode "standard" par defaut, "extended" pour les recherches approfondies
 
-Pour un crawl asynchrone, poller `crawl_get_status` jusqu'a completion.
+**Avec WebFetch (scraping de page) :**
+- Utiliser WebFetch avec l'URL et un prompt d'extraction
+- Le prompt decrit ce qu'on veut extraire de la page
+
+**Avec ScrapeGraph (si disponible) :**
+- Utiliser les outils MCP (smartscraper, searchscraper, markdownify, etc.)
 
 ### Etape 4 : Presenter les resultats
 
@@ -54,7 +71,7 @@ Si les donnees sont volumineuses, proposer :
 ```
 /scrape https://example.com
 ```
-Recupere le contenu en markdown.
+Recupere le contenu principal de la page.
 
 ### Extraire des donnees
 ```
@@ -68,24 +85,25 @@ Extraction structuree par IA.
 ```
 Recherche web avec resultats structures.
 
-### Crawler un site
+### Prospection
+```
+/scrape trouve des importateurs de produits alimentaires en Cote d'Ivoire
+```
+Recherche et extraction de contacts/entreprises.
+
+### Crawler un site (ScrapeGraph requis)
 ```
 /scrape crawl https://docs.example.com 20 pages
 ```
 Crawl multi-pages.
 
-### Verifier les credits
-```
-/scrape credits
-```
-
 ---
 
 ## Regles importantes
 
-- **Toujours confirmer** l'action et le cout estime avant d'executer
-- **Verifier les credits** avant les operations couteuses (crawl, search multiple)
-- **Ne jamais exposer** la cle API dans les reponses
+- **Toujours confirmer** l'action avant d'executer
+- **Ne jamais exposer** de cle API dans les reponses
 - **Sauvegarder** les resultats volumineux dans `livrable/application/`
+- **Inclure les sources** (URLs) dans les resultats de recherche
 - **Communication en francais** systematique
 - **Pas de tirets longs** (em dashes)
