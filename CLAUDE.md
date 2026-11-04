@@ -83,7 +83,8 @@ Une fois que je confirme, Claude met à jour le fichier en question et ajoute un
 │   │   ├── prime.md             # /prime pour démarrer une session
 │   │   ├── update.md            # /update pour mettre à jour le contexte
 │   │   ├── morning.md           # /morning pour démarrer la journée
-│   │   └── commit.md            # /commit pour sauvegarder dans Git
+│   │   ├── commit.md            # /commit pour sauvegarder dans Git
+│   │   └── install-safe.md     # /install-safe pour installer un repo après audit
 │   └── skills/
 │       ├── recherche-actualites/ # Skill veille personnalisée
 │       └── audit-github/        # Skill audit sécurité repos GitHub
@@ -125,6 +126,12 @@ Une fois que je confirme, Claude met à jour le fichier en question et ajoute un
 **Objectif :** Sauvegarder l'état actuel du workspace dans Git.
 
 Crée un commit avec tous les changements en cours. Claude vérifie Git, montre les fichiers modifiés, propose un message de commit, et sauvegarde après validation. Usage rapide : `/commit mon message` pour commiter directement.
+
+### /install-safe
+
+**Objectif :** Installer un repo GitHub en toute sécurité.
+
+Lance un audit de sécurité complet AVANT de cloner ou installer quoi que ce soit. Selon le score, Claude recommande ou déconseille l'installation, et guide chaque étape avec validation. Usage : `/install-safe https://github.com/user/repo`
 
 ### /morning
 
