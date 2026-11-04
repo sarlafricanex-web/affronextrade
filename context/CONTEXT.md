@@ -136,6 +136,37 @@ Ces informations sont à intégrer dans les signatures email, les en-têtes de d
 
 ---
 
+## Identité visuelle (branding)
+
+### Logo
+- **Fichier :** `context/import/africa-nex-logo-emerald-continent-horizontal (1).svg`
+- **Modèle 3D :** `context/import/africa-nex-3d-model - Copie.glb`
+- **Description :** Carte de l'Afrique en vert émeraude avec flèche intégrée (export/mouvement), texte horizontal
+
+### Couleurs de marque
+| Rôle | Couleur | Code hex |
+|------|---------|----------|
+| Principale (Afrique, icône) | Vert émeraude | #10B981 |
+| Accent (NEX) | Orange | #F97316 |
+| Texte principal | Bleu foncé (slate) | #0F172A |
+| Fond | Blanc | #FFFFFF |
+
+### Typographie
+- **Police :** Plus Jakarta Sans
+- **Titre/marque :** Extra Bold (800), espacement 0.065em
+- **Tagline/corps :** Regular (400), espacement 0.20em
+
+### Tagline
+- **EN :** Trading Made Easy
+
+### Utilisation branding
+Ces éléments doivent être appliqués dans tous les livrables : site web, application, présentations, documents commerciaux, réseaux sociaux et supports marketing.
+
+### Vision site web
+- Logo 3D animé (rotation/mouvement) sur le site, basé sur le modèle .glb. Technologie envisagée : Three.js ou React Three Fiber.
+
+---
+
 ## Notes importantes
 
 > Cette section se remplira au fil du temps avec les éléments de contexte qui émergent naturellement dans mes sessions avec Claude.

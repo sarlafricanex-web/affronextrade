@@ -7,6 +7,17 @@
 
 ---
 
+## 2026-11-04
+
+### Scraping, prospection et identité visuelle
+- Skill scraping mise à jour : WebSearch/WebFetch comme backend principal (fonctionne toujours), ScrapeGraph en option (bloqué par SSL depuis l'Algérie)
+- Config MCP ScrapeGraph via uvx ajoutée (.mcp.json, .claude/settings.json)
+- Première prospection réalisée : 11 producteurs algériens d'huile d'olive identifiés avec contacts partiels
+- Logo AFRICA NEX déposé dans context/import/ (SVG + modèle 3D .glb)
+- Charte graphique documentée dans CONTEXT.md : vert émeraude #10B981, orange #F97316, bleu slate #0F172A, police Plus Jakarta Sans, tagline "Trading Made Easy"
+
+---
+
 ## 2026-11-03
 
 ### Organisation du workspace et sécurisation des clefs d'API
