@@ -82,9 +82,11 @@ Une fois que je confirme, Claude met à jour le fichier en question et ajoute un
 │   ├── commands/
 │   │   ├── prime.md             # /prime pour démarrer une session
 │   │   ├── update.md            # /update pour mettre à jour le contexte
-│   │   └── morning.md           # /morning pour démarrer la journée
+│   │   ├── morning.md           # /morning pour démarrer la journée
+│   │   └── commit.md            # /commit pour sauvegarder dans Git
 │   └── skills/
-│       └── recherche-actualites/ # Skill veille personnalisée
+│       ├── recherche-actualites/ # Skill veille personnalisée
+│       └── audit-github/        # Skill audit sécurité repos GitHub
 └── module-installs/
     └── jarvis-install/          # Module d'installation initial
 ```
@@ -139,6 +141,12 @@ Claude va effectuer une veille des actualités du jour, filtrée selon mon conte
 Skill de veille intelligente qui filtre les actualités selon mon contexte personnel. Activée automatiquement quand je demande "fais-moi un point sur les actualités", "donne-moi les news du jour", ou via la commande `/morning`.
 
 L'avantage : pas de bruit. Seulement ce qui me concerne vraiment, vu mes objectifs et projets actuels.
+
+### audit-github
+
+Skill d'audit sécurité pour les repos GitHub. Analyse un dépôt en lecture seule et produit un rapport HTML avec score de confiance, détail des risques par catégorie et verdict clair. Activée quand je demande "vérifie ce repo", "audite ce GitHub", "c'est safe ?", ou que je donne une URL GitHub à analyser.
+
+Les 9 points vérifiés : exécution auto, code suspect, réseau, vol de données, secrets exposés, binaires, dépendances, GitHub Actions, réputation.
 
 ---
 
