@@ -64,3 +64,6 @@ temp/
 
 # --- Repos MCP clones localement ---
 scrapegraph-mcp/
+
+# Local Netlify folder
+.netlify
