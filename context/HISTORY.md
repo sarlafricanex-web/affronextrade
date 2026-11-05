@@ -7,6 +7,25 @@
 
 ---
 
+## 2026-11-05
+
+### Site web AFRICA NEX : UX, formulaire, RGPD, design sable
+- Hero scroll-expand integre (framer-motion) avec support clavier
+- Page Opportunites creee : 8 marches africains, secteurs porteurs, citations CEO, CTA
+- Logo SVG avec carte d'Afrique integre dans Header et Footer (version claire/foncee)
+- Navigation mise a jour : Opportunites ajoutee apres A propos
+- **Fond sable #ece3d4** applique sur toutes les pages (remplacement du blanc)
+- **Netlify Forms active** : formulaire contact fonctionnel avec stockage des soumissions
+- Champs Telephone et WhatsApp ajoutes au formulaire contact
+- **Conformite RGPD** : case de consentement obligatoire, page mentions legales (/legal)
+- Section "Ils nous font confiance" ajoutee (AFG Bank + emplacements futurs partenaires)
+- Bouton Commencer corrige (navigation vers /contact au lieu de mailto)
+- Lien mentions legales ajoute dans le footer
+- Traductions FR/EN/AR completes pour tous les nouveaux contenus
+- Deploye sur Netlify et pousse sur GitHub
+
+---
+
 ## 2026-11-04 (Session 2)
 
 ### Site web AFRICA NEX : refonte design, deploiement Netlify
