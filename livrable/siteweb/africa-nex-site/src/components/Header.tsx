@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 
-const NAV_KEYS = ["about", "services", "producers", "buyers", "contact"] as const;
+const NAV_KEYS = ["about", "opportunities", "services", "producers", "buyers", "contact"] as const;
 const LOCALES = [
   { code: "fr", label: "FR" },
   { code: "en", label: "EN" },

@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { HeroCrossfade } from "@/components/HeroCrossfade";
+import ScrollExpandMedia from "@/components/ui/scroll-expansion-hero";
 import { Reveal } from "@/components/Reveal";
 
 const CAPABILITIES = [
@@ -35,67 +35,47 @@ export default async function HomePage({
 
   return (
     <>
-      {/* Hero: split-stage */}
-      <section className="grid md:grid-cols-2 min-h-svh" style={{ paddingTop: "3.5rem" }}>
-        <div
-          className="flex flex-col justify-center order-2 md:order-1"
-          style={{ padding: "3rem var(--page-margin)" }}
-        >
-          <Reveal>
-            <h1
-              className="font-extrabold"
+      {/* Hero: scroll-to-expand */}
+      <ScrollExpandMedia
+        mediaType="image"
+        mediaSrc="/images/sunrise-from-algeria-port.jpg"
+        bgImageSrc="/images/boat-in-harbor-algeria.jpg"
+        title={t("hero.title")}
+        scrollToExpand={t("hero.tagline")}
+        textBlend
+      >
+        <div className="flex flex-col items-center text-center max-w-2xl mx-auto">
+          <p
+            style={{
+              fontSize: "var(--step-body)",
+              color: "var(--muted)",
+              maxWidth: "42ch",
+            }}
+          >
+            {t("hero.subtitle")}
+          </p>
+          <div className="mt-8 flex gap-3">
+            <Link
+              href="/producers"
+              className="text-sm font-semibold px-6 py-3 transition-colors"
+              style={{ background: "var(--accent)", color: "white" }}
+            >
+              {t("hero.ctaProducer")}
+            </Link>
+            <Link
+              href="/buyers"
+              className="text-sm font-semibold px-6 py-3 transition-colors"
               style={{
-                fontSize: "var(--step-display)",
-                lineHeight: 0.92,
-                letterSpacing: "-0.03em",
-                maxWidth: "14ch",
+                background: "transparent",
+                color: "var(--ink)",
+                border: "1px solid var(--field-b)",
               }}
             >
-              {t("hero.title")}
-            </h1>
-          </Reveal>
-
-          <Reveal delay={1}>
-            <p
-              className="mt-6"
-              style={{
-                fontSize: "var(--step-body)",
-                color: "var(--muted)",
-                maxWidth: "36ch",
-              }}
-            >
-              {t("hero.subtitle")}
-            </p>
-          </Reveal>
-
-          <Reveal delay={2}>
-            <div className="mt-8 flex gap-3">
-              <Link
-                href="/producers"
-                className="text-sm font-semibold px-6 py-3 transition-colors"
-                style={{ background: "var(--accent)", color: "white" }}
-              >
-                {t("hero.ctaProducer")}
-              </Link>
-              <Link
-                href="/buyers"
-                className="text-sm font-semibold px-6 py-3 transition-colors"
-                style={{
-                  background: "transparent",
-                  color: "var(--ink)",
-                  border: "1px solid var(--field-b)",
-                }}
-              >
-                {t("hero.ctaBuyer")}
-              </Link>
-            </div>
-          </Reveal>
+              {t("hero.ctaBuyer")}
+            </Link>
+          </div>
         </div>
-
-        <div className="relative order-1 md:order-2 h-[60svh] md:h-auto md:sticky md:top-0 md:self-start" style={{ height: "100svh" }}>
-          <HeroCrossfade />
-        </div>
-      </section>
+      </ScrollExpandMedia>
 
       {/* Stats: quiet figure lines */}
       <section style={{ padding: "var(--section-gap) var(--page-margin)" }}>
