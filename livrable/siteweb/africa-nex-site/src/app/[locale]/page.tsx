@@ -77,6 +77,49 @@ export default async function HomePage({
         </div>
       </ScrollExpandMedia>
 
+      {/* Trust: partner logos */}
+      <section
+        style={{
+          padding: "clamp(3rem, 6vw, 5rem) var(--page-margin)",
+          borderTop: "1px solid var(--field-b)",
+          borderBottom: "1px solid var(--field-b)",
+        }}
+      >
+        <Reveal>
+          <p
+            className="text-center text-xs font-semibold uppercase tracking-widest mb-10"
+            style={{ color: "var(--muted)" }}
+          >
+            {t("partners.title")}
+          </p>
+        </Reveal>
+        <Reveal delay={1}>
+          <div className="flex flex-wrap items-center justify-center gap-x-16 gap-y-6">
+            <span
+              className="font-extrabold tracking-wide"
+              style={{
+                color: "var(--ink)",
+                fontSize: "clamp(1.4rem, 2.5vw, 1.8rem)",
+              }}
+            >
+              AFG Bank
+            </span>
+            {["", "", "", ""].map((_, i) => (
+              <span
+                key={i}
+                className="font-bold tracking-wide"
+                style={{
+                  color: "var(--field-b)",
+                  fontSize: "clamp(1.2rem, 2vw, 1.5rem)",
+                }}
+              >
+                Votre logo ici
+              </span>
+            ))}
+          </div>
+        </Reveal>
+      </section>
+
       {/* Stats: quiet figure lines */}
       <section style={{ padding: "var(--section-gap) var(--page-margin)" }}>
         <Reveal>

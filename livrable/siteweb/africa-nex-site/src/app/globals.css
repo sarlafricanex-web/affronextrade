@@ -5,13 +5,13 @@
   --font-sans: var(--font-plus-jakarta);
 
   /* Brand palette */
-  --ground: #faf9f7;
+  --ground: #ece3d4;
   --ink: #0f172a;
-  --muted: #64748b;
+  --muted: #5c5347;
   --accent: #10b981;
   --accent-warm: #f97316;
-  --field-a: #f1f0ec;
-  --field-b: #e8e6e1;
+  --field-a: #e3d9c8;
+  --field-b: #d8cebb;
 
   /* Type scale: 5 steps */
   --step-display: clamp(3rem, 6vw, 5.5rem);

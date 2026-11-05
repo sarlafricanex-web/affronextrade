@@ -19,6 +19,9 @@
     "ctaProducer": "Je suis producteur",
     "ctaBuyer": "Je suis acheteur"
   },
+  "partners": {
+    "title": "Ils nous font confiance"
+  },
   "stats": {
     "title": "AFRICA NEX en chiffres",
     "producers": "Producteurs",
@@ -141,8 +144,15 @@
     "email": "Adresse email",
     "company": "Entreprise",
     "country": "Pays",
+    "phoneField": "Telephone",
+    "whatsapp": "WhatsApp",
     "message": "Votre message",
+    "consent": "J'accepte que mes donnees soient utilisees pour traiter ma demande, conformement a la",
+    "privacyLink": "politique de confidentialite",
     "send": "Envoyer",
+    "successTitle": "Message envoye",
+    "successMessage": "Merci pour votre message. Notre equipe vous repondra dans les 24 heures.",
+    "errorMessage": "Une erreur est survenue. Veuillez reessayer ou nous contacter par email.",
     "address": "Adresse",
     "phone": "Telephone",
     "emailLabel": "Email"
@@ -176,6 +186,28 @@
     "ctaSubtitle": "Rejoignez les producteurs algeriens qui exportent deja vers l'Afrique avec AFRICA NEX.",
     "ctaButton": "Devenir fournisseur",
     "ctaSecondary": "Voir nos producteurs"
+  },
+  "legal": {
+    "title": "Mentions legales",
+    "companyTitle": "Editeur du site",
+    "hostingTitle": "Hebergement",
+    "dataTitle": "Donnees personnelles",
+    "dataIntro": "Les donnees collectees via le formulaire de contact sont :",
+    "dataItem1": "Nom, email, entreprise, pays, telephone, WhatsApp, message",
+    "dataItem2": "Finalite : repondre a votre demande et vous proposer nos services",
+    "dataItem3": "Conservation : 3 ans apres le dernier contact",
+    "dataPurpose": "Ces donnees sont traitees par SARL AFRICA NEX et ne sont jamais vendues a des tiers.",
+    "dataRetention": "Conformement a la loi algerienne 18-07 et au RGPD, vous disposez de droits sur vos donnees.",
+    "rightsTitle": "Vos droits",
+    "rightsIntro": "Vous pouvez a tout moment exercer vos droits :",
+    "rightsAccess": "Droit d'acces a vos donnees",
+    "rightsCorrect": "Droit de rectification",
+    "rightsDelete": "Droit de suppression",
+    "rightsObject": "Droit d'opposition au traitement",
+    "rightsContact": "Pour exercer ces droits, contactez-nous a contact@africanex.com.",
+    "cookiesTitle": "Cookies",
+    "cookiesText": "Ce site n'utilise pas de cookies de suivi ou de publicite. Seuls des cookies techniques essentiels au fonctionnement du site peuvent etre utilises.",
+    "lastUpdate": "Derniere mise a jour : novembre 2026"
   },
   "footer": {
     "description": "La marketplace B2B qui connecte les producteurs algeriens aux marches internationaux.",
