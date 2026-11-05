@@ -27,9 +27,14 @@ export function Header() {
         className="mx-auto flex items-center justify-between h-14"
         style={{ padding: "0 var(--page-margin)" }}
       >
-        <Link href="/" className="text-base font-extrabold tracking-tight">
-          <span style={{ color: "var(--ink)" }}>AFRICA </span>
-          <span style={{ color: "var(--accent-warm)" }}>NEX</span>
+        <Link href="/" className="flex items-center gap-2">
+          <img
+            src="/images/logo.svg"
+            alt="AFRICA NEX"
+            width={140}
+            height={49}
+            className="h-8 w-auto"
+          />
         </Link>
 
         <div className="hidden md:flex items-center gap-6">

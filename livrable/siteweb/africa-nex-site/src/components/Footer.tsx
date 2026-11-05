@@ -27,10 +27,13 @@ export function Footer() {
           style={{ padding: "5rem var(--page-margin) 2rem" }}
         >
           <div>
-            <p className="text-sm font-extrabold tracking-tight mb-16" style={{ color: "var(--ground)", opacity: 0.5 }}>
-              <span>AFRICA </span>
-              <span style={{ color: "var(--accent-warm)" }}>NEX</span>
-            </p>
+            <img
+              src="/images/logo-light.svg"
+              alt="AFRICA NEX"
+              width={160}
+              height={56}
+              className="mb-16 h-10 w-auto"
+            />
 
             <nav className="flex flex-col gap-3">
               {FOOTER_LINKS.map((key) => (
