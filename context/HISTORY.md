@@ -17,9 +17,34 @@
 - **Migration Netlify vers Vercel** : les credits Netlify etaient epuises (production deploys paused). Le site est maintenant deploye automatiquement via GitHub sur Vercel (equipe affronex, projet affronextrade)
 - **Nettoyage Netlify** : suppression de netlify.toml, du dossier .netlify/, de la dependance @netlify/plugin-nextjs et de la ligne .netlify dans .gitignore
 - Credit image mis a jour dans le Footer (Pexels vers Canva AI)
-- 3 commits pousses : image + header + boutons, fix header opaque, migration Vercel
+
+### Formulaire contact, base de donnees, dashboard admin
+- **Formulaire contact repare** : remplacement de Netlify Forms par une API Route Next.js (`/api/contact`)
+- **Base Neon Postgres** configuree : stockage des soumissions (nom, email, entreprise, pays, tel, WhatsApp, message, date)
+- **Email Resend** : notification automatique a chaque soumission vers sarlafricanex@gmail.com
+- **Dashboard admin** : page `/admin` protegee par mot de passe, tableau des contacts avec detail, boutons repondre par email/WhatsApp
+- **Export Excel (.xlsx)** : telechargement des contacts au format Excel via ExcelJS (headers blancs sur fond sombre, lignes alternees, filtres auto, largeurs adaptees, protection injection formules). Remplace l'ancien export CSV
+- **Vercel Analytics** ajoute pour le comptage des visites
+
+### Securite et confidentialite
+- **Audit de securite** realise : 1 vulnerabilite trouvee (CSV injection) et corrigee
+- **Headers de securite** : X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict, Permissions-Policy restrictive
+- **Auth admin timing-safe** : comparaison du mot de passe avec `timingSafeEqual` (anti timing-attack)
+- **Erreurs masquees** : les details techniques ne sont plus exposes dans les reponses API
+- **Retention RGPD** : suppression automatique des donnees de plus de 12 mois (cron chaque lundi 3h)
+- **Rapport hebdomadaire** par email : nombre de contacts, purges effectuees
+- **Backup** : Neon inclut le Point-in-Time Recovery automatique
+
+### Variables d'environnement Vercel (projet affronextrade)
+- `DATABASE_URL` : Neon Postgres (production)
+- `DATABASE_URL_UNPOOLED` : Neon Postgres direct
+- `RESEND_API_KEY` : notifications email
+- `ADMIN_PASSWORD` : acces dashboard admin
+- `CRON_SECRET` : securisation du cron hebdomadaire
+
 - **Repo GitHub** : https://github.com/sarlafricanex-web/affronextrade
 - **Vercel** : deploiement continu depuis GitHub (remplace Netlify)
+- **Neon** : projet old-wave-37924987, org org-crimson-shape-55253195, branche production
 
 ---
 
