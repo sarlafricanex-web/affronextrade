@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Reveal } from "@/components/Reveal";
 import { MarketGrid } from "@/components/MarketCard";
 import { Link } from "@/i18n/navigation";
+import { ArrowButton } from "@/components/ArrowButton";
 
 const QUOTES = [
   {
@@ -346,19 +347,20 @@ export default async function OpportunitiesPage({
           </Reveal>
           <Reveal delay={2}>
             <div className="flex flex-wrap gap-4 mt-8 mb-8">
-              <Link
-                href="/contact"
-                className="inline-block font-semibold text-sm px-8 py-4 transition-colors"
-                style={{ background: "white", color: "var(--ink)" }}
-              >
+              <ArrowButton href="/contact" variant="light">
                 {t("ctaButton")}
-              </Link>
+              </ArrowButton>
               <Link
                 href="/producers"
-                className="inline-block font-semibold text-sm px-8 py-4 transition-colors"
-                style={{ border: "1px solid rgba(255,255,255,0.4)", color: "white" }}
+                className="arrow-btn inline-flex items-center gap-0 text-sm font-semibold"
+                style={{ border: "1px solid rgba(255,255,255,0.4)", color: "white", background: "transparent" }}
               >
-                {t("ctaSecondary")}
+                <span className="arrow-btn-label">{t("ctaSecondary")}</span>
+                <span className="arrow-btn-icon" style={{ background: "rgba(255,255,255,0.15)" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" /><polyline points="13 6 19 12 13 18" />
+                  </svg>
+                </span>
               </Link>
             </div>
           </Reveal>

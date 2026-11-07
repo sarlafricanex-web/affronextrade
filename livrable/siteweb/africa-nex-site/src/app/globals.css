@@ -67,6 +67,40 @@ a {
   text-decoration: none;
 }
 
+/* ── Button hover effects ── */
+a[style*="background: var(--ink)"],
+a[style*="background: var(--accent)"],
+button[type="submit"] {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.25s ease;
+}
+
+a[style*="background: var(--ink)"]:hover,
+a[style*="background: var(--accent)"]:hover,
+button[type="submit"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+a[style*="background: var(--ink)"]:active,
+a[style*="background: var(--accent)"]:active,
+button[type="submit"]:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Outline button hover */
+a[style*="border: 1px solid"] {
+  transition: background 0.3s ease, color 0.3s ease, transform 0.25s ease;
+}
+
+a[style*="border: 1px solid"]:hover {
+  background: var(--ink) !important;
+  color: var(--ground) !important;
+  transform: translateY(-2px);
+}
+
 /* ── Selection ── */
 ::selection {
   background: var(--accent);
@@ -99,7 +133,39 @@ a {
   }
 }
 
-/* ── Hero crossfade ── */
+/* ── Header scroll effect ── */
+header {
+  transition: background 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease;
+}
+
+header.scrolled {
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  background: rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 1px 0 var(--field-b);
+}
+
+/* ── Nav link underline animation ── */
+nav a[href]:not([style*="background"]) {
+  position: relative;
+}
+
+nav a[href]:not([style*="background"])::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--accent);
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+nav a[href]:not([style*="background"]):hover::after {
+  width: 100%;
+}
+
+/* ── Hero crossfade + Ken Burns ── */
 .hero-image {
   position: absolute;
   inset: 0;
@@ -107,6 +173,173 @@ a {
   height: 100%;
   object-fit: cover;
   transition: opacity 1.6s ease;
+}
+
+@keyframes ken-burns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.08); }
+}
+
+.hero-image[style*="opacity: 1"] {
+  animation: ken-burns 6s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-image[style*="opacity: 1"] {
+    animation: none;
+  }
+}
+
+/* ── Panorama interactif ── */
+.panorama-container {
+  position: relative;
+}
+
+.panorama-container img {
+  filter: saturate(1.15) contrast(1.08) brightness(1.05);
+  transition: filter 0.3s ease;
+}
+
+.panorama-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(15, 23, 42, 0.25) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.panorama-container::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 35%;
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.2) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── Image hover zoom ── */
+.img-zoom {
+  overflow: hidden;
+}
+
+.img-zoom img {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.img-zoom:hover img {
+  transform: scale(1.04);
+}
+
+/* ── Form input focus ── */
+form input:not([type="hidden"]):not([type="checkbox"]),
+form textarea {
+  transition: box-shadow 0.3s ease;
+}
+
+form input:not([type="hidden"]):not([type="checkbox"]):focus,
+form textarea:focus {
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+/* ── CTA arrow hover ── */
+.cta-arrow {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s ease;
+}
+
+.cta-arrow:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.cta-arrow:hover svg {
+  animation: arrow-nudge 0.6s ease infinite;
+}
+
+@keyframes arrow-nudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}
+
+/* ── Animated counter ── */
+.counter-value {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+/* ── Arrow button ── */
+.arrow-btn {
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.arrow-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+}
+
+.arrow-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.arrow-btn-label {
+  padding: 0.75rem 1.25rem;
+  transition: padding-right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.arrow-btn:hover .arrow-btn-label {
+  padding-right: 0.75rem;
+}
+
+.arrow-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 0;
+  opacity: 0;
+  padding: 0.75rem 0;
+  overflow: hidden;
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              padding 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.arrow-btn:hover .arrow-btn-icon {
+  width: 2.5rem;
+  opacity: 1;
+  padding: 0.75rem 0.75rem 0.75rem 0;
+}
+
+.arrow-btn:hover .arrow-btn-icon svg {
+  animation: arrow-slide 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes arrow-slide {
+  0% { transform: translateX(-8px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrow-btn,
+  .arrow-btn-label,
+  .arrow-btn-icon {
+    transition: none;
+  }
+  .arrow-btn-icon {
+    width: 2.5rem;
+    opacity: 1;
+    padding: 0.75rem 0.75rem 0.75rem 0;
+  }
+  .arrow-btn:hover .arrow-btn-icon svg {
+    animation: none;
+  }
 }
 
 /* ── Utility ── */

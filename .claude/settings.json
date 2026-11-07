@@ -9,6 +9,12 @@
     ]
   },
   "mcpServers": {
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "chrome-devtools-mcp@latest"
+      ]
+    },
     "scrapegraph": {
       "command": "C:\\Users\\DELL\\.local\\bin\\uvx.exe",
       "args": [
@@ -16,6 +22,12 @@
       ],
       "env": {
         "SGAI_API_KEY": "${SGAI_API_KEY}"
+      }
+    },
+    "21st": {
+      "url": "https://21st.dev/api/mcp",
+      "headers": {
+        "x-api-key": "${API_KEY_21ST}"
       }
     }
   }

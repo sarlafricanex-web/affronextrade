@@ -273,9 +273,9 @@ const ScrollExpandMedia = ({
                       ></div>
 
                       <motion.div
-                        className="absolute inset-0 bg-black/30 rounded-xl"
-                        initial={{ opacity: 0.7 }}
-                        animate={{ opacity: 0.5 - scrollProgress * 0.3 }}
+                        className="absolute inset-0 bg-black/20 rounded-xl"
+                        initial={{ opacity: 0.4 }}
+                        animate={{ opacity: 0.25 - scrollProgress * 0.2 }}
                         transition={{ duration: 0.2 }}
                       />
                     </div>
@@ -300,9 +300,9 @@ const ScrollExpandMedia = ({
                       ></div>
 
                       <motion.div
-                        className="absolute inset-0 bg-black/30 rounded-xl"
-                        initial={{ opacity: 0.7 }}
-                        animate={{ opacity: 0.5 - scrollProgress * 0.3 }}
+                        className="absolute inset-0 bg-black/20 rounded-xl"
+                        initial={{ opacity: 0.4 }}
+                        animate={{ opacity: 0.25 - scrollProgress * 0.2 }}
                         transition={{ duration: 0.2 }}
                       />
                     </div>
@@ -318,9 +318,9 @@ const ScrollExpandMedia = ({
                     />
 
                     <motion.div
-                      className="absolute inset-0 bg-black/50 rounded-xl"
-                      initial={{ opacity: 0.7 }}
-                      animate={{ opacity: 0.7 - scrollProgress * 0.3 }}
+                      className="absolute inset-0 bg-black/30 rounded-xl"
+                      initial={{ opacity: 0.4 }}
+                      animate={{ opacity: 0.3 - scrollProgress * 0.2 }}
                       transition={{ duration: 0.2 }}
                     />
                   </div>

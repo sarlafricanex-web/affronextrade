@@ -2,6 +2,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import ScrollExpandMedia from "@/components/ui/scroll-expansion-hero";
 import { Reveal } from "@/components/Reveal";
+import { AnimatedCounter } from "@/components/AnimatedCounter";
+import { PanoramaScroll } from "@/components/PanoramaScroll";
+import { ArrowButton } from "@/components/ArrowButton";
 
 const CAPABILITIES = [
   { key: "b2b", value: "5+ pays" },
@@ -54,25 +57,13 @@ export default async function HomePage({
           >
             {t("hero.subtitle")}
           </p>
-          <div className="mt-8 flex gap-3">
-            <Link
-              href="/producers"
-              className="text-sm font-semibold px-6 py-3 transition-colors"
-              style={{ background: "var(--accent)", color: "white" }}
-            >
+          <div className="mt-8 flex flex-wrap gap-3">
+            <ArrowButton href="/producers" variant="primary">
               {t("hero.ctaProducer")}
-            </Link>
-            <Link
-              href="/buyers"
-              className="text-sm font-semibold px-6 py-3 transition-colors"
-              style={{
-                background: "transparent",
-                color: "var(--ink)",
-                border: "1px solid var(--field-b)",
-              }}
-            >
+            </ArrowButton>
+            <ArrowButton href="/buyers" variant="outline">
               {t("hero.ctaBuyer")}
-            </Link>
+            </ArrowButton>
           </div>
         </div>
       </ScrollExpandMedia>
@@ -139,7 +130,7 @@ export default async function HomePage({
                   className="text-right font-medium tabular-nums"
                   style={{ fontSize: "clamp(1.75rem, 2.4vw, 2rem)" }}
                 >
-                  {stat.figure}
+                  <AnimatedCounter value={stat.figure} />
                 </p>
                 <p style={{ color: "var(--muted)", maxWidth: "40ch" }}>
                   {t(`stats.${stat.key}`)}
@@ -192,18 +183,15 @@ export default async function HomePage({
         </div>
       </section>
 
-      {/* Showcase: split with image */}
-      <section className="grid md:grid-cols-2 items-center" style={{ minHeight: "88svh" }}>
-        <div className="relative aspect-square md:aspect-auto md:h-full overflow-hidden" style={{ margin: "var(--page-margin)" }}>
-          <img
-            src="/images/olives-in-olive-oil.jpg"
-            alt="Olives vertes dans l'huile d'olive"
-            className="w-full h-full object-cover"
-            loading="lazy"
-            decoding="async"
-            width={1760}
-            height={1168}
-          />
+      {/* Showcase: split with panorama */}
+      <section className="grid md:grid-cols-2 items-center" style={{ minHeight: "70svh" }}>
+        <div style={{ margin: "var(--page-margin)" }}>
+          <Reveal>
+            <PanoramaScroll
+              src="/images/cargo-port-containers.jpg"
+              alt="Port cargo international avec conteneurs"
+            />
+          </Reveal>
         </div>
         <div style={{ padding: "4rem var(--page-margin)" }}>
           <Reveal>
@@ -231,13 +219,9 @@ export default async function HomePage({
             </div>
           </Reveal>
           <Reveal delay={3}>
-            <Link
-              href="/categories"
-              className="inline-block mt-8 text-sm font-semibold px-6 py-3"
-              style={{ background: "var(--ink)", color: "var(--ground)" }}
-            >
+            <ArrowButton href="/categories" variant="secondary" className="mt-8">
               {t("categories.viewAll")}
-            </Link>
+            </ArrowButton>
           </Reveal>
         </div>
       </section>
@@ -304,7 +288,7 @@ export default async function HomePage({
           src="/images/cherchell-harbour-01.jpg"
           alt="Port de Cherchell, Algerie"
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ filter: "brightness(0.75)" }}
+          style={{ filter: "brightness(0.85)" }}
           loading="lazy"
           decoding="async"
           width={1920}
@@ -333,13 +317,9 @@ export default async function HomePage({
               </p>
             </Reveal>
             <Reveal delay={2}>
-              <Link
-                href="/contact"
-                className="inline-block mt-6 text-sm font-semibold px-6 py-3"
-                style={{ background: "var(--ground)", color: "var(--ink)" }}
-              >
+              <ArrowButton href="/contact" variant="light" className="mt-6">
                 {t("cta.producerButton")}
-              </Link>
+              </ArrowButton>
             </Reveal>
           </div>
         </div>
@@ -456,7 +436,7 @@ export default async function HomePage({
               </p>
               <Link
                 href="/contact"
-                className="flex items-center justify-center shrink-0"
+                className="cta-arrow flex items-center justify-center shrink-0"
                 style={{
                   width: "clamp(3rem, 5vw, 3.5rem)",
                   height: "clamp(3rem, 5vw, 3.5rem)",

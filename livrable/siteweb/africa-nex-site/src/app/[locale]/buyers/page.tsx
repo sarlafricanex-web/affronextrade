@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Reveal } from "@/components/Reveal";
+import { ArrowButton } from "@/components/ArrowButton";
 
 export default async function BuyersPage({
   params,
@@ -32,13 +33,13 @@ export default async function BuyersPage({
         </div>
         <div className="relative h-[50svh] md:h-full overflow-hidden">
           <img
-            src="/images/olives-in-olive-oil.jpg"
-            alt="Olives vertes dans l'huile d'olive"
+            src="/images/olive-oil-export.jpg"
+            alt="Bouteilles d'huile d'olive premium pour l'export"
+            width={1920}
+            height={2880}
             className="w-full h-full object-cover"
             loading="eager"
             decoding="async"
-            width={1760}
-            height={1168}
           />
         </div>
       </section>
@@ -95,13 +96,9 @@ export default async function BuyersPage({
               </h2>
             </Reveal>
             <Reveal delay={1}>
-              <Link
-                href="/contact"
-                className="inline-block mt-4 text-sm font-semibold px-8 py-3"
-                style={{ background: "var(--ground)", color: "var(--ink)" }}
-              >
+              <ArrowButton href="/contact" variant="light" className="mt-4">
                 {t("ctaButton")}
-              </Link>
+              </ArrowButton>
             </Reveal>
           </div>
         </div>

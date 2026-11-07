@@ -92,6 +92,7 @@ export function Footer() {
               &ldquo;Cherchell Harbour&rdquo; by Bernard Gagnon, CC BY 4.0, via Wikimedia Commons.
               &ldquo;Ripe dates&rdquo; by Kerina yin, CC0, via Wikimedia Commons.
               &ldquo;Sunrise from Algeria port&rdquo; by Fadi karim 7, CC BY-SA 4.0, via Wikimedia Commons.
+              &ldquo;Olive oil export&rdquo; generated with Canva AI.
             </p>
           </div>
         </div>

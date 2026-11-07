@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit Securite - 21st-dev/magic-mcp</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; padding: 1rem; max-width: 900px; margin: 0 auto; }
+  .header { text-align: center; padding: 2rem 1rem; margin-bottom: 2rem; background: white; border-radius: 12px; border: 1px solid #e2e8f0; }
+  .header h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+  .header a { color: #3b82f6; text-decoration: none; font-size: 0.875rem; }
+  .score { font-size: 4rem; font-weight: 800; margin: 1rem 0 0.25rem; }
+  .score.safe { color: #22c55e; }
+  .score.caution { color: #f59e0b; }
+  .score.danger { color: #ef4444; }
+  .verdict { font-size: 1.25rem; font-weight: 600; padding: 0.5rem 1.5rem; border-radius: 50px; display: inline-block; }
+  .verdict.safe { background: #f0fdf4; color: #16a34a; }
+  .verdict.caution { background: #fffbeb; color: #d97706; }
+  .verdict.danger { background: #fef2f2; color: #dc2626; }
+  .meta { margin-top: 1rem; font-size: 0.8rem; color: #64748b; }
+  .cards { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 2rem; }
+  @media (min-width: 640px) { .cards { grid-template-columns: 1fr 1fr; } }
+  .card { background: white; border-radius: 10px; padding: 1.25rem; border: 1px solid #e2e8f0; }
+  .card-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+  .card-body { font-size: 0.85rem; color: #475569; }
+  .status { font-size: 1.1rem; }
+  .risks { background: white; border-radius: 10px; padding: 1.5rem; border: 1px solid #e2e8f0; margin-bottom: 2rem; }
+  .risks h2 { font-size: 1.1rem; margin-bottom: 1rem; }
+  .risk-item { padding: 1rem 0; border-bottom: 1px solid #f1f5f9; }
+  .risk-item:last-child { border-bottom: none; }
+  .risk-level { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.15rem 0.5rem; border-radius: 4px; display: inline-block; margin-bottom: 0.5rem; }
+  .risk-level.moyen { background: #fffbeb; color: #d97706; }
+  .risk-level.faible { background: #f0fdf4; color: #16a34a; }
+  .risk-file { font-family: monospace; font-size: 0.8rem; color: #64748b; margin-bottom: 0.25rem; }
+  .risk-desc { font-size: 0.85rem; color: #334155; }
+  .conclusion { background: white; border-radius: 10px; padding: 1.5rem; border: 1px solid #e2e8f0; }
+  .conclusion h2 { font-size: 1.1rem; margin-bottom: 1rem; }
+  .conclusion p { font-size: 0.9rem; margin-bottom: 0.75rem; }
+  .conclusion ol { padding-left: 1.25rem; font-size: 0.9rem; }
+  .conclusion li { margin-bottom: 0.5rem; }
+  .repo-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.75rem; margin-top: 1rem; text-align: center; font-size: 0.8rem; }
+  .stat-box { background: #f8fafc; padding: 0.5rem; border-radius: 6px; }
+  .stat-val { font-weight: 800; font-size: 1.1rem; color: #0f172a; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Audit Securite GitHub</h1>
+  <a href="https://github.com/21st-dev/magic-mcp" target="_blank">21st-dev/magic-mcp</a>
+  <div class="score caution">78/100</div>
+  <div class="verdict caution">Prudence</div>
+  <div class="meta">Audit realise le 6 novembre 2026 | Licence : ISC | Branche : main</div>
+  <div class="repo-stats">
+    <div class="stat-box"><div class="stat-val">6 404</div>Stars</div>
+    <div class="stat-box"><div class="stat-val">517</div>Forks</div>
+    <div class="stat-box"><div class="stat-val">5</div>Contributeurs</div>
+    <div class="stat-box"><div class="stat-val">9</div>Issues ouvertes</div>
+    <div class="stat-box"><div class="stat-val">21</div>Fichiers</div>
+    <div class="stat-box"><div class="stat-val">Fev 2025</div>Creation</div>
+  </div>
+</div>
+
+<div class="cards">
+
+  <div class="card">
+    <div class="card-title"><span class="status">&#x1F7E2;</span> 1. Execution automatique</div>
+    <div class="card-body">Aucun script <code>preinstall</code> ou <code>postinstall</code>. Le script <code>prepublishOnly</code> lance juste <code>tsc</code> (compilation TypeScript). RAS.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="status">&#x1F7E2;</span> 2. Code suspect</div>
+    <div class="card-body">Aucune obfuscation, pas d'<code>eval()</code>, <code>exec()</code>, <code>Function()</code> ou <code>atob()</code>. Le code source est court, lisible et transparent (un seul fichier <code>src/index.ts</code>).</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="status">&#x1F7E0;</span> 3. Reseau</div>
+    <div class="card-body">Toutes les requetes vont vers <code>https://21st.dev/api/mcp</code> (endpoint officiel). Mais l'URL peut etre surchargee via la variable <code>MCP_URL_21ST</code>, ce qui redirigerait la cle API et toutes les donnees vers un serveur tiers.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="status">&#x1F7E2;</span> 4. Vol de donnees</div>
+    <div class="card-body">Aucun acces au systeme de fichiers, aux cookies, aux profils navigateur, aux cles SSH ou aux wallets. Pas de lecture de donnees locales.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="status">&#x1F7E2;</span> 5. Secrets exposes</div>
+    <div class="card-body">Aucune cle API, token ou mot de passe en dur dans le code. Les cles sont lues via variables d'environnement. Le <code>.gitignore</code> est present.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="status">&#x1F7E2;</span> 6. Binaires sans source</div>
+    <div class="card-body">Un seul fichier binaire : <code>assets/logo.png</code> (logo du projet). Aucun <code>.exe</code>, <code>.dll</code>, <code>.so</code> ou archive suspecte.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="status">&#x1F7E2;</span> 7. Dependances</div>
+    <div class="card-body">Zero dependance de production. Seulement 3 devDependencies standard : <code>@types/node</code>, <code>shx</code>, <code>typescript</code>. Pas de typosquatting.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="status">&#x1F7E2;</span> 8. GitHub Actions</div>
+    <div class="card-body">Workflow bien securise : pas de <code>pull_request_target</code>, actions epinglees par SHA, npm Trusted Publishing (OIDC), verification d'integrite du tarball, <code>--ignore-scripts</code> a l'install.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="status">&#x1F7E0;</span> 9. Reputation globale</div>
+    <div class="card-body">Organisation creee en fevrier 2025, 582 followers, 15 repos publics, 6 404 stars. Communaute active. Le repo est un <strong>proxy</strong> : il redirige tout le trafic MCP vers les serveurs de 21st.dev. Vos prompts et le code genere transitent par leur API.</div>
+  </div>
+
+</div>
+
+<div class="risks">
+  <h2>Tableau des risques</h2>
+
+  <div class="risk-item">
+    <span class="risk-level moyen">Moyen</span>
+    <div class="risk-file">src/index.ts - fetch POST vers 21st.dev/api/mcp</div>
+    <div class="risk-desc"><strong>Proxy integral :</strong> chaque message JSON-RPC (vos prompts, arguments d'outils, code) est transmis tel quel au serveur distant 21st.dev. C'est le fonctionnement normal d'un MCP distant, mais cela signifie que 21st.dev recoit tout le contenu de vos interactions.</div>
+  </div>
+
+  <div class="risk-item">
+    <span class="risk-level moyen">Moyen</span>
+    <div class="risk-file">src/index.ts - variable MCP_URL_21ST</div>
+    <div class="risk-desc"><strong>Endpoint surchargeable :</strong> la variable d'environnement <code>MCP_URL_21ST</code> permet de rediriger tout le trafic (cle API incluse) vers un serveur arbitraire. Verifier qu'elle n'est pas definie dans votre environnement.</div>
+  </div>
+
+  <div class="risk-item">
+    <span class="risk-level moyen">Moyen</span>
+    <div class="risk-file">src/index.ts - lecture de API_KEY</div>
+    <div class="risk-desc"><strong>Variable generique :</strong> le code lit aussi la variable <code>API_KEY</code> (sans prefixe). Si une autre application definit cette variable, sa cle pourrait etre envoyee a 21st.dev par erreur.</div>
+  </div>
+
+  <div class="risk-item">
+    <span class="risk-level faible">Faible</span>
+    <div class="risk-file">Dockerfile</div>
+    <div class="risk-desc"><strong>Container en root :</strong> le Dockerfile n'ajoute pas d'utilisateur non-root. Risque faible car l'usage principal est via <code>npx</code>, pas Docker.</div>
+  </div>
+
+  <div class="risk-item">
+    <span class="risk-level faible">Faible</span>
+    <div class="risk-file">src/index.ts - reponses du serveur</div>
+    <div class="risk-desc"><strong>Reponses non validees :</strong> les reponses du serveur distant sont relayees sans verification. Un serveur compromis pourrait injecter du contenu manipule dans les reponses de l'agent.</div>
+  </div>
+
+</div>
+
+<div class="conclusion">
+  <h2>Peut-on cloner et utiliser ce repo ?</h2>
+  <p><strong>Oui, avec precautions.</strong> Le code est propre, court et transparent. Aucun comportement malveillant detecte. Mais c'est un proxy : vos donnees transitent par les serveurs de 21st.dev. Cela merite attention.</p>
+  <ol>
+    <li><strong>Utilisez la methode d'installation officielle :</strong> <code>npx @21st-dev/cli@latest init</code> (recommande par le repo lui-meme).</li>
+    <li><strong>Creez une cle API dediee</strong> sur <a href="https://21st.dev/mcp" target="_blank">21st.dev/mcp</a>. Ne reutilisez pas une cle d'un autre service.</li>
+    <li><strong>Verifiez vos variables d'environnement :</strong> assurez-vous que <code>MCP_URL_21ST</code> et <code>API_KEY</code> ne sont pas definies ailleurs.</li>
+    <li><strong>Passez la cle par variable d'environnement</strong>, jamais en argument de ligne de commande.</li>
+    <li><strong>Sachez que vos prompts et le code genere</strong> transitent par les serveurs de 21st.dev. Evitez de partager des donnees sensibles via cet outil.</li>
+  </ol>
+</div>
+
+</body>
+</html>

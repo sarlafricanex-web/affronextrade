@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 
@@ -16,13 +16,21 @@ export function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   function switchLocale(locale: string) {
     router.replace(pathname, { locale });
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50" style={{ background: "var(--ground)" }}>
+    <header className={`fixed top-0 left-0 right-0 z-50${scrolled ? " scrolled" : ""}`} style={{ background: "white" }}>
       <nav
         className="mx-auto flex items-center justify-between h-14"
         style={{ padding: "0 var(--page-margin)" }}
