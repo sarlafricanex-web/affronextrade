@@ -10,16 +10,22 @@ export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(false);
 
+  const [sending, setSending] = useState(false);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setSending(true);
+    setError(false);
     const form = e.currentTarget;
-    const data = new FormData(form);
+    const fd = new FormData(form);
+    const body: Record<string, string> = {};
+    fd.forEach((v, k) => { if (k !== "bot-field" && k !== "consent") body[k] = String(v); });
 
     try {
-      const res = await fetch("/__forms.html", {
+      const res = await fetch("/api/contact", {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams(data as unknown as Record<string, string>).toString(),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
       if (res.ok) {
         setSubmitted(true);
@@ -28,6 +34,8 @@ export default function ContactPage() {
       }
     } catch {
       setError(true);
+    } finally {
+      setSending(false);
     }
   }
 
@@ -85,14 +93,9 @@ export default function ContactPage() {
       <section style={{ padding: "0 var(--page-margin) var(--section-gap)" }}>
         <div className="grid lg:grid-cols-5 gap-16">
           <form
-            name="contact"
-            method="POST"
-            data-netlify="true"
-            netlify-honeypot="bot-field"
             className="lg:col-span-3 space-y-5"
             onSubmit={handleSubmit}
           >
-            <input type="hidden" name="form-name" value="contact" />
             <p className="hidden">
               <label>
                 Ne remplissez pas : <input name="bot-field" />
@@ -211,10 +214,11 @@ export default function ContactPage() {
             <Reveal delay={4}>
               <button
                 type="submit"
-                className="text-sm font-semibold px-8 py-3"
+                disabled={sending}
+                className="text-sm font-semibold px-8 py-3 disabled:opacity-50"
                 style={{ background: "var(--ink)", color: "var(--ground)" }}
               >
-                {t("send")}
+                {sending ? "Envoi..." : t("send")}
               </button>
             </Reveal>
           </form>

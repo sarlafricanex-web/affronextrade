@@ -7,6 +7,22 @@
 
 ---
 
+## 2026-11-07
+
+### Site web AFRICA NEX : image brandee, header opaque, migration Vercel
+- **Image olive oil remplacee** : la photo stock Pexels a ete remplacee par une image HD generee via Canva AI montrant des cartons d'export AFRICA NEX avec bouteilles ZITOUNA, drapeau algerien, tampons "Made in Algeria" et etiquettes EXPORT/FRAGILE (828 Ko, 1920px)
+- **Pipeline Canva decouverte** : generate-image ne retourne que des thumbnails ; la methode fiable est create-design, edit-design (insert_fill), export-design pour obtenir des images HD
+- **Header corrige en blanc opaque** : suppression du backdrop-filter qui causait la transparence, ajout de bg-white (Tailwind) et style inline white pour garantir l'opacite
+- **Boutons ArrowButton animes** ajoutes sur le site
+- **Migration Netlify vers Vercel** : les credits Netlify etaient epuises (production deploys paused). Le site est maintenant deploye automatiquement via GitHub sur Vercel (equipe affronex, projet affronextrade)
+- **Nettoyage Netlify** : suppression de netlify.toml, du dossier .netlify/, de la dependance @netlify/plugin-nextjs et de la ligne .netlify dans .gitignore
+- Credit image mis a jour dans le Footer (Pexels vers Canva AI)
+- 3 commits pousses : image + header + boutons, fix header opaque, migration Vercel
+- **Repo GitHub** : https://github.com/sarlafricanex-web/affronextrade
+- **Vercel** : deploiement continu depuis GitHub (remplace Netlify)
+
+---
+
 ## 2026-11-05
 
 ### Site web AFRICA NEX : UX, formulaire, RGPD, design sable
@@ -34,9 +50,8 @@
 - 6 pages : accueil, a propos, services, categories, producteurs (annuaire de 12 producteurs), acheteurs, contact
 - i18n complet : francais, anglais, arabe (RTL)
 - Stack : Next.js 16.4.5, React 19, Tailwind v4, next-intl
-- Deploiement continu configure : GitHub -> Netlify (deploy key installee)
+- Deploiement continu configure : GitHub -> ~~Netlify~~ Vercel (migre le 7 nov.)
 - Revue de securite completee : aucune vulnerabilite critique, headers de securite ajoutes
-- Netlify CLI installe, 15 skills Netlify ajoutees au workspace
 
 ---
 
