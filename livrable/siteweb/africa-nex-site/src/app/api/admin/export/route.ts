@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkAdmin } from "@/lib/admin-auth";
 import { getSubmissions } from "@/lib/db";
+import ExcelJS from "exceljs";
 
 export async function GET(request: Request) {
   const denied = checkAdmin(request);
@@ -9,32 +10,73 @@ export async function GET(request: Request) {
   try {
     const rows = await getSubmissions(10000, 0);
 
-    const headers = ["ID", "Date", "Nom", "Email", "Entreprise", "Pays", "Telephone", "WhatsApp", "Message"];
-    const csvRows = [headers.join(";")];
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "AFRICA NEX";
+    workbook.created = new Date();
+
+    const sheet = workbook.addWorksheet("Contacts");
+
+    sheet.columns = [
+      { header: "ID", key: "id", width: 8 },
+      { header: "Date", key: "date", width: 18 },
+      { header: "Nom", key: "name", width: 22 },
+      { header: "Email", key: "email", width: 28 },
+      { header: "Entreprise", key: "company", width: 22 },
+      { header: "Pays", key: "country", width: 16 },
+      { header: "Telephone", key: "phone", width: 18 },
+      { header: "WhatsApp", key: "whatsapp", width: 18 },
+      { header: "Message", key: "message", width: 40 },
+    ];
+
+    const headerRow = sheet.getRow(1);
+    headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    headerRow.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF0F172A" },
+    };
+    headerRow.alignment = { vertical: "middle" };
+    headerRow.height = 28;
 
     for (const r of rows) {
-      csvRows.push(
-        [
-          r.id,
-          new Date(r.created_at).toLocaleString("fr-FR"),
-          csvEscape(r.name),
-          csvEscape(r.email),
-          csvEscape(r.company),
-          csvEscape(r.country),
-          csvEscape(r.phone),
-          csvEscape(r.whatsapp),
-          csvEscape(r.message),
-        ].join(";")
-      );
+      const val = sanitize(r.message);
+      sheet.addRow({
+        id: r.id,
+        date: new Date(r.created_at).toLocaleString("fr-FR"),
+        name: sanitize(r.name),
+        email: sanitize(r.email),
+        company: sanitize(r.company),
+        country: sanitize(r.country),
+        phone: sanitize(r.phone),
+        whatsapp: sanitize(r.whatsapp),
+        message: val,
+      });
     }
 
-    const bom = "﻿";
-    const csv = bom + csvRows.join("\r\n");
+    sheet.eachRow((row, num) => {
+      if (num === 1) return;
+      row.alignment = { vertical: "top", wrapText: true };
+      if (num % 2 === 0) {
+        row.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFF5F5F5" },
+        };
+      }
+    });
 
-    return new NextResponse(csv, {
+    sheet.autoFilter = {
+      from: { row: 1, column: 1 },
+      to: { row: 1, column: 9 },
+    };
+
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    return new NextResponse(buffer, {
       headers: {
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="contacts-africanex-${new Date().toISOString().slice(0, 10)}.csv"`,
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="contacts-africanex-${new Date().toISOString().slice(0, 10)}.xlsx"`,
+        "Cache-Control": "no-store",
       },
     });
   } catch (e) {
@@ -46,13 +88,8 @@ export async function GET(request: Request) {
   }
 }
 
-function csvEscape(val: unknown): string {
-  let s = String(val ?? "");
-  if (/^[=+\-@\t\r]/.test(s)) {
-    s = "'" + s;
-  }
-  if (s.includes(";") || s.includes('"') || s.includes("\n") || s.includes("'")) {
-    return `"${s.replace(/"/g, '""')}"`;
-  }
+function sanitize(val: unknown): string {
+  const s = String(val ?? "");
+  if (/^[=+\-@\t\r]/.test(s)) return "'" + s;
   return s;
 }

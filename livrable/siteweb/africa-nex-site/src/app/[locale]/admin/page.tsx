@@ -67,14 +67,14 @@ export default function AdminPage() {
     }
   }
 
-  async function exportCsv() {
+  async function exportExcel() {
     const res = await fetch("/api/admin/export", { headers: headers() });
     if (!res.ok) return;
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `contacts-africanex-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `contacts-africanex-${new Date().toISOString().slice(0, 10)}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -166,11 +166,11 @@ export default function AdminPage() {
               {loading ? "..." : "Actualiser"}
             </button>
             <button
-              onClick={exportCsv}
+              onClick={exportExcel}
               className="text-xs font-medium px-4 py-2"
               style={{ background: "var(--accent)", color: "white" }}
             >
-              Exporter CSV / Excel
+              Exporter Excel
             </button>
             <button
               onClick={setupDb}
