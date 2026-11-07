@@ -61,3 +61,16 @@ export async function countSubmissions() {
   const rows = await sql`SELECT COUNT(*)::int AS total FROM submissions`;
   return rows[0].total;
 }
+
+const RETENTION_MONTHS = 12;
+
+export async function purgeOldSubmissions() {
+  const sql = getDb();
+  if (!sql) return 0;
+  const rows = await sql`
+    DELETE FROM submissions
+    WHERE created_at < NOW() - INTERVAL '1 month' * ${RETENTION_MONTHS}
+    RETURNING id
+  `;
+  return rows.length;
+}
