@@ -38,8 +38,9 @@ export async function GET(request: Request) {
       },
     });
   } catch (e) {
+    console.error("Admin export error:", e);
     return NextResponse.json(
-      { error: "Erreur export", detail: String(e) },
+      { error: "Erreur interne" },
       { status: 500 }
     );
   }

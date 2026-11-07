@@ -16,8 +16,9 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({ success: true, message: "Table submissions creee" });
   } catch (e) {
+    console.error("Admin setup error:", e);
     return NextResponse.json(
-      { error: "Erreur DB", detail: String(e) },
+      { error: "Erreur interne" },
       { status: 500 }
     );
   }

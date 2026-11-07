@@ -1,4 +1,15 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
+
+function safeCompare(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) {
+    timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return timingSafeEqual(bufA, bufB);
+}
 
 export function checkAdmin(request: Request): NextResponse | null {
   const pwd = process.env.ADMIN_PASSWORD;
@@ -10,7 +21,9 @@ export function checkAdmin(request: Request): NextResponse | null {
   }
 
   const auth = request.headers.get("authorization");
-  if (!auth || auth !== `Bearer ${pwd}`) {
+  const token = auth?.startsWith("Bearer ") ? auth.slice(7) : "";
+
+  if (!token || !safeCompare(token, pwd)) {
     return NextResponse.json({ error: "Non autorise" }, { status: 401 });
   }
 

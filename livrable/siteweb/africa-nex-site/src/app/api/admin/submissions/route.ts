@@ -17,8 +17,9 @@ export async function GET(request: Request) {
     ]);
     return NextResponse.json({ submissions: rows, total, limit, offset });
   } catch (e) {
+    console.error("Admin submissions error:", e);
     return NextResponse.json(
-      { error: "Erreur DB", detail: String(e) },
+      { error: "Erreur interne" },
       { status: 500 }
     );
   }
