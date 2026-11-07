@@ -46,8 +46,11 @@ export async function GET(request: Request) {
 }
 
 function csvEscape(val: unknown): string {
-  const s = String(val ?? "");
-  if (s.includes(";") || s.includes('"') || s.includes("\n")) {
+  let s = String(val ?? "");
+  if (/^[=+\-@\t\r]/.test(s)) {
+    s = "'" + s;
+  }
+  if (s.includes(";") || s.includes('"') || s.includes("\n") || s.includes("'")) {
     return `"${s.replace(/"/g, '""')}"`;
   }
   return s;
