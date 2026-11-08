@@ -13,15 +13,16 @@ type Producer = {
   verified: boolean;
   initials: string;
   color: string;
+  logo?: string;
 };
 
 const PRODUCERS: Producer[] = [
-  { id: "1", name: "Ifri", location: "Ighzer Amokrane, Bejaia", sector: "agrifood", products: ["Eau minerale", "Boissons gazeuses", "Jus de fruits"], verified: true, initials: "IF", color: "#0891b2" },
-  { id: "2", name: "Cevital", location: "Bejaia", sector: "agrifood", products: ["Huile de table", "Sucre", "Margarine"], verified: true, initials: "CV", color: "#059669" },
+  { id: "1", name: "Ifri", location: "Ighzer Amokrane, Bejaia", sector: "agrifood", products: ["Eau minerale", "Boissons gazeuses", "Jus de fruits"], verified: true, initials: "IF", color: "#0891b2", logo: "/images/logos/ifri.png" },
+  { id: "2", name: "Cevital", location: "Bejaia", sector: "agrifood", products: ["Huile de table", "Sucre", "Margarine"], verified: true, initials: "CV", color: "#059669", logo: "/images/logos/cevital.png" },
   { id: "3", name: "SIM", location: "Blida", sector: "industry", products: ["Electromenager", "Climatiseurs", "Chauffe-eau"], verified: true, initials: "SM", color: "#7c3aed" },
-  { id: "4", name: "Condor Electronics", location: "Bordj Bou Arreridj", sector: "industry", products: ["Smartphones", "TV", "Panneaux solaires"], verified: true, initials: "CE", color: "#dc2626" },
+  { id: "4", name: "Condor Electronics", location: "Bordj Bou Arreridj", sector: "industry", products: ["Smartphones", "TV", "Panneaux solaires"], verified: true, initials: "CE", color: "#dc2626", logo: "/images/logos/condor.png" },
   { id: "5", name: "Lalla Khedidja", location: "Tizi Ouzou", sector: "agrifood", products: ["Eau minerale naturelle"], verified: true, initials: "LK", color: "#2563eb" },
-  { id: "6", name: "Groupe Benamor", location: "Guelma", sector: "agrifood", products: ["Concentre de tomate", "Pates", "Couscous", "Harissa"], verified: true, initials: "GB", color: "#ea580c" },
+  { id: "6", name: "Agrodiv", location: "Guelma", sector: "agrifood", products: ["Concentre de tomate", "Pates", "Couscous", "Harissa"], verified: true, initials: "AG", color: "#ea580c" },
   { id: "7", name: "Toudja Olive Oil", location: "Bejaia", sector: "agrifood", products: ["Huile d'olive extra vierge", "Olives de table"], verified: true, initials: "TO", color: "#65a30d" },
   { id: "8", name: "Biscuiterie Bimo", location: "Blida", sector: "agrifood", products: ["Biscuits", "Gaufrettes", "Chocolat"], verified: true, initials: "BB", color: "#b45309" },
   { id: "9", name: "Henkel Algerie", location: "Alger", sector: "cosmetics", products: ["Produits de soin", "Detergents"], verified: true, initials: "HA", color: "#be185d" },
@@ -108,12 +109,20 @@ export function ProducerDirectory() {
               style={{ background: "var(--ground)", padding: "1.5rem" }}
             >
               <div className="flex items-start gap-3">
-                <div
-                  className="w-10 h-10 flex items-center justify-center shrink-0 text-sm font-bold text-white"
-                  style={{ background: producer.color }}
-                >
-                  {producer.initials}
-                </div>
+                {producer.logo ? (
+                  <img
+                    src={producer.logo}
+                    alt={producer.name}
+                    className="w-10 h-10 shrink-0 object-contain"
+                  />
+                ) : (
+                  <div
+                    className="w-10 h-10 flex items-center justify-center shrink-0 text-sm font-bold text-white"
+                    style={{ background: producer.color }}
+                  >
+                    {producer.initials}
+                  </div>
+                )}
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-bold truncate">{producer.name}</p>

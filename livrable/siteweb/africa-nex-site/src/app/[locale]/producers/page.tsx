@@ -1,7 +1,18 @@
+import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Reveal } from "@/components/Reveal";
 import { ProducerDirectory } from "@/components/ProducerDirectory";
+import { makePageMetadata } from "@/lib/seo";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return makePageMetadata({ locale, titleKey: "producersTitle", descriptionKey: "producersDescription", path: "/producers" });
+}
 
 export default async function ProducersPage({
   params,

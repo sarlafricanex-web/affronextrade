@@ -55,7 +55,9 @@
     "ai": "Marketing IA integre",
     "aiDesc": "Boostez votre visibilite internationale avec nos outils de marketing pilotes par l'IA.",
     "logistics": "Logistique simplifiee",
-    "logisticsDesc": "Accompagnement fret maritime, routier et aerien vers l'Afrique et le monde."
+    "logisticsDesc": "Accompagnement fret maritime, routier et aerien vers l'Afrique et le monde.",
+    "cagex": "Assure par la CAGEX",
+    "cagexDesc": "Vos exportations sont couvertes par la Compagnie Algerienne d'Assurance et de Garantie des Exportations : verification des acheteurs, assurance-credit export et garantie du transport de marchandises."
   },
   "cta": {
     "producerTitle": "Vous etes producteur ?",
@@ -82,19 +84,23 @@
     "title": "Nos services",
     "subtitle": "Des solutions completes pour developper votre activite a l'international",
     "b2b": "Mise en relation B2B",
-    "b2bDesc": "Connectez-vous directement avec des acheteurs et fournisseurs verifies dans plus de 5 pays africains.",
+    "b2bDesc": "Connectez-vous directement avec des acheteurs et fournisseurs verifies dans plus de 8 pays africains.",
     "marketing": "Marketing digital IA",
     "marketingDesc": "Nos agents IA gerent votre presence en ligne, vos campagnes et votre visibilite sur les marches cibles.",
     "logistics": "Accompagnement logistique",
     "logisticsDesc": "Fret maritime, routier et aerien. Nous simplifions l'export vers l'Afrique et le monde.",
     "consulting": "Conseil export",
-    "consultingDesc": "Accompagnement reglementaire, douanier et commercial pour reussir vos premiers exports."
+    "consultingDesc": "Accompagnement reglementaire, douanier et commercial pour reussir vos premiers exports.",
+    "insurance": "Assurance export CAGEX",
+    "insuranceDesc": "Vos marchandises et creances sont couvertes par la CAGEX : assurance-credit export, verification acheteurs et garantie transport.",
+    "compliance": "Conformite SH et douaniere",
+    "complianceDesc": "Classification de vos produits selon le Systeme Harmonise (SH), preparation des documents douaniers et conformite reglementaire pour un dedouanement sans friction."
   },
   "producers": {
     "title": "Espace Producteurs",
     "subtitle": "Developpez vos exportations avec AFRICA NEX",
     "benefit1": "Visibilite internationale",
-    "benefit1Desc": "Votre catalogue visible par des acheteurs dans 5+ pays africains et au-dela.",
+    "benefit1Desc": "Votre catalogue visible par des acheteurs dans 8+ pays africains et au-dela.",
     "benefit2": "Marketing gere par l'IA",
     "benefit2Desc": "Nos agents IA optimisent votre presence en ligne et generent des leads qualifies.",
     "benefit3": "Gestion des commandes",
@@ -218,5 +224,24 @@
     "followUs": "Suivez-nous",
     "rights": "Tous droits reserves.",
     "madeWith": "Fait avec passion a Setif, Algerie"
+  },
+  "meta": {
+    "title": "AFRICA NEX - Marketplace B2B Export Algerie",
+    "description": "Marketplace B2B connectant les producteurs algeriens aux acheteurs internationaux. Export agroalimentaire, automobile, ceramique vers l'Afrique et le monde.",
+    "keywords": "B2B marketplace, export Algerie, producteurs algeriens, commerce international, Afrique, agroalimentaire, automobile, import export",
+    "aboutTitle": "A propos d'AFRICA NEX",
+    "aboutDescription": "Decouvrez AFRICA NEX, la plateforme B2B qui connecte les producteurs algeriens de qualite aux marches internationaux africains.",
+    "servicesTitle": "Nos services export",
+    "servicesDescription": "Services B2B complets : mise en relation, logistique internationale, marketing digital IA et accompagnement export pour les producteurs algeriens.",
+    "categoriesTitle": "Secteurs d'activite",
+    "categoriesDescription": "Explorez nos secteurs : agroalimentaire, automobile, ceramique, cosmetiques, artisanat. Produits algeriens de qualite pour l'export.",
+    "producersTitle": "Annuaire des producteurs algeriens",
+    "producersDescription": "Trouvez des producteurs algeriens verifies et de confiance. Huile d'olive, dattes, pieces automobile, ceramique et plus.",
+    "buyersTitle": "Espace acheteurs internationaux",
+    "buyersDescription": "Acheteurs internationaux : accedez aux meilleurs producteurs algeriens. Commandes simplifiees, logistique geree, paiements securises.",
+    "contactTitle": "Contactez AFRICA NEX",
+    "contactDescription": "Contactez notre equipe pour demarrer vos echanges commerciaux avec l'Algerie. Reponse sous 24h.",
+    "opportunitiesTitle": "Opportunites de marche en Afrique",
+    "opportunitiesDescription": "Decouvrez les opportunites d'export vers la Cote d'Ivoire, le Senegal, le Nigeria, la Centrafrique et l'Ethiopie."
   }
 }

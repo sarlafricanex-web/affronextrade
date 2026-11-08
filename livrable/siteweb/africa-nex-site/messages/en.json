@@ -55,7 +55,9 @@
     "ai": "AI-powered marketing",
     "aiDesc": "Boost your international visibility with our AI-driven marketing tools.",
     "logistics": "Simplified logistics",
-    "logisticsDesc": "Maritime, road and air freight support to Africa and worldwide."
+    "logisticsDesc": "Maritime, road and air freight support to Africa and worldwide.",
+    "cagex": "Insured by CAGEX",
+    "cagexDesc": "Your exports are covered by the Algerian Export Insurance and Guarantee Company: buyer verification, export credit insurance and cargo transport guarantee."
   },
   "cta": {
     "producerTitle": "Are you a producer?",
@@ -82,19 +84,23 @@
     "title": "Our services",
     "subtitle": "Complete solutions to grow your business internationally",
     "b2b": "B2B matchmaking",
-    "b2bDesc": "Connect directly with verified buyers and suppliers in 5+ African countries.",
+    "b2bDesc": "Connect directly with verified buyers and suppliers in 8+ African countries.",
     "marketing": "AI digital marketing",
     "marketingDesc": "Our AI agents manage your online presence, campaigns and visibility in target markets.",
     "logistics": "Logistics support",
     "logisticsDesc": "Maritime, road and air freight. We simplify exports to Africa and worldwide.",
     "consulting": "Export consulting",
-    "consultingDesc": "Regulatory, customs and commercial support to succeed in your first exports."
+    "consultingDesc": "Regulatory, customs and commercial support to succeed in your first exports.",
+    "insurance": "CAGEX export insurance",
+    "insuranceDesc": "Your goods and receivables are covered by CAGEX: export credit insurance, buyer verification and cargo transport guarantee.",
+    "compliance": "HS and customs compliance",
+    "complianceDesc": "Product classification under the Harmonized System (HS), customs documentation and regulatory compliance for friction-free clearance."
   },
   "producers": {
     "title": "Producers Hub",
     "subtitle": "Grow your exports with AFRICA NEX",
     "benefit1": "International visibility",
-    "benefit1Desc": "Your catalog visible to buyers in 5+ African countries and beyond.",
+    "benefit1Desc": "Your catalog visible to buyers in 8+ African countries and beyond.",
     "benefit2": "AI-managed marketing",
     "benefit2Desc": "Our AI agents optimize your online presence and generate qualified leads.",
     "benefit3": "Order management",
@@ -218,5 +224,24 @@
     "followUs": "Follow us",
     "rights": "All rights reserved.",
     "madeWith": "Made with passion in Setif, Algeria"
+  },
+  "meta": {
+    "title": "AFRICA NEX - B2B Export Marketplace Algeria",
+    "description": "B2B marketplace connecting Algerian producers to international buyers. Export agri-food, automotive, ceramics to Africa and worldwide.",
+    "keywords": "B2B marketplace, Algeria export, Algerian producers, international trade, Africa, agri-food, automotive, import export",
+    "aboutTitle": "About AFRICA NEX",
+    "aboutDescription": "Discover AFRICA NEX, the B2B platform connecting quality Algerian producers to African and international markets.",
+    "servicesTitle": "Our export services",
+    "servicesDescription": "Complete B2B services: matchmaking, international logistics, AI-powered digital marketing and export support for Algerian producers.",
+    "categoriesTitle": "Business sectors",
+    "categoriesDescription": "Explore our sectors: agri-food, automotive, ceramics, cosmetics, crafts. Quality Algerian products for export.",
+    "producersTitle": "Algerian producers directory",
+    "producersDescription": "Find verified and trusted Algerian producers. Olive oil, dates, automotive parts, ceramics and more.",
+    "buyersTitle": "International buyers portal",
+    "buyersDescription": "International buyers: access the best Algerian producers. Simplified orders, managed logistics, secure payments.",
+    "contactTitle": "Contact AFRICA NEX",
+    "contactDescription": "Contact our team to start your trade with Algeria. Response within 24 hours.",
+    "opportunitiesTitle": "Market opportunities in Africa",
+    "opportunitiesDescription": "Discover export opportunities to Ivory Coast, Senegal, Nigeria, Central African Republic and Ethiopia."
   }
 }

@@ -1,11 +1,22 @@
+import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Reveal } from "@/components/Reveal";
+import { makePageMetadata } from "@/lib/seo";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return makePageMetadata({ locale, titleKey: "aboutTitle", descriptionKey: "aboutDescription", path: "/about" });
+}
 
 const TEAM = [
-  { name: "Adlene", roleKey: "ceo", initial: "A", color: "var(--accent)" },
-  { name: "Omar", roleKey: "cto", initial: "O", color: "var(--ink)" },
-  { name: "Hamza", roleKey: "cco", initial: "H", color: "var(--accent-warm)" },
-  { name: "Mehdi", roleKey: "cfo", initial: "M", color: "var(--muted)" },
+  { name: "ZEMOULI Adlene", roleKey: "ceo", initial: "A", color: "var(--accent)" },
+  { name: "KHOUADER Omar", roleKey: "cto", initial: "O", color: "var(--ink)" },
+  { name: "KHOUADER Hamza", roleKey: "cco", initial: "H", color: "var(--accent-warm)" },
+  { name: "IDRI Mehdi Malek", roleKey: "cfo", initial: "M", color: "var(--muted)" },
 ] as const;
 
 export default async function AboutPage({

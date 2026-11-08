@@ -7,15 +7,17 @@ import { PanoramaScroll } from "@/components/PanoramaScroll";
 import { ArrowButton } from "@/components/ArrowButton";
 
 const CAPABILITIES = [
-  { key: "b2b", value: "5+ pays" },
+  { key: "b2b", value: "8+ pays" },
   { key: "marketing", value: "IA" },
   { key: "logistics", value: "Maritime, routier, aerien" },
   { key: "consulting", value: "Inclus" },
+  { key: "insurance", value: "CAGEX" },
+  { key: "compliance", value: "SH" },
 ] as const;
 
 const STATS = [
   { figure: "80+", key: "producers" },
-  { figure: "5", key: "countries" },
+  { figure: "8", key: "countries" },
   { figure: "6", key: "sectors" },
   { figure: "500+", key: "transactions" },
 ] as const;
@@ -85,7 +87,19 @@ export default async function HomePage({
           </p>
         </Reveal>
         <Reveal delay={1}>
-          <div className="flex flex-wrap items-center justify-center gap-x-16 gap-y-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-8">
+            <img
+              src="/images/logos/bna.svg"
+              alt="BNA - Banque Nationale d'Algerie"
+              className="h-10 md:h-12 w-auto object-contain"
+              loading="lazy"
+            />
+            <img
+              src="/images/logos/cagex.png"
+              alt="CAGEX - Assurance et Garantie des Exportations"
+              className="h-10 md:h-12 w-auto object-contain"
+              loading="lazy"
+            />
             <span
               className="font-extrabold tracking-wide"
               style={{
@@ -95,18 +109,6 @@ export default async function HomePage({
             >
               AFG Bank
             </span>
-            {["", "", "", ""].map((_, i) => (
-              <span
-                key={i}
-                className="font-bold tracking-wide"
-                style={{
-                  color: "var(--field-b)",
-                  fontSize: "clamp(1.2rem, 2vw, 1.5rem)",
-                }}
-              >
-                Votre logo ici
-              </span>
-            ))}
           </div>
         </Reveal>
       </section>
@@ -158,7 +160,7 @@ export default async function HomePage({
 
           <div className="space-y-0">
             {CAPABILITIES.map((cap, i) => (
-              <Reveal key={cap.key} delay={(i + 1) as 1 | 2 | 3 | 4}>
+              <Reveal key={cap.key} delay={Math.min(i + 1, 4) as 1 | 2 | 3 | 4}>
                 <div
                   className="py-5 flex items-baseline justify-between gap-4"
                   style={{
@@ -276,7 +278,32 @@ export default async function HomePage({
               className="mt-4 py-3 px-4 text-center font-semibold text-sm"
               style={{ background: "var(--ink)", color: "var(--ground)" }}
             >
-              Resultat : vos produits exportes vers 5+ marches
+              Resultat : vos produits exportes vers 8+ marches
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* CAGEX trust badge */}
+      <section style={{ background: "var(--ink)", color: "var(--ground)", padding: "clamp(3rem, 6vw, 5rem) var(--page-margin)" }}>
+        <div className="max-w-4xl mx-auto grid md:grid-cols-[auto_1fr] gap-8 items-center">
+          <Reveal>
+            <img
+              src="/images/logos/cagex.png"
+              alt="CAGEX"
+              className="h-16 md:h-20 w-auto object-contain mx-auto md:mx-0"
+              style={{ filter: "brightness(0) invert(1)" }}
+              loading="lazy"
+            />
+          </Reveal>
+          <Reveal delay={1}>
+            <div>
+              <h3 className="font-extrabold text-lg md:text-xl">
+                {t("trust.cagex")}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.75)", maxWidth: "50ch" }}>
+                {t("trust.cagexDesc")}
+              </p>
             </div>
           </Reveal>
         </div>
@@ -354,7 +381,7 @@ export default async function HomePage({
               </p>
               <p>
                 <span style={{ background: "rgba(16,185,129,0.15)", padding: "0 4px" }}>
-                  Notre objectif : 5 millions USD d&apos;export annuel d&apos;ici 2027.
+                  Notre objectif : 10 millions USD d&apos;export annuel d&apos;ici 2027.
                 </span>
               </p>
             </div>

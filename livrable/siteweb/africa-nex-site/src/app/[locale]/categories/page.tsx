@@ -1,5 +1,16 @@
+import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Reveal } from "@/components/Reveal";
+import { makePageMetadata } from "@/lib/seo";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return makePageMetadata({ locale, titleKey: "categoriesTitle", descriptionKey: "categoriesDescription", path: "/categories" });
+}
 
 const CATEGORIES = [
   "agrifood", "industry", "crafts", "cosmetics", "agriculture", "services",

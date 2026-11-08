@@ -1,11 +1,24 @@
+import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Reveal } from "@/components/Reveal";
+import { makePageMetadata } from "@/lib/seo";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return makePageMetadata({ locale, titleKey: "servicesTitle", descriptionKey: "servicesDescription", path: "/services" });
+}
 
 const SERVICES = [
-  { key: "b2b", figure: "5+" },
+  { key: "b2b", figure: "8+" },
   { key: "marketing", figure: "IA" },
   { key: "logistics", figure: "3" },
   { key: "consulting", figure: "24h" },
+  { key: "insurance", figure: "CAGEX" },
+  { key: "compliance", figure: "SH" },
 ] as const;
 
 export default async function ServicesPage({
@@ -38,7 +51,7 @@ export default async function ServicesPage({
       <section style={{ padding: "0 var(--page-margin) var(--section-gap)" }}>
         <div className="max-w-3xl">
           {SERVICES.map((s, i) => (
-            <Reveal key={s.key} delay={(i + 1) as 1 | 2 | 3 | 4}>
+            <Reveal key={s.key} delay={Math.min(i + 1, 4) as 1 | 2 | 3 | 4}>
               <div
                 className="py-8 grid grid-cols-[6rem_1fr] gap-8 items-baseline"
                 style={{

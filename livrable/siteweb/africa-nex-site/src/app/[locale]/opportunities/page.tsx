@@ -1,8 +1,19 @@
+import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Reveal } from "@/components/Reveal";
 import { MarketGrid } from "@/components/MarketCard";
 import { Link } from "@/i18n/navigation";
 import { ArrowButton } from "@/components/ArrowButton";
+import { makePageMetadata } from "@/lib/seo";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return makePageMetadata({ locale, titleKey: "opportunitiesTitle", descriptionKey: "opportunitiesDescription", path: "/opportunities" });
+}
 
 const QUOTES = [
   {
