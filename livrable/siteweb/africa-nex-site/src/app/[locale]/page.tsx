@@ -211,7 +211,7 @@ export default async function HomePage({
           </Reveal>
           <Reveal delay={2}>
             <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-3">
-              {(["agrifood", "industry", "crafts", "cosmetics", "agriculture", "services"] as const).map(
+              {(["agrifood", "industry", "automotive", "crafts", "cosmetics", "agriculture", "services"] as const).map(
                 (key) => (
                   <p key={key} className="font-medium py-2" style={{ fontSize: "var(--step-body)" }}>
                     {t(`categories.${key}`)}

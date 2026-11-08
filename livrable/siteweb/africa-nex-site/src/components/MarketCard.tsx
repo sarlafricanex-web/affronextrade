@@ -1,110 +1,38 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
-type MarketData = {
-  country: string;
-  flag: string;
-  imports: string;
-  topProducts: string[];
-  growth: string;
-  population: string;
-  opportunity: string;
-  color: string;
+const MARKET_KEYS = [
+  "nigeria", "cotedivoire", "senegal", "ethiopie", "ghana", "cameroun", "kenya", "centrafrique",
+] as const;
+
+type MarketKey = (typeof MARKET_KEYS)[number];
+
+const MARKET_META: Record<MarketKey, { flag: string; imports: string; growth: string; population: string; color: string; productCount: number }> = {
+  nigeria:      { flag: "NG", imports: "41",   growth: "+6.2%", population: "230 M", color: "#059669", productCount: 4 },
+  cotedivoire:  { flag: "CI", imports: "17",   growth: "+7.1%", population: "30 M",  color: "#f97316", productCount: 4 },
+  senegal:      { flag: "SN", imports: "14",   growth: "+8.3%", population: "18 M",  color: "#2563eb", productCount: 4 },
+  ethiopie:     { flag: "ET", imports: "20",   growth: "+7.8%", population: "130 M", color: "#7c3aed", productCount: 4 },
+  ghana:        { flag: "GH", imports: "18",   growth: "+5.4%", population: "34 M",  color: "#dc2626", productCount: 4 },
+  cameroun:     { flag: "CM", imports: "8.3",  growth: "+4.2%", population: "30 M",  color: "#0891b2", productCount: 4 },
+  kenya:        { flag: "KE", imports: "22",   growth: "+5.6%", population: "56 M",  color: "#b45309", productCount: 4 },
+  centrafrique: { flag: "CF", imports: "0.78", growth: "+3.1%", population: "6 M",   color: "#9333ea", productCount: 4 },
 };
 
-const MARKETS: MarketData[] = [
-  {
-    country: "Nigeria",
-    flag: "NG",
-    imports: "41 Md USD",
-    topProducts: ["Cereales", "Ciment", "Vehicules", "Produits chimiques"],
-    growth: "+6.2%",
-    population: "230 M",
-    opportunity: "1er marche du continent, demande massive en materiaux et agroalimentaire",
-    color: "#059669",
-  },
-  {
-    country: "Cote d'Ivoire",
-    flag: "CI",
-    imports: "17 Md USD",
-    topProducts: ["Riz", "Huiles", "Ciment", "Engrais"],
-    growth: "+7.1%",
-    population: "30 M",
-    opportunity: "Hub economique d'Afrique de l'Ouest, porte d'entree regionale",
-    color: "#f97316",
-  },
-  {
-    country: "Senegal",
-    flag: "SN",
-    imports: "14 Md USD",
-    topProducts: ["Produits petroliers", "Riz", "Machines", "Fer et acier"],
-    growth: "+8.3%",
-    population: "18 M",
-    opportunity: "Boom petrolier et gazier, infrastructure en expansion rapide",
-    color: "#2563eb",
-  },
-  {
-    country: "Ethiopie",
-    flag: "ET",
-    imports: "20 Md USD",
-    topProducts: ["Machines", "Cereales", "Engrais", "Produits pharmaceutiques"],
-    growth: "+7.8%",
-    population: "130 M",
-    opportunity: "2e population du continent, industrialisation acceleree",
-    color: "#7c3aed",
-  },
-  {
-    country: "Ghana",
-    flag: "GH",
-    imports: "18 Md USD",
-    topProducts: ["Vehicules", "Ciment", "Produits alimentaires", "Fer et acier"],
-    growth: "+5.4%",
-    population: "34 M",
-    opportunity: "Economie stable, classe moyenne en croissance rapide",
-    color: "#dc2626",
-  },
-  {
-    country: "Cameroun",
-    flag: "CM",
-    imports: "8.3 Md USD",
-    topProducts: ["Cereales", "Poissons", "Medicaments", "Ciment"],
-    growth: "+4.2%",
-    population: "30 M",
-    opportunity: "Carrefour entre Afrique de l'Ouest et Afrique Centrale",
-    color: "#0891b2",
-  },
-  {
-    country: "Kenya",
-    flag: "KE",
-    imports: "22 Md USD",
-    topProducts: ["Machines", "Produits petroliers", "Fer et acier", "Huiles vegetales"],
-    growth: "+5.6%",
-    population: "56 M",
-    opportunity: "Hub technologique et logistique de l'Afrique de l'Est",
-    color: "#b45309",
-  },
-  {
-    country: "Centrafrique",
-    flag: "CF",
-    imports: "0.78 Md USD",
-    topProducts: ["Produits alimentaires", "Medicaments", "Ciment", "Textiles"],
-    growth: "+3.1%",
-    population: "6 M",
-    opportunity: "Marche sous-approvisionne, demande non satisfaite en biens essentiels",
-    color: "#9333ea",
-  },
-];
-
-export function MarketCard({ market, index }: { market: MarketData; index: number }) {
+function MarketCard({ marketKey, index }: { marketKey: MarketKey; index: number }) {
+  const t = useTranslations("markets");
   const [hovered, setHovered] = useState(false);
+  const meta = MARKET_META[marketKey];
+
+  const products = Array.from({ length: meta.productCount }, (_, i) => t(`${marketKey}_product${i + 1}`));
 
   return (
     <div
       className="relative overflow-hidden cursor-crosshair"
       style={{
         minHeight: "340px",
-        background: hovered ? market.color : "var(--ground)",
+        background: hovered ? meta.color : "var(--ground)",
         transition: "background 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
       }}
       onMouseEnter={() => setHovered(true)}
@@ -127,21 +55,21 @@ export function MarketCard({ market, index }: { market: MarketData; index: numbe
             letterSpacing: "-0.03em",
           }}
         >
-          {market.country}
+          {t(`${marketKey}_name`)}
         </p>
         <div>
           <p
             className="font-extrabold"
             style={{
               fontSize: "clamp(2.5rem, 5vw, 4rem)",
-              color: market.color,
+              color: meta.color,
               lineHeight: 0.9,
             }}
           >
-            {market.imports}
+            {meta.imports} {t("billion")}
           </p>
           <p className="mt-2" style={{ color: "var(--muted)", fontSize: "var(--step-small)" }}>
-            d'importations annuelles
+            {t("annualImports")}
           </p>
         </div>
       </div>
@@ -159,10 +87,10 @@ export function MarketCard({ market, index }: { market: MarketData; index: numbe
       >
         <div>
           <p className="font-extrabold" style={{ fontSize: "var(--step-heading)", letterSpacing: "-0.03em" }}>
-            {market.country}
+            {t(`${marketKey}_name`)}
           </p>
           <p className="mt-1" style={{ fontSize: "var(--step-small)", opacity: 0.8 }}>
-            Population : {market.population} / Croissance PIB : {market.growth}
+            {t("population")} : {meta.population} / {t("gdpGrowth")} : {meta.growth}
           </p>
         </div>
 
@@ -171,10 +99,10 @@ export function MarketCard({ market, index }: { market: MarketData; index: numbe
             className="text-xs font-semibold uppercase"
             style={{ letterSpacing: "0.1em", opacity: 0.7 }}
           >
-            Produits les plus importes
+            {t("topImported")}
           </p>
           <div className="mt-2 flex flex-wrap gap-1">
-            {market.topProducts.map((product) => (
+            {products.map((product) => (
               <span
                 key={product}
                 className="text-sm px-3 py-1"
@@ -187,7 +115,7 @@ export function MarketCard({ market, index }: { market: MarketData; index: numbe
         </div>
 
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.25)", paddingTop: "1rem" }}>
-          <p className="text-sm" style={{ opacity: 0.9 }}>{market.opportunity}</p>
+          <p className="text-sm" style={{ opacity: 0.9 }}>{t(`${marketKey}_opportunity`)}</p>
         </div>
       </div>
 
@@ -200,7 +128,7 @@ export function MarketCard({ market, index }: { market: MarketData; index: numbe
           fontSize: "8rem",
           lineHeight: 1,
           opacity: hovered ? 0.1 : 0.04,
-          color: hovered ? "white" : market.color,
+          color: hovered ? "white" : meta.color,
           transition: "opacity 0.4s ease, color 0.4s ease",
           pointerEvents: "none",
         }}
@@ -214,8 +142,8 @@ export function MarketCard({ market, index }: { market: MarketData; index: numbe
 export function MarketGrid() {
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px" style={{ background: "var(--field-b)" }}>
-      {MARKETS.map((market, i) => (
-        <MarketCard key={market.flag} market={market} index={i} />
+      {MARKET_KEYS.map((key, i) => (
+        <MarketCard key={key} marketKey={key} index={i} />
       ))}
     </div>
   );

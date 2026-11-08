@@ -62,6 +62,64 @@ export async function countSubmissions() {
   return rows[0].total;
 }
 
+// --- Reviews ---
+
+export async function initReviews() {
+  const sql = getDb();
+  if (!sql) return false;
+  await sql`
+    CREATE TABLE IF NOT EXISTS reviews (
+      id SERIAL PRIMARY KEY,
+      producer_id TEXT NOT NULL,
+      author_name TEXT NOT NULL,
+      author_company TEXT,
+      author_country TEXT,
+      rating SMALLINT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+      comment TEXT,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+  return true;
+}
+
+export async function saveReview(data: {
+  producerId: string;
+  authorName: string;
+  authorCompany?: string;
+  authorCountry?: string;
+  rating: number;
+  comment?: string;
+}) {
+  const sql = getDb();
+  if (!sql) return null;
+  const rows = await sql`
+    INSERT INTO reviews (producer_id, author_name, author_company, author_country, rating, comment)
+    VALUES (${data.producerId}, ${data.authorName}, ${data.authorCompany ?? ""}, ${data.authorCountry ?? ""}, ${data.rating}, ${data.comment ?? ""})
+    RETURNING id, created_at
+  `;
+  return rows[0];
+}
+
+export async function getReviews(producerId: string) {
+  const sql = getDb();
+  if (!sql) return [];
+  return sql`
+    SELECT * FROM reviews
+    WHERE producer_id = ${producerId}
+    ORDER BY created_at DESC
+  `;
+}
+
+export async function getProducerRatings() {
+  const sql = getDb();
+  if (!sql) return [];
+  return sql`
+    SELECT producer_id, AVG(rating)::numeric(2,1) AS avg_rating, COUNT(*)::int AS review_count
+    FROM reviews
+    GROUP BY producer_id
+  `;
+}
+
 const RETENTION_MONTHS = 12;
 
 export async function purgeOldSubmissions() {
