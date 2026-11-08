@@ -18,7 +18,7 @@ const CAPABILITIES = [
 const STATS = [
   { figure: "80+", key: "producers" },
   { figure: "8", key: "countries" },
-  { figure: "6", key: "sectors" },
+  { figure: "7", key: "sectors" },
   { figure: "500+", key: "transactions" },
 ] as const;
 

@@ -42,6 +42,8 @@
     "cosmeticsDesc": "Essential oils, natural products, skincare",
     "agriculture": "Agriculture",
     "agricultureDesc": "Seeds, equipment, fertilizers, phytosanitary products",
+    "automotive": "Automotive",
+    "automotiveDesc": "Spare parts, sub-assemblies, vehicles, tires, lubricants",
     "services": "Services",
     "servicesDesc": "Logistics, export consulting, digital marketing, translation",
     "viewAll": "View all categories"

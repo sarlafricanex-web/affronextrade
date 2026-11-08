@@ -13,7 +13,7 @@ export async function generateMetadata({
 }
 
 const CATEGORIES = [
-  "agrifood", "industry", "crafts", "cosmetics", "agriculture", "services",
+  "agrifood", "industry", "automotive", "crafts", "cosmetics", "agriculture", "services",
 ] as const;
 
 export default async function CategoriesPage({

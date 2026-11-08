@@ -42,6 +42,8 @@
     "cosmeticsDesc": "Huiles essentielles, produits naturels, soins",
     "agriculture": "Agriculture",
     "agricultureDesc": "Semences, equipements, engrais, produits phytosanitaires",
+    "automotive": "Automobile",
+    "automotiveDesc": "Pieces detachees, sous-ensembles, vehicules, pneumatiques, lubrifiants",
     "services": "Services",
     "servicesDesc": "Logistique, conseil export, marketing digital, traduction",
     "viewAll": "Voir toutes les categories"
