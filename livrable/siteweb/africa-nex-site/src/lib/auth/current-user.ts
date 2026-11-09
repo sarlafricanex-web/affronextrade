@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export type Role = "producer" | "buyer" | "admin";
@@ -8,6 +9,9 @@ export type Role = "producer" | "buyer" | "admin";
 // Le role vient de la base (profiles.role), jamais du navigateur ni des metadonnees du compte.
 // Le client renvoye agit au nom de l'utilisateur : la RLS reste la vraie barriere.
 export const getCurrentUser = cache(async () => {
+  // La verification du jeton compare son expiration a l'heure courante (Date.now()), interdite
+  // pendant un pre-rendu ou un prechargement : tout ce qui suit attend la vraie requete.
+  await connection();
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const userId = data?.claims?.sub;
