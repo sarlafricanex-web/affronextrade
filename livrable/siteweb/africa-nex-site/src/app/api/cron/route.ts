@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { purgeOldSubmissions, countSubmissions } from "@/lib/data/submissions";
-import { safeCompare } from "@/lib/admin-auth";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { safeCompare } from "@/lib/safe-compare";
 import { Resend } from "resend";
 
 export async function GET(request: Request) {
@@ -10,10 +11,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Non autorise" }, { status: 401 });
   }
 
+  // Tache sans utilisateur connecte : seule la cle secrete peut purger et compter.
+  const admin = createAdminClient();
   const results: Record<string, unknown> = {};
 
   try {
-    const purged = await purgeOldSubmissions();
+    const purged = await purgeOldSubmissions(admin);
     results.purged = purged;
   } catch (e) {
     console.error("Cron purge error:", e);
@@ -21,7 +24,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const total = await countSubmissions();
+    const total = await countSubmissions(admin);
     results.totalSubmissions = total;
   } catch (e) {
     console.error("Cron count error:", e);

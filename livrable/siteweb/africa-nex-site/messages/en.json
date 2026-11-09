@@ -377,6 +377,31 @@
     "comingSoonText": "New features arrive week after week: company profile, catalog, quote requests.",
     "nextProducer": "Next step: present your company and your first product.",
     "nextBuyer": "Next step: discover producers and send your first quote request.",
-    "browseProducers": "View producers"
+    "browseProducers": "View producers",
+    "nextAdmin": "Contact form requests are waiting for you in the administration area.",
+    "openAdmin": "Open administration"
+  },
+  "admin": {
+    "eyebrow": "Contact form",
+    "title": "Contacts",
+    "total": "{count, plural, one {# request in total} other {# requests in total}}",
+    "truncated": "Only the {shown} most recent are shown here. The Excel export contains all of them.",
+    "refresh": "Refresh",
+    "export": "Export to Excel",
+    "emptyTitle": "No requests yet",
+    "emptyText": "Requests will appear here as soon as a visitor fills in the website contact form.",
+    "colDate": "Date",
+    "colName": "Name",
+    "colEmail": "Email",
+    "colCompany": "Company",
+    "colCountry": "Country",
+    "colPhone": "Phone",
+    "colWhatsapp": "WhatsApp",
+    "colMessage": "Message",
+    "view": "View",
+    "close": "Close",
+    "receivedOn": "Received on {date}",
+    "replyEmail": "Reply by email",
+    "replyWhatsapp": "Reply on WhatsApp"
   }
 }

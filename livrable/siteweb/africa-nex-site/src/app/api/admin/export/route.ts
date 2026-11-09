@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
-import { checkAdmin } from "@/lib/admin-auth";
-import { getAllSubmissions } from "@/lib/data/submissions";
 import ExcelJS from "exceljs";
+import { getCurrentUser } from "@/lib/auth/current-user";
+import { getAllSubmissions } from "@/lib/data/submissions";
 
-export async function GET(request: Request) {
-  const denied = checkAdmin(request);
-  if (denied) return denied;
+export async function GET() {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Non autorise" }, { status: 401 });
+  if (user.role !== "admin") return NextResponse.json({ error: "Acces refuse" }, { status: 403 });
 
   try {
-    const rows = await getAllSubmissions();
+    // Lecture avec la session de l'admin : la RLS verifie le role une seconde fois.
+    const rows = await getAllSubmissions(user.supabase);
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "AFRICA NEX";
@@ -39,17 +41,17 @@ export async function GET(request: Request) {
     headerRow.height = 28;
 
     for (const r of rows) {
-      const val = sanitize(r.message);
       sheet.addRow({
         id: r.id,
-        date: new Date(r.created_at).toLocaleString("fr-FR"),
+        // Heure d'Algerie, quel que soit le fuseau du serveur.
+        date: new Date(r.created_at).toLocaleString("fr-FR", { timeZone: "Africa/Algiers" }),
         name: sanitize(r.name),
         email: sanitize(r.email),
         company: sanitize(r.company),
         country: sanitize(r.country),
         phone: sanitize(r.phone),
         whatsapp: sanitize(r.whatsapp),
-        message: val,
+        message: sanitize(r.message),
       });
     }
 
@@ -88,6 +90,7 @@ export async function GET(request: Request) {
   }
 }
 
+// Neutralise les formules : une cellule commencant par = + - @ s'executerait dans Excel.
 function sanitize(val: unknown): string {
   const s = String(val ?? "");
   if (/^[=+\-@\t\r]/.test(s)) return "'" + s;

@@ -377,6 +377,31 @@
     "comingSoonText": "Les prochaines fonctions arrivent semaine apres semaine : profil d'entreprise, catalogue, demandes de devis.",
     "nextProducer": "Prochaine etape : presenter votre entreprise et votre premier produit.",
     "nextBuyer": "Prochaine etape : decouvrir les producteurs et envoyer votre premiere demande de devis.",
-    "browseProducers": "Voir les producteurs"
+    "browseProducers": "Voir les producteurs",
+    "nextAdmin": "Les demandes du formulaire de contact vous attendent dans l'administration.",
+    "openAdmin": "Ouvrir l'administration"
+  },
+  "admin": {
+    "eyebrow": "Formulaire de contact",
+    "title": "Contacts",
+    "total": "{count, plural, one {# demande au total} other {# demandes au total}}",
+    "truncated": "Seules les {shown} plus recentes sont affichees ici. L'export Excel les contient toutes.",
+    "refresh": "Actualiser",
+    "export": "Exporter en Excel",
+    "emptyTitle": "Aucune demande pour le moment",
+    "emptyText": "Les demandes apparaitront ici des qu'un visiteur remplira le formulaire de contact du site.",
+    "colDate": "Date",
+    "colName": "Nom",
+    "colEmail": "Email",
+    "colCompany": "Entreprise",
+    "colCountry": "Pays",
+    "colPhone": "Telephone",
+    "colWhatsapp": "WhatsApp",
+    "colMessage": "Message",
+    "view": "Voir",
+    "close": "Fermer",
+    "receivedOn": "Recue le {date}",
+    "replyEmail": "Repondre par email",
+    "replyWhatsapp": "Repondre sur WhatsApp"
   }
 }

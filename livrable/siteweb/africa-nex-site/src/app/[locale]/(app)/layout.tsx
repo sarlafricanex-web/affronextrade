@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth/current-user";
 import { AppNav } from "@/components/app/AppNav";
 
 // Pages par utilisateur : rendues a chaque requete, sans validation de navigation instantanee.
@@ -26,17 +26,13 @@ export default function AppLayout({
 
 async function AppShell({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const userId = data?.claims?.sub;
+  const user = await getCurrentUser();
   // Deuxieme verrou apres le proxy : une page protegee ne s'affiche jamais sans session valide.
-  if (!userId) redirect(`/${locale}/login`);
-
-  const { data: profile } = await supabase.from("profiles").select("full_name, role").eq("id", userId).single();
+  if (!user) redirect(`/${locale}/login`);
 
   return (
     <div className="mx-auto md:grid md:grid-cols-[240px_1fr]" style={{ maxWidth: 1280, minHeight: "70svh" }}>
-      <AppNav role={profile?.role ?? "buyer"} name={profile?.full_name ?? ""} />
+      <AppNav role={user.role} name={user.fullName} />
       <div style={{ padding: "2.5rem var(--page-margin)", minWidth: 0 }}>{children}</div>
     </div>
   );
