@@ -32,7 +32,9 @@ export function SubmissionsTable({ submissions }: { submissions: SubmissionRow[]
 
   return (
     <>
-      <div className="overflow-x-auto" style={{ background: "white", border: "1px solid var(--field-b)" }}>
+      {/* relative : le libelle reserve aux lecteurs d'ecran (sr-only, positionne en absolu) reste
+          dans le tableau defilant au lieu d'elargir toute la page. */}
+      <div className="relative overflow-x-auto" style={{ background: "white", border: "1px solid var(--field-b)" }}>
         <table className="w-full text-sm" style={{ borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "2px solid var(--field-b)" }}>

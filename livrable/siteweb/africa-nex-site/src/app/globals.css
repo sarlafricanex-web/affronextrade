@@ -134,12 +134,13 @@ a[style*="border: 1px solid"]:hover {
 }
 
 /* ── Header scroll effect ── */
-header {
+/* Limite a l'en-tete du site : un selecteur "header" toucherait aussi les titres des pages. */
+.site-header {
   background: white !important;
   transition: box-shadow 0.3s ease;
 }
 
-header.scrolled {
+.site-header.scrolled {
   box-shadow: 0 1px 0 var(--field-b);
 }
 
