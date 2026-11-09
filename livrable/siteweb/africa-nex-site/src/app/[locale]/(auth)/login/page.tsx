@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -9,6 +10,12 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { GoogleButton } from "@/components/auth/GoogleButton";
 import { Alert, Divider, Field, SubmitButton, TextInput } from "@/components/auth/fields";
 
+// Lien de connexion ou de reinitialisation invalide : signale par /auth/callback (?error=link).
+function LinkErrorNotice() {
+  const t = useTranslations("auth");
+  return useSearchParams().get("error") ? <Alert tone="error">{t("errorLinkExpired")}</Alert> : null;
+}
+
 export default function LoginPage() {
   const t = useTranslations("auth");
   const locale = useLocale();
@@ -16,10 +23,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("error")) setError(t("errorLinkExpired"));
-  }, [t]);
 
   async function submit(event: { preventDefault: () => void }) {
     event.preventDefault();
@@ -43,6 +46,9 @@ export default function LoginPage() {
           <p className="mt-3" style={{ color: "var(--muted)" }}>{t("loginSubtitle")}</p>
         </div>
 
+        <Suspense fallback={null}>
+          <LinkErrorNotice />
+        </Suspense>
         {error && <Alert tone="error">{error}</Alert>}
 
         <GoogleButton onError={() => setError(t("errorGeneric"))} />

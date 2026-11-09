@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { GoogleButton } from "@/components/auth/GoogleButton";
@@ -13,6 +13,7 @@ type Role = "producer" | "buyer";
 export default function RegisterPage() {
   const t = useTranslations("auth");
   const locale = useLocale();
+  const router = useRouter();
   const [role, setRole] = useState<Role>("producer");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -47,7 +48,7 @@ export default function RegisterPage() {
       return;
     }
     if (data.session) {
-      window.location.assign(`/${locale}/dashboard`);
+      router.replace("/dashboard");
       return;
     }
     // Confirmation d'email active (en production) : la session arrive apres le clic dans l'email.

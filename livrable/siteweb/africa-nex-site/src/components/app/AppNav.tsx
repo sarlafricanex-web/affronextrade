@@ -1,7 +1,7 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
-import { Link, usePathname } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 // Les liens des sections a venir (entreprise, produits, demandes) s'ajouteront semaine apres semaine.
@@ -18,13 +18,13 @@ const SPACE_KEY = { producer: "spaceProducer", buyer: "spaceBuyer", admin: "spac
 
 export function AppNav({ role, name }: { role: string; name: string }) {
   const t = useTranslations("app");
-  const locale = useLocale();
   const pathname = usePathname();
+  const router = useRouter();
   const space = role === "producer" || role === "admin" ? role : "buyer";
 
   async function signOut() {
     await createClient().auth.signOut();
-    window.location.assign(`/${locale}/login`);
+    router.replace("/login");
   }
 
   return (

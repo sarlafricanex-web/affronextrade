@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Alert, Field, SubmitButton, TextInput } from "@/components/auth/fields";
 
 export default function ResetPasswordPage() {
   const t = useTranslations("auth");
-  const locale = useLocale();
+  const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
@@ -31,7 +31,7 @@ export default function ResetPasswordPage() {
       setLoading(false);
       return;
     }
-    window.location.assign(`/${locale}/dashboard`);
+    router.replace("/dashboard");
   }
 
   return (

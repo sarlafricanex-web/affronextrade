@@ -5,16 +5,15 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+const CONFIGURED = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
+
 // La session est lue dans le navigateur : les pages vitrine restent statiques.
 export function AuthNav({ className, onNavigate }: { className?: string; onNavigate?: () => void }) {
   const t = useTranslations("auth");
-  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const [signedIn, setSignedIn] = useState<boolean | null>(CONFIGURED ? null : false);
 
   useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-      setSignedIn(false);
-      return;
-    }
+    if (!CONFIGURED) return;
     const supabase = createClient();
     supabase.auth.getSession().then(({ data }) => setSignedIn(Boolean(data.session)));
     const { data } = supabase.auth.onAuthStateChange((_event, session) => setSignedIn(Boolean(session)));
