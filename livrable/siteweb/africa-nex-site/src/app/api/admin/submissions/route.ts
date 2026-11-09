@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkAdmin } from "@/lib/admin-auth";
-import { getSubmissions, countSubmissions } from "@/lib/db";
+import { getSubmissions, countSubmissions } from "@/lib/data/submissions";
 
 export async function GET(request: Request) {
   const denied = checkAdmin(request);

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkAdmin } from "@/lib/admin-auth";
-import { getSubmissions } from "@/lib/db";
+import { getAllSubmissions } from "@/lib/data/submissions";
 import ExcelJS from "exceljs";
 
 export async function GET(request: Request) {
@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   if (denied) return denied;
 
   try {
-    const rows = await getSubmissions(10000, 0);
+    const rows = await getAllSubmissions();
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "AFRICA NEX";

@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "./database.types";
 
 // La cle secrete contourne toute la RLS. Seul fichier autorise a la lire ;
 // "server-only" transforme tout import cote navigateur en erreur de compilation.
@@ -10,7 +11,7 @@ export function createAdminClient() {
     throw new Error("Supabase admin client is not configured");
   }
 
-  return createClient(url, secretKey, {
+  return createClient<Database>(url, secretKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
 }

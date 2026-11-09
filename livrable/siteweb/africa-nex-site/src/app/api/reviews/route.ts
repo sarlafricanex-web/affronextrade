@@ -1,23 +1,18 @@
 import { NextResponse } from "next/server";
-import { getReviews, getProducerRatings, initReviews } from "@/lib/db";
-
-let dbReady = false;
+import { getProducerRatings, getReviews } from "@/lib/data/reviews";
 
 export async function GET(request: Request) {
-  if (!dbReady) {
-    dbReady = (await initReviews()) ?? false;
+  const producerId = new URL(request.url).searchParams.get("producerId");
+
+  try {
+    if (producerId) {
+      return NextResponse.json({ reviews: await getReviews(producerId) });
+    }
+    return NextResponse.json({ ratings: await getProducerRatings() });
+  } catch (e) {
+    console.error("Reviews error:", e);
+    return NextResponse.json({ error: "Erreur interne" }, { status: 500 });
   }
-
-  const { searchParams } = new URL(request.url);
-  const producerId = searchParams.get("producerId");
-
-  if (producerId) {
-    const reviews = await getReviews(producerId);
-    return NextResponse.json({ reviews });
-  }
-
-  const ratings = await getProducerRatings();
-  return NextResponse.json({ ratings });
 }
 
 export async function POST() {

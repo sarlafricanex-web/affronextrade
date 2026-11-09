@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { purgeOldSubmissions, countSubmissions } from "@/lib/db";
+import { purgeOldSubmissions, countSubmissions } from "@/lib/data/submissions";
 import { safeCompare } from "@/lib/admin-auth";
 import { Resend } from "resend";
 
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
           <h2>Rapport hebdomadaire</h2>
           <p><strong>Contacts en base :</strong> ${results.totalSubmissions ?? "N/A"}</p>
           <p><strong>Anciens contacts supprimes :</strong> ${results.purged ?? 0}</p>
-          <p style="color:#888;font-size:12px;">Backup Neon : actif (Point-in-Time Recovery automatique)</p>
+          <p style="color:#888;font-size:12px;">Sauvegardes : quotidiennes (Supabase)</p>
           <p style="color:#888;font-size:12px;">Exporte tes contacts depuis le <a href="https://affronextrade.vercel.app/fr/admin">dashboard admin</a></p>
         `,
       });

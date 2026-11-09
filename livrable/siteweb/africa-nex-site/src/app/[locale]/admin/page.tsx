@@ -79,25 +79,6 @@ export default function AdminPage() {
     URL.revokeObjectURL(url);
   }
 
-  async function setupDb() {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/admin/setup", {
-        method: "POST",
-        headers: headers(),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setError("");
-        alert("Base de donnees initialisee avec succes !");
-      } else {
-        setError(data.error || "Erreur");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
   if (!authed) {
     return (
       <div style={{ paddingTop: "5rem" }}>
@@ -171,14 +152,6 @@ export default function AdminPage() {
               style={{ background: "var(--accent)", color: "white" }}
             >
               Exporter Excel
-            </button>
-            <button
-              onClick={setupDb}
-              disabled={loading}
-              className="text-xs font-medium px-4 py-2"
-              style={{ border: "1px solid var(--field-b)", background: "transparent", color: "var(--muted)" }}
-            >
-              Init DB
             </button>
           </div>
         </div>

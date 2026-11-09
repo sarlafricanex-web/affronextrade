@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import { saveSubmission, initDb } from "@/lib/db";
+import { saveSubmission } from "@/lib/data/submissions";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
 const NOTIFY_EMAIL = process.env.CONTACT_EMAIL ?? "sarlafricanex@gmail.com";
-
-let dbReady = false;
 
 export async function POST(request: Request) {
   let data: Record<string, string>;
@@ -26,16 +24,6 @@ export async function POST(request: Request) {
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "Email invalide" }, { status: 400 });
-  }
-
-  // Init DB table on first request
-  if (!dbReady && process.env.DATABASE_URL) {
-    try {
-      await initDb();
-      dbReady = true;
-    } catch (e) {
-      console.error("DB init failed:", e);
-    }
   }
 
   // Store in database
