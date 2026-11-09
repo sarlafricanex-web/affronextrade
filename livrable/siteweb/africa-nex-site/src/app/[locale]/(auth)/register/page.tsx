@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { GoogleButton } from "@/components/auth/GoogleButton";
 import { Alert, ConfirmPasswordField, Divider, Field, PasswordInput, SubmitButton, TextInput } from "@/components/auth/fields";
+import { PhoneField } from "@/components/phone/PhoneField";
+import { isValidPhone } from "@/lib/phone";
 
 type Role = "producer" | "buyer";
 
@@ -24,7 +26,8 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [checkConfirm, setCheckConfirm] = useState(false);
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(""); // format international : +213555123456
+  const [checkPhone, setCheckPhone] = useState(false);
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
   const [checkEmail, setCheckEmail] = useState(false);
@@ -41,6 +44,10 @@ export default function RegisterPage() {
       setCheckConfirm(true);
       return focusField("register-confirm");
     }
+    if (!isValidPhone(phone)) {
+      setCheckPhone(true);
+      return focusField("register-phone");
+    }
     if (!consent) {
       focusField("register-consent");
       return setError(t("errorConsent"));
@@ -53,7 +60,7 @@ export default function RegisterPage() {
       email,
       password,
       options: {
-        data: { full_name: fullName.trim(), role, locale, phone: phone.trim() },
+        data: { full_name: fullName.trim(), role, locale, phone },
         emailRedirectTo: callback.toString(),
       },
     });
@@ -126,8 +133,8 @@ export default function RegisterPage() {
           <PasswordInput id="register-password" autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />
         </Field>
         <ConfirmPasswordField id="register-confirm" password={password} value={confirm} onChange={setConfirm} forceCheck={checkConfirm} />
-        <Field label={t("phone")}>
-          <TextInput id="register-phone" type="tel" autoComplete="tel" placeholder="+213" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <Field label={t("phone")} htmlFor="register-phone">
+          <PhoneField id="register-phone" onChange={setPhone} forceCheck={checkPhone} />
         </Field>
 
         <label className="flex items-start gap-3 text-sm" style={{ color: "var(--muted)" }}>

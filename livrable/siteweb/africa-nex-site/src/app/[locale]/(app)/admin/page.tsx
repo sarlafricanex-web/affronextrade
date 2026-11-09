@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { countSubmissions, getSubmissions } from "@/lib/data/submissions";
+import { formatPhone } from "@/lib/phone";
 import { RefreshButton } from "@/components/admin/RefreshButton";
 import { SubmissionsTable } from "@/components/admin/SubmissionsTable";
 
@@ -29,6 +30,8 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
     const date = new Date(s.created_at);
     return {
       ...s,
+      phone: formatPhone(s.phone),
+      whatsapp: formatPhone(s.whatsapp),
       shortDate: format.dateTime(date, { dateStyle: "medium", timeStyle: "short" }),
       longDate: format.dateTime(date, { dateStyle: "full", timeStyle: "short" }),
     };

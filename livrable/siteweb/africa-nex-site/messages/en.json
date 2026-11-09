@@ -405,5 +405,14 @@
     "receivedOn": "Received on {date}",
     "replyEmail": "Reply by email",
     "replyWhatsapp": "Reply on WhatsApp"
+  },
+  "phone": {
+    "countryCode": "Country code: {code}. Change country",
+    "search": "Search a country or a code",
+    "listLabel": "Countries and codes",
+    "suggested": "Suggestions",
+    "allCountries": "All countries",
+    "noResult": "No country found",
+    "invalid": "Incomplete or invalid number for this country"
   }
 }

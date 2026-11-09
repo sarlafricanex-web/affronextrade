@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { saveSubmission } from "@/lib/data/submissions";
+import { isValidPhone } from "@/lib/phone";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -24,6 +25,11 @@ export async function POST(request: Request) {
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "Email invalide" }, { status: 400 });
+  }
+
+  // Meme regle que le formulaire : vide, ou numero international valide (+213555123456).
+  if (!isValidPhone(phone) || !isValidPhone(whatsapp)) {
+    return NextResponse.json({ error: "Numero de telephone invalide" }, { status: 400 });
   }
 
   // Store in database

@@ -405,5 +405,14 @@
     "receivedOn": "Recue le {date}",
     "replyEmail": "Repondre par email",
     "replyWhatsapp": "Repondre sur WhatsApp"
+  },
+  "phone": {
+    "countryCode": "Indicatif du pays : {code}. Changer de pays",
+    "search": "Rechercher un pays ou un indicatif",
+    "listLabel": "Pays et indicatifs",
+    "suggested": "Suggestions",
+    "allCountries": "Tous les pays",
+    "noResult": "Aucun pays trouve",
+    "invalid": "Numero incomplet ou invalide pour ce pays"
   }
 }

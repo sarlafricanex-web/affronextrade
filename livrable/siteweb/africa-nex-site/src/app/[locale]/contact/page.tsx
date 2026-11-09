@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Reveal } from "@/components/Reveal";
+import { PhoneField } from "@/components/phone/PhoneField";
 
 export default function ContactPage() {
   const t = useTranslations("contact");
@@ -152,25 +153,14 @@ export default function ContactPage() {
 
             <Reveal delay={2}>
               <div className="grid sm:grid-cols-2 gap-5">
+                {/* Champs caches "phone" et "whatsapp" au format international (+213555123456). */}
                 <div>
-                  <label className="block text-sm font-medium mb-1">{t("phoneField")}</label>
-                  <input
-                    name="phone"
-                    type="tel"
-                    className="w-full px-4 py-3 text-sm"
-                    style={{ background: "var(--field-a)", border: "none", outline: "none" }}
-                    placeholder="+213 ..."
-                  />
+                  <label htmlFor="contact-phone" className="block text-sm font-medium mb-1">{t("phoneField")}</label>
+                  <PhoneField id="contact-phone" name="phone" fieldStyle={{ border: "none" }} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">{t("whatsapp")}</label>
-                  <input
-                    name="whatsapp"
-                    type="tel"
-                    className="w-full px-4 py-3 text-sm"
-                    style={{ background: "var(--field-a)", border: "none", outline: "none" }}
-                    placeholder="+213 ..."
-                  />
+                  <label htmlFor="contact-whatsapp" className="block text-sm font-medium mb-1">{t("whatsapp")}</label>
+                  <PhoneField id="contact-whatsapp" name="whatsapp" fieldStyle={{ border: "none" }} />
                 </div>
               </div>
             </Reveal>
