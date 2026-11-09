@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
@@ -82,31 +82,6 @@ function Stars({ rating, size = 14 }: { rating: number; size?: number }) {
   );
 }
 
-function StarInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  const [hover, setHover] = useState(0);
-  return (
-    <span className="inline-flex gap-1 cursor-pointer">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <svg
-          key={star}
-          width={28}
-          height={28}
-          viewBox="0 0 24 24"
-          fill={(hover || value) >= star ? "#f59e0b" : "none"}
-          stroke="#f59e0b"
-          strokeWidth="2"
-          style={{ cursor: "pointer", transition: "transform 0.15s" }}
-          onMouseEnter={() => setHover(star)}
-          onMouseLeave={() => setHover(0)}
-          onClick={() => onChange(star)}
-        >
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
-      ))}
-    </span>
-  );
-}
-
 function ReviewModal({
   producer,
   onClose,
@@ -119,13 +94,6 @@ function ReviewModal({
   const t = useTranslations("producers");
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
-  const [authorName, setAuthorName] = useState("");
-  const [authorCompany, setAuthorCompany] = useState("");
-  const [authorCountry, setAuthorCountry] = useState("");
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
 
   const ratingData = ratings.get(producer.id);
 
@@ -136,32 +104,6 @@ function ReviewModal({
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [producer.id]);
-
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!rating || !authorName) return;
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/reviews", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          producerId: producer.id,
-          authorName,
-          authorCompany,
-          authorCountry,
-          rating: String(rating),
-          comment,
-        }),
-      });
-      if (res.ok) {
-        setSubmitted(true);
-        const refreshed = await fetch(`/api/reviews?producerId=${producer.id}`).then((r) => r.json());
-        setReviews(refreshed.reviews ?? []);
-      }
-    } catch {}
-    setSubmitting(false);
-  }, [producer.id, authorName, authorCompany, authorCountry, rating, comment]);
 
   return (
     <div
@@ -239,63 +181,9 @@ function ReviewModal({
           )}
         </div>
 
-        {/* Submit form */}
+        {/* Submission notice */}
         <div style={{ padding: "1.5rem", borderTop: "1px solid var(--field-b)", marginTop: "1rem" }}>
-          {submitted ? (
-            <p className="text-sm font-semibold" style={{ color: "var(--accent)" }}>{t("reviewThanks")}</p>
-          ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-              <p className="font-semibold text-sm">{t("leaveReview")}</p>
-              <StarInput value={rating} onChange={setRating} />
-              <input
-                type="text"
-                placeholder={t("reviewName")}
-                value={authorName}
-                onChange={(e) => setAuthorName(e.target.value)}
-                required
-                className="px-3 py-2 text-sm"
-                style={{ background: "var(--field-a)", border: "1px solid var(--field-b)", outline: "none" }}
-              />
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="text"
-                  placeholder={t("reviewCompany")}
-                  value={authorCompany}
-                  onChange={(e) => setAuthorCompany(e.target.value)}
-                  className="px-3 py-2 text-sm"
-                  style={{ background: "var(--field-a)", border: "1px solid var(--field-b)", outline: "none" }}
-                />
-                <input
-                  type="text"
-                  placeholder={t("reviewCountry")}
-                  value={authorCountry}
-                  onChange={(e) => setAuthorCountry(e.target.value)}
-                  className="px-3 py-2 text-sm"
-                  style={{ background: "var(--field-a)", border: "1px solid var(--field-b)", outline: "none" }}
-                />
-              </div>
-              <textarea
-                placeholder={t("reviewComment")}
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                rows={3}
-                className="px-3 py-2 text-sm resize-none"
-                style={{ background: "var(--field-a)", border: "1px solid var(--field-b)", outline: "none" }}
-              />
-              <button
-                type="submit"
-                disabled={submitting || !rating || !authorName}
-                className="px-4 py-2 text-sm font-semibold transition-opacity"
-                style={{
-                  background: "var(--ink)",
-                  color: "var(--ground)",
-                  opacity: submitting || !rating || !authorName ? 0.5 : 1,
-                }}
-              >
-                {submitting ? "..." : t("submitReview")}
-              </button>
-            </form>
-          )}
+          <p className="text-sm" style={{ color: "var(--muted)" }}>{t("reviewsComingSoon")}</p>
         </div>
       </div>
     </div>

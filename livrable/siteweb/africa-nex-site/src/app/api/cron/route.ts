@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { purgeOldSubmissions, countSubmissions } from "@/lib/db";
+import { safeCompare } from "@/lib/admin-auth";
 import { Resend } from "resend";
 
 export async function GET(request: Request) {
-  const auth = request.headers.get("authorization");
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  const secret = process.env.CRON_SECRET;
+  const auth = request.headers.get("authorization") ?? "";
+  if (!secret || !safeCompare(auth, `Bearer ${secret}`)) {
     return NextResponse.json({ error: "Non autorise" }, { status: 401 });
   }
 
