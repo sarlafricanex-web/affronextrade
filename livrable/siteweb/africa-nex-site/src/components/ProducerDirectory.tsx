@@ -33,22 +33,22 @@ type RatingData = {
 };
 
 const PRODUCERS: Producer[] = [
-  { id: "1", name: "Ifri", location: "Ighzer Amokrane, Bejaia", sector: "agrifood", products: ["Eau minerale", "Boissons gazeuses", "Jus de fruits"], verified: true, initials: "IF", color: "#0891b2", logo: "/images/logos/ifri.png" },
-  { id: "2", name: "Cevital", location: "Bejaia", sector: "agrifood", products: ["Huile de table", "Sucre", "Margarine"], verified: true, initials: "CV", color: "#059669", logo: "/images/logos/cevital.png" },
-  { id: "3", name: "SIM", location: "Blida", sector: "industry", products: ["Electromenager", "Climatiseurs", "Chauffe-eau"], verified: true, initials: "SM", color: "#7c3aed" },
-  { id: "4", name: "Condor Electronics", location: "Bordj Bou Arreridj", sector: "industry", products: ["Smartphones", "TV", "Panneaux solaires"], verified: true, initials: "CE", color: "#dc2626", logo: "/images/logos/condor.png" },
-  { id: "5", name: "Lalla Khedidja", location: "Tizi Ouzou", sector: "agrifood", products: ["Eau minerale naturelle"], verified: true, initials: "LK", color: "#2563eb" },
-  { id: "6", name: "Agrodiv", location: "Guelma", sector: "agrifood", products: ["Concentre de tomate", "Pates", "Couscous", "Harissa"], verified: true, initials: "AG", color: "#ea580c" },
-  { id: "7", name: "Toudja Olive Oil", location: "Bejaia", sector: "agrifood", products: ["Huile d'olive extra vierge", "Olives de table"], verified: true, initials: "TO", color: "#65a30d" },
-  { id: "8", name: "Biscuiterie Bimo", location: "Blida", sector: "agrifood", products: ["Biscuits", "Gaufrettes", "Chocolat"], verified: true, initials: "BB", color: "#b45309" },
-  { id: "9", name: "Henkel Algerie", location: "Alger", sector: "cosmetics", products: ["Produits de soin", "Detergents"], verified: true, initials: "HA", color: "#be185d" },
-  { id: "10", name: "Ceramique Saida", location: "Saida", sector: "crafts", products: ["Carrelage", "Ceramique artisanale", "Faience"], verified: true, initials: "CS", color: "#9333ea" },
-  { id: "11", name: "Fertial", location: "Annaba", sector: "agriculture", products: ["Engrais phosphates", "Engrais azotes", "Ammoniac"], verified: true, initials: "FT", color: "#0d9488" },
-  { id: "12", name: "Hodna Lait", location: "M'sila", sector: "agrifood", products: ["Lait UHT", "Yaourts", "Fromage"], verified: true, initials: "HL", color: "#4f46e5" },
-  { id: "13", name: "MOTRIO Algerie", location: "Alger", sector: "automotive", products: ["Filtres", "Plaquettes de frein", "Batteries", "Radiateurs", "Kits distribution"], verified: true, initials: "MO", color: "#dc2626", logo: "/images/logos/motrio.png" },
-  { id: "14", name: "IRIS Tyres", location: "Setif", sector: "automotive", products: ["Pneumatiques tourisme", "Pneumatiques utilitaires", "Pneumatiques semi-lourds"], verified: true, initials: "IT", color: "#ea580c" },
-  { id: "15", name: "FB Radiateur", location: "Ain M'lila, Oum El Bouaghi", sector: "automotive", products: ["Radiateurs automobile", "Systemes de refroidissement"], verified: true, initials: "FB", color: "#1d4ed8" },
-  { id: "16", name: "Cirta Automotive", location: "Constantine", sector: "automotive", products: ["Pieces detachees", "Sous-ensembles", "Composants mecaniques"], verified: true, initials: "CA", color: "#0f766e" },
+  { id: "1", name: "Ifri", location: "Ighzer Amokrane, Bejaia", sector: "agrifood", products: ["Eau minerale", "Boissons gazeuses", "Jus de fruits"], verified: false, initials: "IF", color: "#0891b2", logo: "/images/logos/ifri.png" },
+  { id: "2", name: "Cevital", location: "Bejaia", sector: "agrifood", products: ["Huile de table", "Sucre", "Margarine"], verified: false, initials: "CV", color: "#059669", logo: "/images/logos/cevital.png" },
+  { id: "3", name: "SIM", location: "Blida", sector: "industry", products: ["Electromenager", "Climatiseurs", "Chauffe-eau"], verified: false, initials: "SM", color: "#7c3aed" },
+  { id: "4", name: "Condor Electronics", location: "Bordj Bou Arreridj", sector: "industry", products: ["Smartphones", "TV", "Panneaux solaires"], verified: false, initials: "CE", color: "#dc2626", logo: "/images/logos/condor.png" },
+  { id: "5", name: "Lalla Khedidja", location: "Tizi Ouzou", sector: "agrifood", products: ["Eau minerale naturelle"], verified: false, initials: "LK", color: "#2563eb" },
+  { id: "6", name: "Agrodiv", location: "Guelma", sector: "agrifood", products: ["Concentre de tomate", "Pates", "Couscous", "Harissa"], verified: false, initials: "AG", color: "#ea580c" },
+  { id: "7", name: "Toudja Olive Oil", location: "Bejaia", sector: "agrifood", products: ["Huile d'olive extra vierge", "Olives de table"], verified: false, initials: "TO", color: "#65a30d" },
+  { id: "8", name: "Biscuiterie Bimo", location: "Blida", sector: "agrifood", products: ["Biscuits", "Gaufrettes", "Chocolat"], verified: false, initials: "BB", color: "#b45309" },
+  { id: "9", name: "Henkel Algerie", location: "Alger", sector: "cosmetics", products: ["Produits de soin", "Detergents"], verified: false, initials: "HA", color: "#be185d" },
+  { id: "10", name: "Ceramique Saida", location: "Saida", sector: "crafts", products: ["Carrelage", "Ceramique artisanale", "Faience"], verified: false, initials: "CS", color: "#9333ea" },
+  { id: "11", name: "Fertial", location: "Annaba", sector: "agriculture", products: ["Engrais phosphates", "Engrais azotes", "Ammoniac"], verified: false, initials: "FT", color: "#0d9488" },
+  { id: "12", name: "Hodna Lait", location: "M'sila", sector: "agrifood", products: ["Lait UHT", "Yaourts", "Fromage"], verified: false, initials: "HL", color: "#4f46e5" },
+  { id: "13", name: "MOTRIO Algerie", location: "Alger", sector: "automotive", products: ["Filtres", "Plaquettes de frein", "Batteries", "Radiateurs", "Kits distribution"], verified: false, initials: "MO", color: "#dc2626", logo: "/images/logos/motrio.png" },
+  { id: "14", name: "IRIS Tyres", location: "Setif", sector: "automotive", products: ["Pneumatiques tourisme", "Pneumatiques utilitaires", "Pneumatiques semi-lourds"], verified: false, initials: "IT", color: "#ea580c" },
+  { id: "15", name: "FB Radiateur", location: "Ain M'lila, Oum El Bouaghi", sector: "automotive", products: ["Radiateurs automobile", "Systemes de refroidissement"], verified: false, initials: "FB", color: "#1d4ed8" },
+  { id: "16", name: "Cirta Automotive", location: "Constantine", sector: "automotive", products: ["Pieces detachees", "Sous-ensembles", "Composants mecaniques"], verified: false, initials: "CA", color: "#0f766e" },
 ];
 
 const FILTERS = [
