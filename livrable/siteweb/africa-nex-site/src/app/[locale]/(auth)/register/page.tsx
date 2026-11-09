@@ -44,7 +44,9 @@ export default function RegisterPage() {
       setCheckConfirm(true);
       return focusField("register-confirm");
     }
-    if (!isValidPhone(phone)) {
+    // Telephone obligatoire (contact par WhatsApp, puis SMS en v2). Les comptes Google le
+    // donneront a l'etape de configuration du compte.
+    if (!phone || !isValidPhone(phone)) {
       setCheckPhone(true);
       return focusField("register-phone");
     }
@@ -134,7 +136,7 @@ export default function RegisterPage() {
         </Field>
         <ConfirmPasswordField id="register-confirm" password={password} value={confirm} onChange={setConfirm} forceCheck={checkConfirm} />
         <Field label={t("phone")} htmlFor="register-phone">
-          <PhoneField id="register-phone" onChange={setPhone} forceCheck={checkPhone} />
+          <PhoneField id="register-phone" required onChange={setPhone} forceCheck={checkPhone} />
         </Field>
 
         <label className="flex items-start gap-3 text-sm" style={{ color: "var(--muted)" }}>

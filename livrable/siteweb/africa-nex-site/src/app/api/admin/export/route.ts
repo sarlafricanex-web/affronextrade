@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getAllSubmissions } from "@/lib/data/submissions";
+import { countryName } from "@/lib/countries";
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -48,7 +49,7 @@ export async function GET() {
         name: sanitize(r.name),
         email: sanitize(r.email),
         company: sanitize(r.company),
-        country: sanitize(r.country),
+        country: sanitize(countryName(r.country)),
         phone: sanitize(r.phone),
         whatsapp: sanitize(r.whatsapp),
         message: sanitize(r.message),

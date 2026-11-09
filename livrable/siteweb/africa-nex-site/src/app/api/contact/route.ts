@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { saveSubmission } from "@/lib/data/submissions";
 import { isValidPhone } from "@/lib/phone";
+import { countryName, isCountryCode } from "@/lib/countries";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -32,6 +33,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Numero de telephone invalide" }, { status: 400 });
   }
 
+  // Code pays ISO ("SN") choisi dans la liste : fiable pour les statistiques.
+  if (!isCountryCode(country)) {
+    return NextResponse.json({ error: "Pays invalide" }, { status: 400 });
+  }
+
   // Store in database
   let saved = false;
   try {
@@ -55,7 +61,7 @@ export async function POST(request: Request) {
             <tr><td style="padding:6px 12px;font-weight:bold;">Nom</td><td style="padding:6px 12px;">${esc(name)}</td></tr>
             <tr><td style="padding:6px 12px;font-weight:bold;">Email</td><td style="padding:6px 12px;"><a href="mailto:${esc(email)}">${esc(email)}</a></td></tr>
             ${company ? `<tr><td style="padding:6px 12px;font-weight:bold;">Entreprise</td><td style="padding:6px 12px;">${esc(company)}</td></tr>` : ""}
-            ${country ? `<tr><td style="padding:6px 12px;font-weight:bold;">Pays</td><td style="padding:6px 12px;">${esc(country)}</td></tr>` : ""}
+            ${country ? `<tr><td style="padding:6px 12px;font-weight:bold;">Pays</td><td style="padding:6px 12px;">${esc(countryName(country) ?? country)}</td></tr>` : ""}
             ${phone ? `<tr><td style="padding:6px 12px;font-weight:bold;">Telephone</td><td style="padding:6px 12px;">${esc(phone)}</td></tr>` : ""}
             ${whatsapp ? `<tr><td style="padding:6px 12px;font-weight:bold;">WhatsApp</td><td style="padding:6px 12px;">${esc(whatsapp)}</td></tr>` : ""}
           </table>

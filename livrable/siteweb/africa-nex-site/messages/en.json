@@ -174,7 +174,8 @@
     "errorMessage": "An error occurred. Please try again or contact us by email.",
     "address": "Address",
     "phone": "Phone",
-    "emailLabel": "Email"
+    "emailLabel": "Email",
+    "countryPlaceholder": "Select your country"
   },
   "opportunities": {
     "heroLabel": "Export opportunities",
@@ -413,6 +414,9 @@
     "suggested": "Suggestions",
     "allCountries": "All countries",
     "noResult": "No country found",
-    "invalid": "Incomplete or invalid number for this country"
+    "invalid": "Incomplete or invalid number for this country",
+    "required": "Phone number is required",
+    "searchCountry": "Search a country",
+    "countries": "Countries"
   }
 }

@@ -4,10 +4,14 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Reveal } from "@/components/Reveal";
+import type { CountryCode } from "libphonenumber-js";
 import { PhoneField } from "@/components/phone/PhoneField";
+import { CountrySelect } from "@/components/country/CountrySelect";
 
 export default function ContactPage() {
   const t = useTranslations("contact");
+  // Pays choisi : propose aussi son indicatif au telephone et a WhatsApp tant qu'ils sont vides.
+  const [country, setCountry] = useState<CountryCode | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(false);
 
@@ -140,12 +144,14 @@ export default function ContactPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">{t("country")}</label>
-                  <input
+                  <label id="contact-country-label" htmlFor="contact-country" className="block text-sm font-medium mb-1">{t("country")}</label>
+                  <CountrySelect
+                    id="contact-country"
                     name="country"
-                    type="text"
-                    className="w-full px-4 py-3 text-sm"
-                    style={{ background: "var(--field-a)", border: "none", outline: "none" }}
+                    labelId="contact-country-label"
+                    onChange={setCountry}
+                    placeholder={t("countryPlaceholder")}
+                    fieldStyle={{ border: "none" }}
                   />
                 </div>
               </div>
@@ -156,11 +162,11 @@ export default function ContactPage() {
                 {/* Champs caches "phone" et "whatsapp" au format international (+213555123456). */}
                 <div>
                   <label htmlFor="contact-phone" className="block text-sm font-medium mb-1">{t("phoneField")}</label>
-                  <PhoneField id="contact-phone" name="phone" fieldStyle={{ border: "none" }} />
+                  <PhoneField id="contact-phone" name="phone" suggestedCountry={country} fieldStyle={{ border: "none" }} />
                 </div>
                 <div>
                   <label htmlFor="contact-whatsapp" className="block text-sm font-medium mb-1">{t("whatsapp")}</label>
-                  <PhoneField id="contact-whatsapp" name="whatsapp" fieldStyle={{ border: "none" }} />
+                  <PhoneField id="contact-whatsapp" name="whatsapp" suggestedCountry={country} fieldStyle={{ border: "none" }} />
                 </div>
               </div>
             </Reveal>
