@@ -362,7 +362,9 @@
     "errorLinkExpired": "This link is invalid or has expired. Request a new one.",
     "errorGeneric": "Something went wrong. Please try again shortly.",
     "loading": "Please wait...",
-    "mySpace": "My space"
+    "mySpace": "My space",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "app": {
     "greeting": "Hello {name}",

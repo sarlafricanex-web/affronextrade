@@ -5,13 +5,14 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { AuthShell } from "@/components/auth/AuthShell";
-import { Alert, Field, SubmitButton, TextInput } from "@/components/auth/fields";
+import { Alert, ConfirmPasswordField, Field, PasswordInput, SubmitButton } from "@/components/auth/fields";
 
 export default function ResetPasswordPage() {
   const t = useTranslations("auth");
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [checkConfirm, setCheckConfirm] = useState(false);
   const [error, setError] = useState("");
   const [expired, setExpired] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -19,8 +20,15 @@ export default function ResetPasswordPage() {
   async function submit(event: { preventDefault: () => void }) {
     event.preventDefault();
     setError("");
-    if (password.length < 8) return setError(t("errorWeakPassword"));
-    if (password !== confirm) return setError(t("errorMismatch"));
+    if (password.length < 8) {
+      document.getElementById("reset-password")?.focus();
+      return setError(t("errorWeakPassword"));
+    }
+    if (password !== confirm) {
+      setCheckConfirm(true);
+      document.getElementById("reset-confirm")?.focus();
+      return;
+    }
 
     setLoading(true);
     const { error: updateError } = await createClient().auth.updateUser({ password });
@@ -46,12 +54,10 @@ export default function ResetPasswordPage() {
         ) : (
           <>
             {error && <Alert tone="error">{error}</Alert>}
-            <Field label={t("newPassword")} hint={t("passwordHint")}>
-              <TextInput id="reset-password" type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />
+            <Field label={t("newPassword")} hint={t("passwordHint")} htmlFor="reset-password">
+              <PasswordInput id="reset-password" autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />
             </Field>
-            <Field label={t("confirmPassword")}>
-              <TextInput id="reset-confirm" type="password" autoComplete="new-password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
-            </Field>
+            <ConfirmPasswordField id="reset-confirm" password={password} value={confirm} onChange={setConfirm} forceCheck={checkConfirm} />
             <SubmitButton loading={loading}>{loading ? t("loading") : t("save")}</SubmitButton>
           </>
         )}

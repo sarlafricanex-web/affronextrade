@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { GoogleButton } from "@/components/auth/GoogleButton";
-import { Alert, Divider, Field, SubmitButton, TextInput } from "@/components/auth/fields";
+import { Alert, Divider, Field, PasswordInput, SubmitButton, TextInput } from "@/components/auth/fields";
 
 // Lien de connexion ou de reinitialisation invalide : signale par /auth/callback (?error=link).
 function LinkErrorNotice() {
@@ -57,8 +57,8 @@ export default function LoginPage() {
         <Field label={t("email")}>
           <TextInput id="login-email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         </Field>
-        <Field label={t("password")}>
-          <TextInput id="login-password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+        <Field label={t("password")} htmlFor="login-password">
+          <PasswordInput id="login-password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
         </Field>
         <Link href="/forgot-password" className="self-end text-sm font-semibold underline">{t("forgotLink")}</Link>
 

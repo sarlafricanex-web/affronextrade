@@ -6,9 +6,13 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { GoogleButton } from "@/components/auth/GoogleButton";
-import { Alert, Divider, Field, SubmitButton, TextInput } from "@/components/auth/fields";
+import { Alert, ConfirmPasswordField, Divider, Field, PasswordInput, SubmitButton, TextInput } from "@/components/auth/fields";
 
 type Role = "producer" | "buyer";
+
+// Sur telephone, le message en haut du formulaire peut etre hors de vue :
+// le curseur va aussi dans le champ a corriger.
+const focusField = (id: string) => document.getElementById(id)?.focus();
 
 export default function RegisterPage() {
   const t = useTranslations("auth");
@@ -18,6 +22,8 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [checkConfirm, setCheckConfirm] = useState(false);
   const [phone, setPhone] = useState("");
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
@@ -27,8 +33,18 @@ export default function RegisterPage() {
   async function submit(event: { preventDefault: () => void }) {
     event.preventDefault();
     setError("");
-    if (password.length < 8) return setError(t("errorWeakPassword"));
-    if (!consent) return setError(t("errorConsent"));
+    if (password.length < 8) {
+      focusField("register-password");
+      return setError(t("errorWeakPassword"));
+    }
+    if (password !== confirm) {
+      setCheckConfirm(true);
+      return focusField("register-confirm");
+    }
+    if (!consent) {
+      focusField("register-consent");
+      return setError(t("errorConsent"));
+    }
 
     setLoading(true);
     const callback = new URL("/auth/callback", window.location.origin);
@@ -76,8 +92,6 @@ export default function RegisterPage() {
           <p className="mt-3" style={{ color: "var(--muted)" }}>{t("registerSubtitle")}</p>
         </div>
 
-        {error && <Alert tone="error">{error}</Alert>}
-
         <fieldset className="flex flex-col gap-3">
           <legend className="mb-3 text-xs font-semibold uppercase" style={{ letterSpacing: "0.08em", color: "var(--muted)" }}>{t("youAre")}</legend>
           <div className="grid sm:grid-cols-2 gap-3">
@@ -108,9 +122,10 @@ export default function RegisterPage() {
         <Field label={t("email")}>
           <TextInput id="register-email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         </Field>
-        <Field label={t("password")} hint={t("passwordHint")}>
-          <TextInput id="register-password" type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />
+        <Field label={t("password")} hint={t("passwordHint")} htmlFor="register-password">
+          <PasswordInput id="register-password" autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />
         </Field>
+        <ConfirmPasswordField id="register-confirm" password={password} value={confirm} onChange={setConfirm} forceCheck={checkConfirm} />
         <Field label={t("phone")}>
           <TextInput id="register-phone" type="tel" autoComplete="tel" placeholder="+213" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </Field>
@@ -123,6 +138,8 @@ export default function RegisterPage() {
           </span>
         </label>
 
+        {/* Formulaire long : le message s'affiche pres du bouton, la ou se porte le regard a l'envoi. */}
+        {error && <Alert tone="error">{error}</Alert>}
         <SubmitButton loading={loading}>{loading ? t("loading") : t("createAccount")}</SubmitButton>
 
         <p className="text-center text-sm" style={{ color: "var(--muted)" }}>

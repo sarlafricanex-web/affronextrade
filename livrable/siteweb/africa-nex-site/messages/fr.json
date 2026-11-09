@@ -362,7 +362,9 @@
     "errorLinkExpired": "Ce lien est invalide ou a expire. Demandez-en un nouveau.",
     "errorGeneric": "Une erreur est survenue. Reessayez dans un instant.",
     "loading": "Patientez...",
-    "mySpace": "Mon espace"
+    "mySpace": "Mon espace",
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe"
   },
   "app": {
     "greeting": "Bonjour {name}",
