@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { AuthNav } from "@/components/AuthNav";
 
 const NAV_KEYS = ["about", "opportunities", "services", "producers", "buyers", "contact"] as const;
 const LOCALES = [
@@ -71,6 +72,7 @@ export function Header() {
               </button>
             ))}
           </div>
+          <AuthNav className="text-sm font-semibold" />
           <Link
             href="/contact"
             className="text-sm font-semibold px-5 py-2 transition-colors"
@@ -144,6 +146,10 @@ export function Header() {
               </button>
             ))}
           </div>
+          <AuthNav
+            className="block text-center text-sm font-semibold mt-4 py-3"
+            onNavigate={() => setMenuOpen(false)}
+          />
           <Link
             href="/contact"
             onClick={() => setMenuOpen(false)}
