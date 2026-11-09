@@ -43,3 +43,8 @@ next-env.d.ts
 
 .vercel
 .env*
+!.env.example
+
+# supabase cli
+/supabase/.temp/
+/supabase/.branches/
