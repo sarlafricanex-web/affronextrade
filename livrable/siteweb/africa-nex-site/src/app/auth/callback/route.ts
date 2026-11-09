@@ -17,8 +17,15 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       if ((role === "producer" || role === "buyer") && data.user) {
-        // Le role choisi avant "Continuer avec Google" ne vaut que pour un compte pas encore configure.
-        await supabase.from("profiles").update({ role }).eq("id", data.user.id).eq("onboarding_completed", false);
+        // Le role choisi avant "Continuer avec Google" ne vaut que pour un compte producteur ou
+        // acheteur pas encore configure. Jamais pour un admin : ses droits lui permettraient de
+        // se retirer lui-meme le role admin en passant par la page d'inscription.
+        await supabase
+          .from("profiles")
+          .update({ role })
+          .eq("id", data.user.id)
+          .eq("onboarding_completed", false)
+          .in("role", ["producer", "buyer"]);
       }
       return NextResponse.redirect(new URL(next, url.origin));
     }
