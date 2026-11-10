@@ -6,6 +6,10 @@ const withNextIntl = createNextIntlPlugin();
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  experimental: {
+    // Logo producteur (2 Mo maximum) envoye avec le formulaire de presentation.
+    serverActions: { bodySizeLimit: "3mb" },
+  },
   async headers() {
     return [
       {

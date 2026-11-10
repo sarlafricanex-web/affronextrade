@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getMyCompany } from "@/lib/data/company";
 import { IdentityForm } from "@/components/onboarding/IdentityForm";
+import { PresentationForm } from "@/components/onboarding/PresentationForm";
 
 export const instant = false;
 
@@ -90,6 +91,22 @@ export default async function OnboardingPage({
                   address: company?.private?.address ?? "",
                   phone: company?.private?.contact_phone ?? "",
                   whatsapp: company?.private?.contact_whatsapp ?? "",
+                }}
+              />
+            </>
+          ) : current === 2 && company ? (
+            <>
+              <h2 className="font-extrabold" style={{ fontSize: "var(--step-heading)" }}>{t("presentationTitle")}</h2>
+              <p className="mt-2 mb-6 text-sm" style={{ color: "var(--muted)" }}>{t("presentationIntro")}</p>
+              <PresentationForm
+                defaults={{
+                  descriptionFr: company.description_fr ?? "",
+                  descriptionEn: company.description_en ?? "",
+                  descriptionAr: company.description_ar ?? "",
+                  website: company.website ?? "",
+                  foundedYear: company.founded_year ? String(company.founded_year) : "",
+                  headcount: company.headcount ?? "",
+                  logoUrl: company.logo_url,
                 }}
               />
             </>
