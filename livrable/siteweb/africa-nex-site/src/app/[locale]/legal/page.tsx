@@ -32,8 +32,9 @@ export default async function LegalPage({
                 <p>SARL AFRICA NEX</p>
                 <p>Cite 50 LSP + 18, Locaux RDC, Batiment 4, Bloc 1, n 52</p>
                 <p>Setif, Algerie</p>
-                <p>RC : 19/00-1234567 B 19</p>
-                <p>Email : contact@africanex.com</p>
+                <p>RC : 19/00-0096919 B 26</p>
+                <p>NIF : 002619009691970</p>
+                <p>Email : sarlafricanex@gmail.com</p>
                 <p>Tel : +213 770 96 02 70</p>
               </div>
             </div>
@@ -43,9 +44,9 @@ export default async function LegalPage({
             <div className="space-y-3">
               <h2 className="font-bold text-lg">{t("hostingTitle")}</h2>
               <div className="text-sm leading-relaxed space-y-1" style={{ color: "var(--muted)" }}>
-                <p>Netlify, Inc.</p>
-                <p>512 2nd Street, Suite 200, San Francisco, CA 94107, USA</p>
-                <p>https://www.netlify.com</p>
+                <p>Vercel Inc.</p>
+                <p>440 N Barranca Avenue #4133, Covina, CA 91723, USA</p>
+                <p>https://vercel.com</p>
               </div>
             </div>
           </Reveal>

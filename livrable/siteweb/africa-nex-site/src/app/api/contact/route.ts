@@ -67,7 +67,7 @@ export async function POST(request: Request) {
           </table>
           ${message ? `<h3 style="margin-top:20px;">Message</h3><p style="white-space:pre-wrap;background:#f5f5f5;padding:12px;border-radius:4px;">${esc(message)}</p>` : ""}
           <hr style="margin-top:24px;border:none;border-top:1px solid #ddd;">
-          <p style="color:#888;font-size:12px;">Soumis depuis africanex.com${saved ? " - Enregistre en base" : ""}</p>
+          <p style="color:#888;font-size:12px;">Soumis depuis le site AFRICA NEX${saved ? " - Enregistre en base" : ""}</p>
         `,
       });
       emailed = true;
