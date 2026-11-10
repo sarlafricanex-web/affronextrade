@@ -270,7 +270,7 @@
     "dataIntro": "Les donnees collectees via le formulaire de contact sont :",
     "dataItem1": "Nom, email, entreprise, pays, telephone, WhatsApp, message",
     "dataItem2": "Finalite : repondre a votre demande et vous proposer nos services",
-    "dataItem3": "Conservation : 3 ans apres le dernier contact",
+    "dataItem3": "Conservation : 12 mois, puis suppression automatique",
     "dataPurpose": "Ces donnees sont traitees par SARL AFRICA NEX et ne sont jamais vendues a des tiers.",
     "dataRetention": "Conformement a la loi algerienne 18-07 et au RGPD, vous disposez de droits sur vos donnees.",
     "rightsTitle": "Vos droits",
