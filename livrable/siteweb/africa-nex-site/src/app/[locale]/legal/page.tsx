@@ -34,7 +34,7 @@ export default async function LegalPage({
                 <p>Setif, Algerie</p>
                 <p>RC : 19/00-0096919 B 26</p>
                 <p>NIF : 002619009691970</p>
-                <p>Email : contact@africanex.com</p>
+                <p>Email : sarlafricanex@gmail.com</p>
                 <p>Tel : +213 770 96 02 70</p>
               </div>
             </div>

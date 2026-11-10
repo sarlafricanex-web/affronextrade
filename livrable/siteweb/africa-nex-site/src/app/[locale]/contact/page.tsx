@@ -249,7 +249,7 @@ export default function ContactPage() {
                   <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--muted)" }}>
                     {t("emailLabel")}
                   </p>
-                  <a href="mailto:contact@africanex.com" className="text-sm hover:underline">contact@africanex.com</a>
+                  <a href="mailto:sarlafricanex@gmail.com" className="text-sm hover:underline">sarlafricanex@gmail.com</a>
                 </div>
               </div>
             </Reveal>

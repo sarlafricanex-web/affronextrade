@@ -72,7 +72,7 @@ export function Footer() {
                 <p className="text-xs font-semibold mb-1" style={{ color: "var(--muted)" }}>
                   Email
                 </p>
-                <p className="text-sm" style={{ color: "var(--ground)" }}>contact@africanex.com</p>
+                <p className="text-sm" style={{ color: "var(--ground)" }}>sarlafricanex@gmail.com</p>
               </div>
             </div>
 

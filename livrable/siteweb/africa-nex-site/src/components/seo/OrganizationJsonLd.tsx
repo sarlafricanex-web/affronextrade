@@ -24,7 +24,7 @@ export function OrganizationJsonLd({ locale }: { locale: string }) {
       addressCountry: "DZ",
     },
     telephone: "+213770960270",
-    email: "contact@africanex.com",
+    email: "sarlafricanex@gmail.com",
     areaServed: [
       { "@type": "Country", name: "Algeria" },
       { "@type": "Country", name: "Nigeria" },
