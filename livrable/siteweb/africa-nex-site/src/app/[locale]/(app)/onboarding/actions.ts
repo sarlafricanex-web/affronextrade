@@ -106,6 +106,8 @@ export async function saveIdentity(_prev: IdentityState, formData: FormData): Pr
     return { errors: {}, formError: "errorGeneric" };
   }
 
+  // Depuis "Mon entreprise" : on reste sur la page, avec confirmation.
+  if (text(formData, "mode") === "edit") redirect(`/${locale}/company?tab=identity&saved=1`);
   redirect(text(formData, "intent") === "later" ? `/${locale}/dashboard` : `/${locale}/onboarding?step=2`);
 }
 
@@ -209,6 +211,7 @@ export async function savePresentation(_prev: PresentationState, formData: FormD
     return { errors: {}, formError: "errorGeneric" };
   }
 
+  if (text(formData, "mode") === "edit") redirect(`/${locale}/company?tab=presentation&saved=1`);
   redirect(text(formData, "intent") === "later" ? `/${locale}/dashboard` : `/${locale}/onboarding?step=3`);
 }
 

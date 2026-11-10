@@ -557,6 +557,23 @@
     "errorPrice": "أدخل سعرًا أكبر من صفر (منزلتان عشريتان كحد أقصى).",
     "errorMoq": "أدخل كمية أكبر من صفر.",
     "errorPhotoSize": "حجم الصورة يتجاوز 4 ميغابايت.",
-    "errorPhotoType": "يجب أن تكون الصورة PNG أو JPEG أو WebP."
+    "errorPhotoType": "يجب أن تكون الصورة PNG أو JPEG أو WebP.",
+    "saveChanges": "حفظ التعديلات",
+    "savedNotice": "تم حفظ التعديلات.",
+    "companyEyebrow": "مؤسستي",
+    "companyTabs": "أقسام البطاقة",
+    "tabPresentation": "التقديم",
+    "tabIdentity": "الهوية ومعلومات الاتصال",
+    "statusDraft": "مسودة",
+    "statusPublished": "منشورة",
+    "completionTitle": "نسبة اكتمال البطاقة",
+    "checkIdentity": "رقم التعريف الجبائي والسجل التجاري",
+    "checkDescriptionFr": "التقديم بالفرنسية",
+    "checkDescriptionEn": "التقديم بالإنجليزية",
+    "checkDescriptionAr": "التقديم بالعربية",
+    "checkLogo": "الشعار",
+    "checkWebsite": "الموقع الإلكتروني",
+    "checkProduct": "منتج واحد على الأقل",
+    "sidePublished": "بطاقتك مرئية للمشترين في الدليل."
   }
 }

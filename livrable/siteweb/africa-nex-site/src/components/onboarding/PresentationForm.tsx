@@ -46,7 +46,7 @@ function Description({ id, name, label, hint, dir, defaultValue, min, error }: {
   );
 }
 
-export function PresentationForm({ defaults }: { defaults: PresentationDefaults }) {
+export function PresentationForm({ defaults, mode = "onboarding" }: { defaults: PresentationDefaults; mode?: "onboarding" | "edit" }) {
   const t = useTranslations("onboarding");
   const locale = useLocale();
   const [state, action, pending] = useActionState<PresentationState, FormData>(savePresentation, { errors: {} });
@@ -60,6 +60,7 @@ export function PresentationForm({ defaults }: { defaults: PresentationDefaults 
   return (
     <form action={action} className="flex flex-col gap-6">
       <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="mode" value={mode} />
       {state.formError && <Alert tone="error">{t(state.formError)}</Alert>}
 
       <div className="flex flex-col gap-2">
@@ -114,7 +115,14 @@ export function PresentationForm({ defaults }: { defaults: PresentationDefaults 
         </Field>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-3 pt-2" style={{ borderTop: "1px solid var(--field-b)" }}>
+      {mode === "edit" ? (
+        <div className="pt-2" style={{ borderTop: "1px solid var(--field-b)" }}>
+          <button type="submit" name="intent" value="save" disabled={pending} className="mt-4 w-full py-4 text-sm font-bold uppercase disabled:opacity-60 sm:w-auto sm:px-10" style={{ background: "var(--ink)", color: "white", letterSpacing: "0.08em" }}>
+            {pending ? t("saving") : t("saveChanges")}
+          </button>
+        </div>
+      ) : (
+        <div className="grid sm:grid-cols-2 gap-3 pt-2" style={{ borderTop: "1px solid var(--field-b)" }}>
         <button type="submit" name="intent" value="later" disabled={pending} className="mt-4 py-4 text-sm font-bold uppercase disabled:opacity-60" style={{ background: "white", border: "1px solid var(--ink)", letterSpacing: "0.08em" }}>
           {t("saveLater")}
         </button>
@@ -122,6 +130,7 @@ export function PresentationForm({ defaults }: { defaults: PresentationDefaults 
           {pending ? t("saving") : t("continueStep3")}
         </button>
       </div>
+      )}
     </form>
   );
 }

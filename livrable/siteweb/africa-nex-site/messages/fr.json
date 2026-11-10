@@ -557,6 +557,23 @@
     "errorPrice": "Indiquez un prix superieur a zero (2 decimales maximum).",
     "errorMoq": "Indiquez une quantite superieure a zero.",
     "errorPhotoSize": "La photo depasse 4 Mo.",
-    "errorPhotoType": "La photo doit etre une image PNG, JPEG ou WebP."
+    "errorPhotoType": "La photo doit etre une image PNG, JPEG ou WebP.",
+    "saveChanges": "Enregistrer les modifications",
+    "savedNotice": "Modifications enregistrees.",
+    "companyEyebrow": "Mon entreprise",
+    "companyTabs": "Sections de la fiche",
+    "tabPresentation": "Presentation",
+    "tabIdentity": "Identite et coordonnees",
+    "statusDraft": "Brouillon",
+    "statusPublished": "En ligne",
+    "completionTitle": "Fiche completee a",
+    "checkIdentity": "NIF et registre du commerce",
+    "checkDescriptionFr": "Presentation en francais",
+    "checkDescriptionEn": "Presentation en anglais",
+    "checkDescriptionAr": "Presentation en arabe",
+    "checkLogo": "Logo",
+    "checkWebsite": "Site web",
+    "checkProduct": "Au moins un produit",
+    "sidePublished": "Votre fiche est visible des acheteurs dans l'annuaire."
   }
 }

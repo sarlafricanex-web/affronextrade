@@ -22,7 +22,7 @@ export type IdentityDefaults = {
 
 const selectStyle = { background: "var(--field-a)", border: "1px solid var(--field-b)", outline: "none" } as const;
 
-export function IdentityForm({ defaults }: { defaults: IdentityDefaults }) {
+export function IdentityForm({ defaults, mode = "onboarding" }: { defaults: IdentityDefaults; mode?: "onboarding" | "edit" }) {
   const t = useTranslations("onboarding");
   const locale = useLocale();
   const [state, action, pending] = useActionState<IdentityState, FormData>(saveIdentity, { errors: {} });
@@ -35,6 +35,7 @@ export function IdentityForm({ defaults }: { defaults: IdentityDefaults }) {
   return (
     <form action={action} className="flex flex-col gap-6">
       <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="mode" value={mode} />
       {state.formError && <Alert tone="error">{t(state.formError)}</Alert>}
 
       <Field label={t("companyName")} hint={t("companyNameHint")} htmlFor="ob-name">
@@ -111,7 +112,14 @@ export function IdentityForm({ defaults }: { defaults: IdentityDefaults }) {
 
       <p className="text-xs" style={{ color: "var(--muted)" }}>{t("privacyNote")}</p>
 
-      <div className="grid sm:grid-cols-2 gap-3 pt-2" style={{ borderTop: "1px solid var(--field-b)" }}>
+      {mode === "edit" ? (
+        <div className="pt-2" style={{ borderTop: "1px solid var(--field-b)" }}>
+          <button type="submit" name="intent" value="save" disabled={pending} className="mt-4 w-full py-4 text-sm font-bold uppercase disabled:opacity-60 sm:w-auto sm:px-10" style={{ background: "var(--ink)", color: "white", letterSpacing: "0.08em" }}>
+            {pending ? t("saving") : t("saveChanges")}
+          </button>
+        </div>
+      ) : (
+        <div className="grid sm:grid-cols-2 gap-3 pt-2" style={{ borderTop: "1px solid var(--field-b)" }}>
         <button
           type="submit"
           name="intent"
@@ -133,6 +141,7 @@ export function IdentityForm({ defaults }: { defaults: IdentityDefaults }) {
           {pending ? t("saving") : t("continue")}
         </button>
       </div>
+      )}
     </form>
   );
 }

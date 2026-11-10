@@ -557,6 +557,23 @@
     "errorPrice": "Enter a price above zero (2 decimals maximum).",
     "errorMoq": "Enter a quantity above zero.",
     "errorPhotoSize": "The photo exceeds 4 MB.",
-    "errorPhotoType": "The photo must be a PNG, JPEG or WebP image."
+    "errorPhotoType": "The photo must be a PNG, JPEG or WebP image.",
+    "saveChanges": "Save changes",
+    "savedNotice": "Changes saved.",
+    "companyEyebrow": "My company",
+    "companyTabs": "Profile sections",
+    "tabPresentation": "Presentation",
+    "tabIdentity": "Identity and contact details",
+    "statusDraft": "Draft",
+    "statusPublished": "Online",
+    "completionTitle": "Profile completed",
+    "checkIdentity": "Tax ID and trade register",
+    "checkDescriptionFr": "Presentation in French",
+    "checkDescriptionEn": "Presentation in English",
+    "checkDescriptionAr": "Presentation in Arabic",
+    "checkLogo": "Logo",
+    "checkWebsite": "Website",
+    "checkProduct": "At least one product",
+    "sidePublished": "Your profile is visible to buyers in the directory."
   }
 }

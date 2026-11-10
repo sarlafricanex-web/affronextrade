@@ -34,7 +34,7 @@ export default async function DashboardPage({
       getMyCompany(user.supabase, user.userId),
       user.supabase.from("profiles").select("onboarding_completed").eq("id", user.userId).single(),
     ]);
-    if (profile?.onboarding_completed) action = { href: "/onboarding", key: "navCompany" };
+    if (profile?.onboarding_completed) action = { href: "/company", key: "navCompany" };
     else if (company) action = { href: company.description_fr ? "/onboarding?step=3" : "/onboarding?step=2", key: "continueOnboarding" };
   }
 
