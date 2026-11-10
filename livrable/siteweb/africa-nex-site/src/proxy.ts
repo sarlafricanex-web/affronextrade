@@ -2,6 +2,7 @@ import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
 import { adopt, refreshSession } from "./lib/supabase/session";
+import { previewGate } from "./lib/preview-gate";
 
 const handleI18nRouting = createMiddleware(routing);
 
@@ -20,6 +21,10 @@ function splitLocale(pathname: string) {
 }
 
 export default async function proxy(request: NextRequest) {
+  // Version de test en ligne : mot de passe de l'equipe avant toute autre chose.
+  const denied = previewGate(request);
+  if (denied) return denied;
+
   const { claims, carrier } = await refreshSession(request);
   const { pathname, search } = request.nextUrl;
 
