@@ -27,3 +27,21 @@ export const WILAYA_CODES = new Set(WILAYAS.map(([code]) => code));
 // NIF algerien : 15 chiffres (espaces toleres a la saisie).
 export const normalizeNif = (value: string) => value.replace(/\s/g, "");
 export const isValidNif = (value: string) => /^\d{15}$/.test(normalizeNif(value));
+
+export const CURRENCIES = ["USD", "EUR", "DZD"] as const;
+export const PRICE_BASES = ["FOB", "FCA", "EXW"] as const;
+export const UNITS = ["kg", "t", "l", "unit", "carton", "pallet"] as const;
+
+// Code SH : 6, 8 ou 10 chiffres, enregistre groupe "1509.20.00". Renvoie null si invalide.
+export function normalizeHsCode(value: string) {
+  const digits = value.replace(/[\s.]/g, "");
+  if (!/^\d{6}$|^\d{8}$|^\d{10}$/.test(digits)) return null;
+  return [digits.slice(0, 4), ...digits.slice(4).match(/\d{2}/g)!].join(".");
+}
+
+// Nombre saisi avec virgule ou point, espaces toleres ("9,20" ou "2 000").
+export function parseAmount(value: string) {
+  const cleaned = value.replace(/\s/g, "").replace(",", ".");
+  if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) return null;
+  return Number(cleaned);
+}

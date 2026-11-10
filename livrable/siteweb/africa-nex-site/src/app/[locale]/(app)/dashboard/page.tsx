@@ -13,19 +13,38 @@ const ACTION = {
   admin: { href: "/admin", key: "openAdmin" },
 } as const;
 
-export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function DashboardPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ configured?: string }>;
+}) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "app" });
   const user = await getCurrentUser();
   if (!user) return null;
 
   const firstName = user.fullName.trim().split(/\s+/)[0];
-  // Producteur ayant deja commence : on reprend la configuration la ou il s'est arrete.
-  const company = user.role === "producer" ? await getMyCompany(user.supabase, user.userId) : null;
-  const action = company ? { href: "/onboarding?step=2", key: "continueOnboarding" } : ACTION[user.role];
+  const { configured } = await searchParams;
+  // Producteur : configuration a commencer, a reprendre, ou terminee (lien vers son entreprise).
+  let action: { href: string; key: string } = ACTION[user.role];
+  if (user.role === "producer") {
+    const [company, { data: profile }] = await Promise.all([
+      getMyCompany(user.supabase, user.userId),
+      user.supabase.from("profiles").select("onboarding_completed").eq("id", user.userId).single(),
+    ]);
+    if (profile?.onboarding_completed) action = { href: "/onboarding", key: "navCompany" };
+    else if (company) action = { href: company.description_fr ? "/onboarding?step=3" : "/onboarding?step=2", key: "continueOnboarding" };
+  }
 
   return (
     <div className="flex flex-col gap-8">
+      {configured && user.role === "producer" && (
+        <p role="status" className="p-4 font-semibold" style={{ background: "white", borderInlineStart: "4px solid var(--accent)" }}>
+          {t("configuredNotice")}
+        </p>
+      )}
       <header>
         <p className="text-xs font-semibold uppercase" style={{ letterSpacing: "0.08em", color: "var(--muted)" }}>{t(SPACE[user.role])}</p>
         <h1 className="mt-2 font-extrabold" style={{ fontSize: "var(--step-title)", lineHeight: 1 }}>

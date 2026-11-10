@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { getMyCompany } from "@/lib/data/company";
+import { getFirstProduct, getMyCompany } from "@/lib/data/company";
+import { ProductForm } from "@/components/onboarding/ProductForm";
 import { IdentityForm } from "@/components/onboarding/IdentityForm";
 import { PresentationForm } from "@/components/onboarding/PresentationForm";
 
@@ -30,7 +31,8 @@ export default async function OnboardingPage({
   ]);
   // Les etapes 2 et 3 supposent l'entreprise creee a l'etape 1.
   const current = company && (step === "2" || step === "3") ? Number(step) : 1;
-  const done = [Boolean(company), Boolean(company?.description_fr), false];
+  const product = company ? await getFirstProduct(user.supabase, company.id) : null;
+  const done = [Boolean(company), Boolean(company?.description_fr), Boolean(product)];
 
   return (
     <div className="flex flex-col gap-8">
@@ -107,6 +109,23 @@ export default async function OnboardingPage({
                   foundedYear: company.founded_year ? String(company.founded_year) : "",
                   headcount: company.headcount ?? "",
                   logoUrl: company.logo_url,
+                }}
+              />
+            </>
+          ) : current === 3 && company ? (
+            <>
+              <h2 className="font-extrabold" style={{ fontSize: "var(--step-heading)" }}>{t("productTitle")}</h2>
+              <p className="mt-2 mb-6 text-sm" style={{ color: "var(--muted)" }}>{t("productIntro")}</p>
+              <ProductForm
+                defaults={{
+                  productName: product?.product_name ?? "",
+                  hsCode: product?.hs_code ?? "",
+                  price: product?.unit_price_ht != null ? String(product.unit_price_ht) : "",
+                  currency: product?.currency ?? "",
+                  priceBasis: product?.price_basis ?? "",
+                  unit: product?.unit ?? "",
+                  moq: product?.min_order_quantity != null ? String(product.min_order_quantity) : "",
+                  photoUrl: (Array.isArray(product?.images) ? (product.images[0] as { url?: string } | undefined)?.url : undefined) ?? null,
                 }}
               />
             </>

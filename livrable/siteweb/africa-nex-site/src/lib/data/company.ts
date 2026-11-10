@@ -41,3 +41,16 @@ export async function getMyCompany(client: Client, userId: string) {
 }
 
 export type MyCompany = NonNullable<Awaited<ReturnType<typeof getMyCompany>>>;
+
+// Premier produit de l'entreprise (celui saisi a la premiere configuration), s'il existe.
+export async function getFirstProduct(client: Client, companyId: string) {
+  const { data, error } = await client
+    .from("products")
+    .select("id, product_name, hs_code, unit_price_ht, currency, price_basis, unit, min_order_quantity, images")
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}

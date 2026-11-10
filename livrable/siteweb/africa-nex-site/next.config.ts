@@ -7,8 +7,8 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   experimental: {
-    // Logo producteur (2 Mo maximum) envoye avec le formulaire de presentation.
-    serverActions: { bodySizeLimit: "3mb" },
+    // Logo (2 Mo) ou photo produit (4 Mo) avec leur formulaire ; Vercel refuse au-dela de 4,5 Mo.
+    serverActions: { bodySizeLimit: "4.4mb" },
   },
   async headers() {
     return [

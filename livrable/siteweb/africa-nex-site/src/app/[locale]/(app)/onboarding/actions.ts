@@ -3,11 +3,14 @@
 import { randomBytes } from "crypto";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { getMyCompanyId } from "@/lib/data/company";
+import { getFirstProduct, getMyCompanyId } from "@/lib/data/company";
 import { resolveLocale } from "@/lib/auth/next-path";
 import { isValidPhone } from "@/lib/phone";
 import type { Database } from "@/lib/supabase/database.types";
-import { LEGAL_FORMS, SECTORS, WILAYA_CODES, isValidNif, normalizeNif } from "@/lib/onboarding/reference";
+import {
+  CURRENCIES, LEGAL_FORMS, PRICE_BASES, SECTORS, UNITS, WILAYA_CODES,
+  isValidNif, normalizeHsCode, normalizeNif, parseAmount,
+} from "@/lib/onboarding/reference";
 
 export type IdentityField = "companyName" | "legalForm" | "sector" | "nif" | "rc" | "wilaya" | "city" | "address" | "phone" | "whatsapp";
 // Cles de traduction (espace "onboarding"), jamais de texte libre renvoye au navigateur.
@@ -207,4 +210,96 @@ export async function savePresentation(_prev: PresentationState, formData: FormD
   }
 
   redirect(text(formData, "intent") === "later" ? `/${locale}/dashboard` : `/${locale}/onboarding?step=3`);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Etape 3 : premier produit (brouillon). Code SH, prix et devise obligatoires : ce sont les champs
+// que la base exige pour qu'un produit puisse ensuite etre publie.
+
+export type ProductField = "productName" | "hsCode" | "price" | "currency" | "priceBasis" | "unit" | "moq" | "photo";
+export type ProductState = { errors: Partial<Record<ProductField, string>>; formError?: string };
+
+const PHOTO_MAX_BYTES = 4 * 1024 * 1024;
+
+export async function saveFirstProduct(_prev: ProductState, formData: FormData): Promise<ProductState> {
+  const locale = resolveLocale(text(formData, "locale"));
+  const user = await getCurrentUser();
+  if (!user) redirect(`/${locale}/login`);
+  if (user.role !== "producer") redirect(`/${locale}/dashboard`);
+  const { supabase, userId } = user;
+  const companyId = await getMyCompanyId(supabase, userId);
+  if (!companyId) redirect(`/${locale}/onboarding`);
+
+  const productName = text(formData, "productName");
+  const hsCode = normalizeHsCode(text(formData, "hsCode"));
+  const price = parseAmount(text(formData, "price"));
+  const currency = text(formData, "currency");
+  const priceBasis = text(formData, "priceBasis");
+  const unit = text(formData, "unit");
+  const moq = parseAmount(text(formData, "moq"));
+
+  const errors: ProductState["errors"] = {};
+  if (productName.length < 2 || productName.length > 255) errors.productName = "errorProductName";
+  if (!hsCode) errors.hsCode = "errorHsCode";
+  if (price === null || price <= 0) errors.price = "errorPrice";
+  if (!(CURRENCIES as readonly string[]).includes(currency)) errors.currency = "errorChoose";
+  if (!(PRICE_BASES as readonly string[]).includes(priceBasis)) errors.priceBasis = "errorChoose";
+  if (!(UNITS as readonly string[]).includes(unit)) errors.unit = "errorChoose";
+  if (moq === null || moq <= 0) errors.moq = "errorMoq";
+
+  const photo = formData.get("photo");
+  let upload: { bytes: Uint8Array; kind: "png" | "jpg" | "webp" } | null = null;
+  if (photo instanceof File && photo.size > 0) {
+    if (photo.size > PHOTO_MAX_BYTES) errors.photo = "errorPhotoSize";
+    else {
+      const bytes = new Uint8Array(await photo.arrayBuffer());
+      const kind = imageKind(bytes);
+      if (!kind) errors.photo = "errorPhotoType";
+      else upload = { bytes, kind };
+    }
+  }
+  if (Object.keys(errors).length) return { errors };
+
+  const existing = await getFirstProduct(supabase, companyId);
+  const { data: company } = await supabase.from("companies").select("sector").eq("id", companyId).single();
+  const fields = {
+    product_name: productName,
+    hs_code: hsCode,
+    unit_price_ht: price,
+    currency,
+    price_basis: priceBasis,
+    unit,
+    min_order_quantity: moq,
+    category: company?.sector ?? null,
+  };
+
+  let images = (Array.isArray(existing?.images) ? existing.images : []) as { path: string; url: string }[];
+  if (upload) {
+    // Dossier de l'entreprise : les regles de stockage verifient l'appartenance.
+    const path = `${companyId}/produit-${randomBytes(6).toString("hex")}.${upload.kind}`;
+    const contentType = upload.kind === "jpg" ? "image/jpeg" : `image/${upload.kind}`;
+    const { error: uploadError } = await supabase.storage.from("product-images").upload(path, upload.bytes, { contentType, upsert: false });
+    if (uploadError) {
+      console.error("Product photo upload failed:", uploadError.message);
+      return { errors: {}, formError: "errorGeneric" };
+    }
+    const old = images.map((i) => i.path).filter((p) => p.startsWith(`${companyId}/`));
+    if (old.length) await supabase.storage.from("product-images").remove(old);
+    images = [{ path, url: supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl }];
+  }
+
+  const { error } = existing
+    ? await supabase.from("products").update({ ...fields, images }).eq("id", existing.id)
+    : await supabase.from("products").insert({ ...fields, images, company_id: companyId, source: "producer", status: "draft" });
+  if (error) {
+    console.error("First product save failed:", error.code, error.message);
+    return { errors: {}, formError: "errorGeneric" };
+  }
+
+  if (text(formData, "intent") !== "later") {
+    // Configuration terminee : le tableau de bord ne la propose plus.
+    await supabase.from("profiles").update({ onboarding_completed: true }).eq("id", userId);
+    redirect(`/${locale}/dashboard?configured=1`);
+  }
+  redirect(`/${locale}/dashboard`);
 }
