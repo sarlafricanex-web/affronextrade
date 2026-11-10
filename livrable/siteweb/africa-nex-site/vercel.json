@@ -7,7 +7,7 @@
   ],
   "git": {
     "deploymentEnabled": {
-      "plateforme": false
+      "plateforme": true
     }
   }
 }
