@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { safeNextPath } from "@/lib/auth/next-path";
 
 export function GoogleButton({ role, onError }: { role?: "producer" | "buyer"; onError: () => void }) {
   const t = useTranslations("auth");
@@ -9,7 +10,8 @@ export function GoogleButton({ role, onError }: { role?: "producer" | "buyer"; o
 
   async function signIn() {
     const callback = new URL("/auth/callback", window.location.origin);
-    callback.searchParams.set("next", new URLSearchParams(window.location.search).get("next") ?? `/${locale}/dashboard`);
+    // Destination verifiee des maintenant (le retour /auth/callback la reverifie de toute facon).
+    callback.searchParams.set("next", safeNextPath(new URLSearchParams(window.location.search).get("next"), locale));
     if (role) callback.searchParams.set("role", role);
     const { error } = await createClient().auth.signInWithOAuth({
       provider: "google",
