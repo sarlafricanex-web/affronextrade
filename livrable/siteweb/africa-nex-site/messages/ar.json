@@ -382,7 +382,8 @@
     "nextBuyer": "الخطوة التالية: اكتشف المنتجين وأرسل أول طلب عرض سعر.",
     "browseProducers": "عرض المنتجين",
     "nextAdmin": "طلبات استمارة الاتصال بانتظارك في فضاء الإدارة.",
-    "openAdmin": "فتح فضاء الإدارة"
+    "openAdmin": "فتح فضاء الإدارة",
+    "navAccounts": "الحسابات"
   },
   "admin": {
     "eyebrow": "استمارة الاتصال",
@@ -405,7 +406,20 @@
     "close": "إغلاق",
     "receivedOn": "تاريخ الاستلام: {date}",
     "replyEmail": "الرد عبر البريد الإلكتروني",
-    "replyWhatsapp": "الرد عبر واتساب"
+    "replyWhatsapp": "الرد عبر واتساب",
+    "accountsEyebrow": "المنصة",
+    "accountsTitle": "الحسابات",
+    "accountsTotal": "{count, plural, zero {# حساب مسجل} one {حساب واحد مسجل} two {حسابان مسجلان} few {# حسابات مسجلة} many {# حسابًا مسجلًا} other {# حساب مسجل}}",
+    "colRole": "الدور",
+    "colVia": "طريقة الدخول",
+    "colCreated": "تاريخ التسجيل",
+    "colLastSignIn": "آخر دخول",
+    "roleAdmin": "مدير",
+    "roleProducer": "منتج",
+    "roleBuyer": "مشترٍ",
+    "viaEmail": "البريد الإلكتروني",
+    "never": "أبدًا",
+    "missingPhone": "غير مكتمل"
   },
   "phone": {
     "countryCode": "رمز البلد: {code}. تغيير البلد",

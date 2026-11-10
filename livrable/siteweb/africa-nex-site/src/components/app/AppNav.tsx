@@ -11,6 +11,7 @@ const LINKS = {
   admin: [
     { href: "/dashboard", key: "navDashboard" },
     { href: "/admin", key: "navAdmin" },
+    { href: "/admin/accounts", key: "navAccounts" },
   ],
 } as const;
 

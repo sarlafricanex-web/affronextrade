@@ -382,7 +382,8 @@
     "nextBuyer": "Next step: discover producers and send your first quote request.",
     "browseProducers": "View producers",
     "nextAdmin": "Contact form requests are waiting for you in the administration area.",
-    "openAdmin": "Open administration"
+    "openAdmin": "Open administration",
+    "navAccounts": "Accounts"
   },
   "admin": {
     "eyebrow": "Contact form",
@@ -405,7 +406,20 @@
     "close": "Close",
     "receivedOn": "Received on {date}",
     "replyEmail": "Reply by email",
-    "replyWhatsapp": "Reply on WhatsApp"
+    "replyWhatsapp": "Reply on WhatsApp",
+    "accountsEyebrow": "Platform",
+    "accountsTitle": "Accounts",
+    "accountsTotal": "{count, plural, one {# registered account} other {# registered accounts}}",
+    "colRole": "Role",
+    "colVia": "Sign-in",
+    "colCreated": "Registered",
+    "colLastSignIn": "Last sign-in",
+    "roleAdmin": "Admin",
+    "roleProducer": "Producer",
+    "roleBuyer": "Buyer",
+    "viaEmail": "Email",
+    "never": "Never",
+    "missingPhone": "Missing"
   },
   "phone": {
     "countryCode": "Country code: {code}. Change country",

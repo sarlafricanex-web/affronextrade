@@ -382,7 +382,8 @@
     "nextBuyer": "Prochaine etape : decouvrir les producteurs et envoyer votre premiere demande de devis.",
     "browseProducers": "Voir les producteurs",
     "nextAdmin": "Les demandes du formulaire de contact vous attendent dans l'administration.",
-    "openAdmin": "Ouvrir l'administration"
+    "openAdmin": "Ouvrir l'administration",
+    "navAccounts": "Comptes"
   },
   "admin": {
     "eyebrow": "Formulaire de contact",
@@ -405,7 +406,20 @@
     "close": "Fermer",
     "receivedOn": "Recue le {date}",
     "replyEmail": "Repondre par email",
-    "replyWhatsapp": "Repondre sur WhatsApp"
+    "replyWhatsapp": "Repondre sur WhatsApp",
+    "accountsEyebrow": "Plateforme",
+    "accountsTitle": "Comptes",
+    "accountsTotal": "{count, plural, one {# compte inscrit} other {# comptes inscrits}}",
+    "colRole": "Role",
+    "colVia": "Connexion",
+    "colCreated": "Inscrit le",
+    "colLastSignIn": "Derniere connexion",
+    "roleAdmin": "Admin",
+    "roleProducer": "Producteur",
+    "roleBuyer": "Acheteur",
+    "viaEmail": "Email",
+    "never": "Jamais",
+    "missingPhone": "A completer"
   },
   "phone": {
     "countryCode": "Indicatif du pays : {code}. Changer de pays",
