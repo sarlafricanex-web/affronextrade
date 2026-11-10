@@ -6,7 +6,10 @@ import { createClient } from "@/lib/supabase/client";
 
 // Les liens des sections a venir (entreprise, produits, demandes) s'ajouteront semaine apres semaine.
 const LINKS = {
-  producer: [{ href: "/dashboard", key: "navDashboard" }],
+  producer: [
+    { href: "/dashboard", key: "navDashboard" },
+    { href: "/onboarding", key: "navCompany" },
+  ],
   buyer: [{ href: "/dashboard", key: "navDashboard" }],
   admin: [
     { href: "/dashboard", key: "navDashboard" },

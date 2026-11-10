@@ -1,13 +1,14 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
+import { getMyCompany } from "@/lib/data/company";
 
 export const instant = false;
 
 const SPACE = { producer: "spaceProducer", buyer: "spaceBuyer", admin: "spaceAdmin" } as const;
 const NEXT_STEP = { producer: "nextProducer", buyer: "nextBuyer", admin: "nextAdmin" } as const;
 const ACTION = {
-  producer: null,
+  producer: { href: "/onboarding", key: "startOnboarding" },
   buyer: { href: "/producers", key: "browseProducers" },
   admin: { href: "/admin", key: "openAdmin" },
 } as const;
@@ -19,7 +20,9 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   if (!user) return null;
 
   const firstName = user.fullName.trim().split(/\s+/)[0];
-  const action = ACTION[user.role];
+  // Producteur ayant deja commence : on reprend la configuration la ou il s'est arrete.
+  const company = user.role === "producer" ? await getMyCompany(user.supabase, user.userId) : null;
+  const action = company ? { href: "/onboarding?step=2", key: "continueOnboarding" } : ACTION[user.role];
 
   return (
     <div className="flex flex-col gap-8">
