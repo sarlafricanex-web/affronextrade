@@ -350,7 +350,7 @@ export default async function ProducerProfilePage({ params }: { params: Params }
                 )}
                 <div id="laisser-un-avis" style={{ scrollMarginTop: "5rem" }}>
                   <Suspense fallback={null}>
-                    <ReviewSlot companyId={profile.id} slug={profile.slug} locale={locale} />
+                    <ReviewSlot companyId={profile.id} slug={profile.slug} locale={locale} producerName={profile.name} />
                   </Suspense>
                 </div>
               </div>
