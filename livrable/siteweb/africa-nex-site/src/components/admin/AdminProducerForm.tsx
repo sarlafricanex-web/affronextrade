@@ -77,7 +77,7 @@ export function AdminProducerForm({ defaults: initial }: { defaults: AdminProduc
 
       {(["Fr", "En", "Ar"] as const).map((lang) => (
         <Field key={lang} label={t(`apDescription${lang}`)} hint={o("optional")} htmlFor={`ap-desc-${lang}`}>
-          <textarea id={`ap-desc-${lang}`} name={`description${lang}`} rows={3} maxLength={2000} dir={lang === "Ar" ? "rtl" : "ltr"} defaultValue={d[`description${lang}`]} className="w-full resize-y px-4 py-3 text-sm" style={box} />
+          <textarea id={`ap-desc-${lang}`} name={`description${lang}`} lang={lang.toLowerCase()} spellCheck rows={3} maxLength={2000} dir={lang === "Ar" ? "rtl" : "ltr"} defaultValue={d[`description${lang}`]} className="w-full resize-y px-4 py-3 text-sm" style={box} />
           {err(`description${lang}`)}
         </Field>
       ))}

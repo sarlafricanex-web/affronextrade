@@ -29,6 +29,9 @@ function Description({ id, name, label, hint, dir, defaultValue, min, error }: {
         id={id}
         name={name}
         dir={dir}
+        // Langue de la case : le correcteur du navigateur verifie l'orthographe dans la bonne langue.
+        lang={name.endsWith("Ar") ? "ar" : name.endsWith("En") ? "en" : "fr"}
+        spellCheck
         rows={5}
         maxLength={2000}
         minLength={min}

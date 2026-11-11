@@ -127,7 +127,7 @@ export function ProductEditor({ product: initial }: { product: EditorProduct }) 
             {(["Fr", "En", "Ar"] as const).map((l) => (
               <div key={l} hidden={lang !== l}>
                 <label htmlFor={`pe-desc-${l}`} className="sr-only">{c(`description${l}`)}</label>
-                <textarea id={`pe-desc-${l}`} name={`description${l}`} dir={l === "Ar" ? "rtl" : "ltr"} rows={5} maxLength={2000} defaultValue={product[`description${l}`]} placeholder={c(`descPlaceholder${l}`)} className={`${inputCls} resize-y`} style={fieldStyle} />
+                <textarea id={`pe-desc-${l}`} name={`description${l}`} dir={l === "Ar" ? "rtl" : "ltr"} lang={l.toLowerCase()} spellCheck rows={5} maxLength={2000} defaultValue={product[`description${l}`]} placeholder={c(`descPlaceholder${l}`)} className={`${inputCls} resize-y`} style={fieldStyle} />
                 {err(`description${l}`)}
               </div>
             ))}
