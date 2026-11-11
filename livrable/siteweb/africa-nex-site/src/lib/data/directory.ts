@@ -74,7 +74,7 @@ export async function getProducerProfile(slug: string) {
   const client = createPublicClient();
   const { data: c, error } = await client
     .from("companies")
-    .select("id, slug, company_name, city, wilaya, sector, verified, claim_status, brand_initials, brand_color, logo_url, description_fr, description_en, description_ar, website, founded_year, headcount")
+    .select("id, slug, company_name, city, wilaya, sector, verified, claim_status, brand_initials, brand_color, logo_url, cover_url, description_fr, description_en, description_ar, website, founded_year, headcount, monthly_capacity, monthly_capacity_unit, export_ports")
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw error;
@@ -96,7 +96,13 @@ export async function getProducerProfile(slug: string) {
       .order("created_at", { ascending: false })
       .limit(20),
     // Documents publics ET verifies par AFRICA NEX (la RLS ne renvoie rien d'autre au public).
-    client.from("company_documents").select("id, kind, title, expires_on").eq("company_id", c.id).order("kind"),
+    // Un document expire n'est plus montre au public (cache de quelques heures : tolerance acceptable).
+    client
+      .from("company_documents")
+      .select("id, kind, title, expires_on")
+      .eq("company_id", c.id)
+      .or(`expires_on.is.null,expires_on.gte.${new Date().toISOString().slice(0, 10)}`)
+      .order("kind"),
   ]);
   if (productsError) throw productsError;
   if (reviewsError) throw reviewsError;
@@ -113,10 +119,14 @@ export async function getProducerProfile(slug: string) {
     initials: c.brand_initials ?? c.company_name.slice(0, 2).toUpperCase(),
     color: c.brand_color ?? "#0f172a",
     logo: c.logo_url,
+    cover: c.cover_url,
     description: { fr: c.description_fr, en: c.description_en, ar: c.description_ar },
     website: c.website,
     foundedYear: c.founded_year,
     headcount: c.headcount,
+    monthlyCapacity: c.monthly_capacity === null ? null : Number(c.monthly_capacity),
+    monthlyCapacityUnit: c.monthly_capacity_unit,
+    exportPorts: c.export_ports,
     products: (products ?? []).map((p): PublicProduct => {
       const images = Array.isArray(p.images) ? (p.images as { url?: string }[]) : [];
       return {
