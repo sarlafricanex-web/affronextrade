@@ -346,3 +346,13 @@ form textarea:focus {
 .text-accent { color: var(--accent); }
 .bg-field { background: var(--field-a); }
 .bg-field-alt { background: var(--field-b); }
+
+/* Notation par etoiles (avis) : ordre inverse dans le DOM, donc "~" colore les etoiles de gauche. */
+.review-stars .star { fill: none; transition: fill 0.1s; }
+.review-stars label:has(input:checked) .star,
+.review-stars label:has(input:checked) ~ label .star,
+.review-stars label:hover .star,
+.review-stars label:hover ~ label .star { fill: #f59e0b; }
+/* Au survol, les etoiles a droite de celle survolee s'eteignent, meme si une note plus haute etait cochee. */
+.review-stars.review-stars label:has(~ label:hover) .star { fill: none; }
+.review-stars label:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }

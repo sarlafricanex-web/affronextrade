@@ -9,6 +9,7 @@ import { WILAYAS } from "@/lib/onboarding/reference";
 import { countryName } from "@/lib/countries";
 import { ProducerAvatar, SECTOR_FILTER_KEY, Stars, VerifiedBadge } from "@/components/producers/parts";
 import { RecordView } from "@/components/producers/RecordView";
+import { ReviewSlot } from "@/components/producers/ReviewSlot";
 
 type Params = Promise<{ locale: string; slug: string }>;
 type Lang = "fr" | "en" | "ar";
@@ -159,7 +160,7 @@ export default async function ProducerProfilePage({ params }: { params: Params }
             )}
           </div>
 
-          <div>
+          <div id="avis" style={{ scrollMarginTop: "5rem" }}>
             <h2 className="font-extrabold" style={{ fontSize: "var(--step-heading)" }}>{t("reviewsTitle")}</h2>
             {profile.reviews.length === 0 ? (
               <p className="mt-3" style={{ color: "var(--muted)" }}>{t("noReviews")}</p>
@@ -179,7 +180,9 @@ export default async function ProducerProfilePage({ params }: { params: Params }
                 ))}
               </ul>
             )}
-            <p className="mt-4 text-sm" style={{ color: "var(--muted)" }}>{t("reviewsComingSoon")}</p>
+            <Suspense fallback={null}>
+              <ReviewSlot companyId={profile.id} slug={profile.slug} locale={locale} />
+            </Suspense>
           </div>
         </div>
 

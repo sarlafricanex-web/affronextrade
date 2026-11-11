@@ -21,6 +21,7 @@ const LINKS = {
     { href: "/admin/accounts", key: "navAccounts" },
     { href: "/admin/producers", key: "navProducers" },
     { href: "/admin/claims", key: "navClaims" },
+    { href: "/admin/reviews", key: "navReviews" },
   ],
 } as const;
 
