@@ -201,7 +201,8 @@
     "next": "Suivant",
     "ctaProducerTitle": "Vous êtes producteur ?",
     "ctaProducerText": "Rejoignez le réseau AFRICA NEX et présentez vos produits aux acheteurs internationaux. Toutes les mises en relation passent par AFRICA NEX.",
-    "ctaProducerButton": "Référencer mon entreprise"
+    "ctaProducerButton": "Référencer mon entreprise",
+    "benefitsTitle": "Pourquoi exporter avec AFRICA NEX"
   },
   "buyers": {
     "title": "Espace Acheteurs",

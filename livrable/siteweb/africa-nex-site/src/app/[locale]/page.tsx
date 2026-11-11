@@ -284,6 +284,32 @@ export default async function HomePage({
         </div>
       </section>
 
+      {/* Avantages pour les producteurs (deplaces de la page Producteurs) */}
+      <section style={{ background: "var(--field-a)", padding: "var(--section-gap) var(--page-margin)" }}>
+        <Reveal>
+          <h2 className="font-extrabold" style={{ fontSize: "var(--step-title)", maxWidth: "18ch" }}>
+            {t("producers.benefitsTitle")}
+          </h2>
+        </Reveal>
+        <div className="mt-10 max-w-3xl space-y-6">
+          {(["benefit1", "benefit2", "benefit3", "benefit4"] as const).map((key, i) => (
+            <Reveal key={key} delay={(i + 1) as 1 | 2 | 3 | 4}>
+              <div className="grid grid-cols-[3rem_1fr] gap-6 items-baseline">
+                <p className="text-right font-extrabold" style={{ fontSize: "1.5rem", color: "var(--accent)" }}>
+                  {i + 1}
+                </p>
+                <div>
+                  <p className="font-bold">{t(`producers.${key}`)}</p>
+                  <p className="mt-1" style={{ color: "var(--muted)", fontSize: "var(--step-small)" }}>
+                    {t(`producers.${key}Desc`)}
+                  </p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
       {/* CAGEX trust badge */}
       <section style={{ background: "var(--ink)", color: "var(--ground)", padding: "clamp(3rem, 6vw, 5rem) var(--page-margin)" }}>
         <div className="max-w-4xl mx-auto grid md:grid-cols-[auto_1fr] gap-8 items-center">
