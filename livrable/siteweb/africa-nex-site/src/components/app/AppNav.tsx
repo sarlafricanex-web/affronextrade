@@ -19,6 +19,7 @@ const LINKS = {
     { href: "/dashboard", key: "navDashboard" },
     { href: "/admin", key: "navAdmin" },
     { href: "/admin/accounts", key: "navAccounts" },
+    { href: "/admin/producers", key: "navProducers" },
     { href: "/admin/claims", key: "navClaims" },
   ],
 } as const;
@@ -49,7 +50,7 @@ export function AppNav({ role, name }: { role: string; name: string }) {
       </div>
       <nav className="flex md:flex-col overflow-x-auto">
         {LINKS[space].map((link) => {
-          const active = pathname === link.href || (link.href === "/catalog" && pathname.startsWith("/catalog/"));
+          const active = pathname === link.href || ((link.href === "/catalog" || link.href === "/admin/producers") && pathname.startsWith(`${link.href}/`));
           return (
             <Link
               key={link.href}
