@@ -5,7 +5,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { saveIdentity, type IdentityField, type IdentityState } from "@/app/[locale]/(app)/onboarding/actions";
 import { Alert, Field, TextInput } from "@/components/auth/fields";
 import { PhoneField } from "@/components/phone/PhoneField";
-import { LEGAL_FORMS, SECTORS, WILAYAS } from "@/lib/onboarding/reference";
+import { LEGAL_FORMS, SECTORS } from "@/lib/onboarding/reference";
+import { WilayaCommuneFields } from "@/components/onboarding/WilayaCommuneFields";
 
 export type IdentityDefaults = {
   companyName: string;
@@ -81,17 +82,15 @@ export function IdentityForm({ defaults, mode = "onboarding" }: { defaults: Iden
       </div>
 
       <div className="grid sm:grid-cols-2 gap-6">
-        <Field label={t("wilaya")} htmlFor="ob-wilaya">
-          <select id="ob-wilaya" name="wilaya" required defaultValue={defaults.wilaya} className="w-full px-4 py-3 text-sm" style={selectStyle} {...described("wilaya")}>
-            <option value="" disabled>{t("choose")}</option>
-            {WILAYAS.map(([code, name]) => <option key={code} value={code}>{`${code} ${name}`}</option>)}
-          </select>
-          {err("wilaya")}
-        </Field>
-        <Field label={t("city")} htmlFor="ob-city">
-          <TextInput id="ob-city" name="city" required maxLength={100} defaultValue={defaults.city} autoComplete="address-level2" {...described("city")} />
-          {err("city")}
-        </Field>
+        <WilayaCommuneFields
+          idPrefix="ob"
+          defaults={defaults}
+          selectStyle={selectStyle}
+          wilayaError={err("wilaya")}
+          cityError={err("city")}
+          describedWilaya={described("wilaya")}
+          describedCity={described("city")}
+        />
       </div>
 
       <Field label={t("address")} htmlFor="ob-address">

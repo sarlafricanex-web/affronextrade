@@ -816,7 +816,11 @@
     "alreadyListedLink": "Chercher dans l'annuaire",
     "claimPendingNotice": "Votre demande de revendication de {name} est en cours d'examen. Inutile de créer une nouvelle fiche : nous revenons vers vous rapidement.",
     "tabDocuments": "Documents",
-    "checkRegistration": "Registre de commerce joint"
+    "checkRegistration": "Registre de commerce joint",
+    "commune": "Commune",
+    "communeChooseWilaya": "Choisissez d'abord la wilaya",
+    "communeLegacy": "Ancienne saisie : « {value} ». Choisissez la commune dans la liste.",
+    "errorCommune": "Choisissez une commune de la wilaya sélectionnée."
   },
   "catalog": {
     "eyebrow": "Espace producteur",

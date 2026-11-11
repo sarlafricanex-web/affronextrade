@@ -5,7 +5,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { saveAdminProducer, type AdminProducerField, type AdminProducerState } from "@/app/[locale]/(app)/admin/producers/actions";
 import { Alert, Field, TextInput } from "@/components/auth/fields";
 import { PhoneField } from "@/components/phone/PhoneField";
-import { SECTORS, WILAYAS } from "@/lib/onboarding/reference";
+import { SECTORS } from "@/lib/onboarding/reference";
+import { WilayaCommuneFields } from "@/components/onboarding/WilayaCommuneFields";
 
 export type AdminProducerDefaults = {
   id: string;
@@ -57,17 +58,7 @@ export function AdminProducerForm({ defaults: initial }: { defaults: AdminProduc
           </select>
           {err("sector")}
         </Field>
-        <Field label={o("wilaya")} htmlFor="ap-wilaya">
-          <select id="ap-wilaya" name="wilaya" required defaultValue={d.wilaya} className="w-full px-4 py-3 text-sm" style={box}>
-            <option value="" disabled>{o("choose")}</option>
-            {WILAYAS.map(([code, name]) => <option key={code} value={code}>{`${code} ${name}`}</option>)}
-          </select>
-          {err("wilaya")}
-        </Field>
-        <Field label={o("city")} htmlFor="ap-city">
-          <TextInput id="ap-city" name="city" required maxLength={100} defaultValue={d.city} />
-          {err("city")}
-        </Field>
+        <WilayaCommuneFields idPrefix="ap" defaults={d} selectStyle={box} wilayaError={err("wilaya")} cityError={err("city")} />
       </div>
 
       <Field label={isNew ? t("apProducts") : t("apAddProducts")} hint={t("apProductsHint")} htmlFor="ap-products">

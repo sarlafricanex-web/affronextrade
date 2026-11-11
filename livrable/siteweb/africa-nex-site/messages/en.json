@@ -816,7 +816,11 @@
     "alreadyListedLink": "Search the directory",
     "claimPendingNotice": "Your request to claim {name} is under review. No need to create a new profile: we will get back to you shortly.",
     "tabDocuments": "Documents",
-    "checkRegistration": "Trade register attached"
+    "checkRegistration": "Trade register attached",
+    "commune": "Municipality",
+    "communeChooseWilaya": "Choose the wilaya first",
+    "communeLegacy": "Previous entry: \"{value}\". Pick the municipality from the list.",
+    "errorCommune": "Choose a municipality of the selected wilaya."
   },
   "catalog": {
     "eyebrow": "Producer space",

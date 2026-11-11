@@ -13,6 +13,7 @@ import {
   CURRENCIES, LEGAL_FORMS, PRICE_BASES, SECTORS, UNITS, WILAYA_CODES,
   isValidNif, normalizeHsCode, normalizeNif, parseAmount,
 } from "@/lib/onboarding/reference";
+import { findCommune } from "@/lib/onboarding/communes";
 
 export type IdentityField = "companyName" | "legalForm" | "sector" | "nif" | "rc" | "wilaya" | "city" | "address" | "phone" | "whatsapp";
 // Cles de traduction (espace "onboarding"), jamais de texte libre renvoye au navigateur.
@@ -59,7 +60,10 @@ export async function saveIdentity(_prev: IdentityState, formData: FormData): Pr
   if (!isValidNif(v.nif)) errors.nif = "errorNif";
   if (v.rc.length < 4 || v.rc.length > 40) errors.rc = "errorRc";
   if (!WILAYA_CODES.has(v.wilaya)) errors.wilaya = "errorChoose";
-  if (!v.city || v.city.length > 100) errors.city = "errorRequired";
+  // La commune doit appartenir a la wilaya choisie ; on enregistre son nom officiel.
+  const commune = findCommune(v.wilaya, v.city);
+  if (!commune) errors.city = v.city ? "errorCommune" : "errorRequired";
+  else v.city = commune;
   if (!v.address || v.address.length > 300) errors.address = "errorRequired";
   if (!v.phone || !isValidPhone(v.phone)) errors.phone = "errorPhone";
   if (!v.whatsapp || !isValidPhone(v.whatsapp)) errors.whatsapp = "errorPhone";

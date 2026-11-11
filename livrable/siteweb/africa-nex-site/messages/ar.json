@@ -816,7 +816,11 @@
     "alreadyListedLink": "البحث في الدليل",
     "claimPendingNotice": "طلبك للمطالبة بـ {name} قيد الدراسة. لا داعي لإنشاء ملف جديد: سنعود إليك قريبًا.",
     "tabDocuments": "الوثائق",
-    "checkRegistration": "السجل التجاري مرفق"
+    "checkRegistration": "السجل التجاري مرفق",
+    "commune": "البلدية",
+    "communeChooseWilaya": "اختر الولاية أولا",
+    "communeLegacy": "الإدخال السابق: «{value}». اختر البلدية من القائمة.",
+    "errorCommune": "اختر بلدية تابعة للولاية المحددة."
   },
   "catalog": {
     "eyebrow": "فضاء المنتج",

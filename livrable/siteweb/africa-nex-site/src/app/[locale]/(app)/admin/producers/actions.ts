@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { resolveLocale } from "@/lib/auth/next-path";
 import { isValidPhone } from "@/lib/phone";
 import { SECTORS, WILAYA_CODES, isValidNif, normalizeNif } from "@/lib/onboarding/reference";
+import { findCommune } from "@/lib/onboarding/communes";
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -49,7 +50,8 @@ export async function saveAdminProducer(_prev: AdminProducerState, formData: For
   if (raw.companyName.length < 2 || raw.companyName.length > 255) errors.companyName = "errorCompanyName";
   if (!(SECTORS as readonly string[]).includes(raw.sector)) errors.sector = "errorChoose";
   if (!WILAYA_CODES.has(raw.wilaya)) errors.wilaya = "errorChoose";
-  if (!raw.city || raw.city.length > 100) errors.city = "errorRequired";
+  const commune = findCommune(raw.wilaya, raw.city);
+  if (!commune) errors.city = raw.city ? "errorCommune" : "errorRequired";
   for (const k of ["descriptionFr", "descriptionEn", "descriptionAr"] as const) if (raw[k].length > 2000) errors[k] = "errorTooLong";
   let website: string | null = null;
   if (raw.website) {
@@ -72,7 +74,7 @@ export async function saveAdminProducer(_prev: AdminProducerState, formData: For
     company_name: raw.companyName,
     sector: raw.sector,
     wilaya: raw.wilaya,
-    city: raw.city,
+    city: commune!,
     description_fr: raw.descriptionFr || null,
     description_en: raw.descriptionEn || null,
     description_ar: raw.descriptionAr || null,
