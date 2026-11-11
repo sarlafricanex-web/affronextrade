@@ -1429,6 +1429,7 @@ export type Database = {
     }
     Functions: {
       accept_offer: { Args: { p_offer_id: string }; Returns: undefined }
+      approve_claim: { Args: { p_claim: string }; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
       is_member_of: { Args: { target_company: string }; Returns: boolean }
       is_owner_of: { Args: { target_company: string }; Returns: boolean }
@@ -1441,6 +1442,7 @@ export type Database = {
           unit_price_ht: number
         }[]
       }
+      reject_claim: { Args: { p_claim: string }; Returns: undefined }
       try_uuid: { Args: { p: string }; Returns: string }
     }
     Enums: {

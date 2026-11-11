@@ -20,3 +20,18 @@ export async function readImage(value: FormDataEntryValue | null, maxBytes: numb
   const kind = imageKind(bytes);
   return kind ? { bytes, kind } : { error: "type" as const };
 }
+
+// Justificatif : PDF, PNG ou JPEG (pas de WebP, refuse par le bucket des documents).
+export type DocumentKind = "pdf" | "png" | "jpg";
+const DOC_TYPES: Record<DocumentKind, string> = { pdf: "application/pdf", png: "image/png", jpg: "image/jpeg" };
+export const documentContentType = (kind: DocumentKind) => DOC_TYPES[kind];
+
+export async function readDocument(value: FormDataEntryValue | null, maxBytes: number) {
+  if (!(value instanceof File) || value.size === 0) return null;
+  if (value.size > maxBytes) return { error: "size" as const };
+  const bytes = new Uint8Array(await value.arrayBuffer());
+  const isPdf = bytes.length > 5 && String.fromCharCode(...bytes.slice(0, 5)) === "%PDF-";
+  const image = imageKind(bytes);
+  const kind: DocumentKind | null = isPdf ? "pdf" : image === "png" || image === "jpg" ? image : null;
+  return kind ? { bytes, kind } : { error: "type" as const };
+}

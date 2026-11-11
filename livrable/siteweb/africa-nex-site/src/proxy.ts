@@ -7,7 +7,7 @@ import { previewGate } from "./lib/preview-gate";
 const handleI18nRouting = createMiddleware(routing);
 
 // Confort de navigation seulement : la vraie securite est dans les regles RLS de la base.
-const PROTECTED = ["/dashboard", "/onboarding", "/company", "/catalog", "/admin"];
+const PROTECTED = ["/dashboard", "/onboarding", "/company", "/catalog", "/claim", "/admin"];
 const AUTH_PAGES = ["/login", "/register", "/forgot-password"];
 
 const isUnder = (path: string, prefix: string) => path === prefix || path.startsWith(`${prefix}/`);

@@ -91,7 +91,7 @@ export function ProducerDirectory({ producers, unavailable = false }: { producer
               )}
 
               {p.claimStatus !== "claimed" && (
-                <p className="mt-3 text-xs" style={{ color: "var(--muted)" }}>{t("unclaimedShort")}</p>
+                <p className="mt-3 text-xs" style={{ color: "var(--muted)" }}>{t(p.claimStatus === "claim_pending" ? "claimPendingShort" : "unclaimedShort")}</p>
               )}
 
               <div className="mt-auto flex gap-4 pt-4">

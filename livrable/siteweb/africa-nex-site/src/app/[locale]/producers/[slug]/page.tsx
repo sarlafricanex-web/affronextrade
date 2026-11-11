@@ -67,10 +67,15 @@ export default async function ProducerProfilePage({ params }: { params: Params }
         <RecordView companyId={profile.id} locale={locale} />
       </Suspense>
 
-      {profile.claimStatus !== "claimed" && (
+      {profile.claimStatus === "unclaimed" && (
         <div role="note" className="text-sm" style={{ background: "var(--ink)", color: "white", padding: "0.9rem var(--page-margin)" }}>
           {t("unclaimedBanner")}{" "}
-          <Link href="/contact" className="font-bold underline">{t("claimLink")}</Link>
+          <Link href={`/claim/${profile.slug}`} className="font-bold underline">{t("claimLink")}</Link>
+        </div>
+      )}
+      {profile.claimStatus === "claim_pending" && (
+        <div role="note" className="text-sm" style={{ background: "var(--ink)", color: "white", padding: "0.9rem var(--page-margin)" }}>
+          {t("claimPendingBanner")}
         </div>
       )}
 

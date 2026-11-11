@@ -63,7 +63,13 @@ export default async function OnboardingPage({
   ]);
   // Les etapes 2 et 3 supposent l'entreprise creee a l'etape 1.
   const current = company && (step === "2" || step === "3") ? Number(step) : 1;
-  const product = company ? await getFirstProduct(user.supabase, company.id) : null;
+  const [product, { data: pendingClaim }] = await Promise.all([
+    company ? getFirstProduct(user.supabase, company.id) : Promise.resolve(null),
+    company
+      ? Promise.resolve({ data: null })
+      : user.supabase.from("company_claims").select("companies(company_name, slug)").eq("profile_id", user.userId).eq("status", "pending").maybeSingle(),
+  ]);
+  const claimed = pendingClaim?.companies as { company_name: string; slug: string } | null | undefined;
   const done = [Boolean(company), Boolean(company?.description_fr), Boolean(product)];
 
   return (
@@ -73,6 +79,19 @@ export default async function OnboardingPage({
         <h1 className="mt-2 font-extrabold" style={{ fontSize: "var(--step-title)", lineHeight: 1 }}>{t("title")}</h1>
         <p className="mt-3" style={{ color: "var(--muted)", maxWidth: "60ch" }}>{t("intro")}</p>
       </header>
+
+      {!company && (
+        <p role="note" className="p-4 text-sm" style={{ background: "white", borderInlineStart: "4px solid var(--accent)" }}>
+          {claimed ? (
+            <>{t("claimPendingNotice", { name: claimed.company_name })}</>
+          ) : (
+            <>
+              {t("alreadyListed")}{" "}
+              <Link href="/producers" className="font-bold underline">{t("alreadyListedLink")}</Link>
+            </>
+          )}
+        </p>
+      )}
 
       <ol className="grid sm:grid-cols-3" style={{ border: "1px solid var(--field-b)", background: "white" }}>
         {STEPS.map((key, index) => {
