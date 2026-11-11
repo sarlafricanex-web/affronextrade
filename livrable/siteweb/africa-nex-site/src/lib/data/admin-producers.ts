@@ -33,7 +33,7 @@ export async function getAdminProducer(client: Client, id: string) {
       .select("id, slug, kind, company_name, sector, wilaya, city, description_fr, description_en, description_ar, website, visibility, verified, claim_status")
       .eq("id", id)
       .maybeSingle(),
-    client.from("company_private").select("tax_id, contact_email, contact_phone").eq("company_id", id).maybeSingle(),
+    client.from("company_private").select("tax_id, nis, tax_article, contact_email, contact_phone").eq("company_id", id).maybeSingle(),
     client.from("products").select("id, product_name, status, source").eq("company_id", id).order("sort_order").order("created_at"),
     client.from("company_documents").select("id, kind, title, is_public, review_status, expires_on, created_at").eq("company_id", id).order("created_at", { ascending: false }),
   ]);

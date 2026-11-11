@@ -7,7 +7,8 @@ import { getProducerCards, getProducerProfile } from "@/lib/data/directory";
 import { routing } from "@/i18n/routing";
 import { WILAYAS } from "@/lib/onboarding/reference";
 import { countryName } from "@/lib/countries";
-import { ProducerAvatar, SECTOR_FILTER_KEY, Stars } from "@/components/producers/parts";
+import { ProducerAvatar, Stars } from "@/components/producers/parts";
+import { isSector } from "@/lib/sectors";
 import { RecordView } from "@/components/producers/RecordView";
 import { ReviewSlot } from "@/components/producers/ReviewSlot";
 
@@ -92,17 +93,18 @@ export default async function ProducerProfilePage({ params }: { params: Params }
   setRequestLocale(locale);
   const profile = await getProducerProfile(slug);
   if (!profile) notFound();
-  const [t, o, td, format] = await Promise.all([
+  const [t, o, td, ts, format] = await Promise.all([
     getTranslations("producers"),
     getTranslations("onboarding"),
     getTranslations("documents"),
+    getTranslations("sectors"),
     getFormatter(),
   ]);
 
   const about = pick(profile.description, locale);
   const wilaya = WILAYAS.find(([code]) => code === profile.wilaya)?.[1];
   const place = [profile.location, wilaya && !profile.location.toLowerCase().includes(wilaya.toLowerCase()) ? wilaya : null, countryName("DZ", locale)].filter(Boolean).join(", ");
-  const sector = SECTOR_FILTER_KEY[profile.sector] ? t(SECTOR_FILTER_KEY[profile.sector]) : null;
+  const sector = isSector(profile.sector) ? ts(profile.sector) : null;
   const avg = profile.reviews.length ? profile.reviews.reduce((s, r) => s + r.rating, 0) / profile.reviews.length : null;
   const avgText = avg === null ? null : format.number(avg, { maximumFractionDigits: 1, minimumFractionDigits: 1 });
   const unitLabel = (u: string | null) => (u ? (o.has(`unit_${u}`) ? o(`unit_${u}`) : u) : "");

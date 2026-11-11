@@ -31,7 +31,7 @@ export async function getMyCompany(client: Client, userId: string) {
       .single(),
     client
       .from("company_private")
-      .select("tax_id, rc_number, address, contact_phone, contact_whatsapp")
+      .select("tax_id, nis, tax_article, rc_number, address, contact_phone, contact_whatsapp")
       .eq("company_id", membership.company_id)
       .maybeSingle(),
   ]);

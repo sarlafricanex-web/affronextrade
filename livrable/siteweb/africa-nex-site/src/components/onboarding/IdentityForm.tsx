@@ -5,14 +5,17 @@ import { useLocale, useTranslations } from "next-intl";
 import { saveIdentity, type IdentityField, type IdentityState } from "@/app/[locale]/(app)/onboarding/actions";
 import { Alert, Field, TextInput } from "@/components/auth/fields";
 import { PhoneField } from "@/components/phone/PhoneField";
-import { LEGAL_FORMS, SECTORS } from "@/lib/onboarding/reference";
+import { LEGAL_FORMS } from "@/lib/onboarding/reference";
 import { WilayaCommuneFields } from "@/components/onboarding/WilayaCommuneFields";
+import { SectorSelect } from "@/components/onboarding/SectorSelect";
 
 export type IdentityDefaults = {
   companyName: string;
   legalForm: string;
   sector: string;
   nif: string;
+  nis: string;
+  taxArticle: string;
   rc: string;
   wilaya: string;
   city: string;
@@ -25,6 +28,7 @@ const selectStyle = { background: "var(--field-a)", border: "1px solid var(--fie
 
 export function IdentityForm({ defaults, mode = "onboarding" }: { defaults: IdentityDefaults; mode?: "onboarding" | "edit" }) {
   const t = useTranslations("onboarding");
+  const ts = useTranslations("sectors");
   const locale = useLocale();
   const [state, action, pending] = useActionState<IdentityState, FormData>(saveIdentity, { errors: {} });
   const err = (field: IdentityField) =>
@@ -62,18 +66,23 @@ export function IdentityForm({ defaults, mode = "onboarding" }: { defaults: Iden
         {err("legalForm")}
       </fieldset>
 
-      <Field label={t("sector")} htmlFor="ob-sector">
-        <select id="ob-sector" name="sector" required defaultValue={defaults.sector} className="w-full px-4 py-3 text-sm" style={selectStyle} {...described("sector")}>
-          <option value="" disabled>{t("choose")}</option>
-          {SECTORS.map((s) => <option key={s} value={s}>{t(`sector_${s}`)}</option>)}
-        </select>
+      <Field label={ts("label")} hint={ts("hint")} htmlFor="ob-sector">
+        <SectorSelect id="ob-sector" defaultValue={defaults.sector} style={selectStyle} described={described("sector")} />
         {err("sector")}
       </Field>
 
       <div className="grid sm:grid-cols-2 gap-6">
         <Field label={t("nif")} hint={t("nifHint")} htmlFor="ob-nif">
-          <TextInput id="ob-nif" name="nif" required inputMode="numeric" dir="ltr" defaultValue={defaults.nif} placeholder="000000000000000" {...described("nif")} />
+          <TextInput id="ob-nif" name="nif" required inputMode="numeric" maxLength={24} dir="ltr" defaultValue={defaults.nif} placeholder="00000000000000000000" {...described("nif")} />
           {err("nif")}
+        </Field>
+        <Field label={t("nis")} hint={t("nisHint")} htmlFor="ob-nis">
+          <TextInput id="ob-nis" name="nis" required inputMode="numeric" maxLength={19} dir="ltr" defaultValue={defaults.nis} placeholder="000000000000000" {...described("nis")} />
+          {err("nis")}
+        </Field>
+        <Field label={t("taxArticle")} hint={t("taxArticleHint")} htmlFor="ob-article">
+          <TextInput id="ob-article" name="taxArticle" required inputMode="numeric" maxLength={14} dir="ltr" defaultValue={defaults.taxArticle} placeholder="00000000000" {...described("taxArticle")} />
+          {err("taxArticle")}
         </Field>
         <Field label={t("rc")} htmlFor="ob-rc">
           <TextInput id="ob-rc" name="rc" required maxLength={40} dir="ltr" defaultValue={defaults.rc} placeholder="19/00-0000000 B 24" {...described("rc")} />

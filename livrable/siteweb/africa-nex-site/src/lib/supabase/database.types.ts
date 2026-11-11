@@ -396,7 +396,9 @@ export type Database = {
           contact_name: string | null
           contact_phone: string | null
           contact_whatsapp: string | null
+          nis: string | null
           rc_number: string | null
+          tax_article: string | null
           tax_id: string | null
           updated_at: string
         }
@@ -407,7 +409,9 @@ export type Database = {
           contact_name?: string | null
           contact_phone?: string | null
           contact_whatsapp?: string | null
+          nis?: string | null
           rc_number?: string | null
+          tax_article?: string | null
           tax_id?: string | null
           updated_at?: string
         }
@@ -418,7 +422,9 @@ export type Database = {
           contact_name?: string | null
           contact_phone?: string | null
           contact_whatsapp?: string | null
+          nis?: string | null
           rc_number?: string | null
+          tax_article?: string | null
           tax_id?: string | null
           updated_at?: string
         }

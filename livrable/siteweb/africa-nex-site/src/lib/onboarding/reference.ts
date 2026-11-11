@@ -3,14 +3,14 @@
 export const LEGAL_FORMS = ["SARL", "SPA", "EURL", "SNC", "EI"] as const;
 export type LegalForm = (typeof LEGAL_FORMS)[number];
 
-// Valeurs autorisees par la contrainte de la colonne companies.sector.
-export const SECTORS = ["agrifood", "agriculture", "industry", "automotive", "cosmetics", "crafts"] as const;
-export type Sector = (typeof SECTORS)[number];
+// Secteurs d'activite : divisions de la CITI Rev.4 (ONU), base de la nomenclature algerienne NAA.
+export { SECTORS, SECTOR_SECTIONS, type Sector } from "@/lib/sectors";
 
 // Types d'acheteurs (contrainte de la colonne companies.buyer_type).
 export const BUYER_TYPES = ["importer", "distributor", "wholesaler", "retailer", "industrial", "other"] as const;
 
-// Les 58 wilayas, code officiel et nom usuel.
+// Les 69 wilayas, code officiel et nom usuel. 59 a 69 : loi n° 26-06 du 5 avril 2026 (JO n° 25),
+// numeros fixes par le decret publie au JO n° 40.
 export const WILAYAS: ReadonlyArray<readonly [string, string]> = [
   ["01", "Adrar"], ["02", "Chlef"], ["03", "Laghouat"], ["04", "Oum El Bouaghi"], ["05", "Batna"],
   ["06", "Béjaïa"], ["07", "Biskra"], ["08", "Béchar"], ["09", "Blida"], ["10", "Bouira"],
@@ -23,13 +23,18 @@ export const WILAYAS: ReadonlyArray<readonly [string, string]> = [
   ["41", "Souk Ahras"], ["42", "Tipaza"], ["43", "Mila"], ["44", "Aïn Defla"], ["45", "Naâma"],
   ["46", "Aïn Témouchent"], ["47", "Ghardaïa"], ["48", "Relizane"], ["49", "Timimoun"], ["50", "Bordj Badji Mokhtar"],
   ["51", "Ouled Djellal"], ["52", "Béni Abbès"], ["53", "In Salah"], ["54", "In Guezzam"], ["55", "Touggourt"],
-  ["56", "Djanet"], ["57", "El M'Ghair"], ["58", "El Meniaa"],
+  ["56", "Djanet"], ["57", "El M'Ghair"], ["58", "El Meniaa"], ["59", "Aflou"], ["60", "Barika"],
+  ["61", "El Kantara"], ["62", "Bir El Ater"], ["63", "El Aricha"], ["64", "Ksar Chellala"], ["65", "Aïn Oussara"],
+  ["66", "Messaad"], ["67", "Ksar El Boukhari"], ["68", "Bou Saâda"], ["69", "El Abiodh Sidi Cheikh"],
 ];
 export const WILAYA_CODES = new Set(WILAYAS.map(([code]) => code));
 
-// NIF algerien : 15 chiffres (espaces toleres a la saisie).
+// Identifiants fiscaux et statistiques (espaces toleres a la saisie).
+// NIF : 20 chiffres. NIS (ONS) : 15 chiffres. Article d'imposition : 11 chiffres.
 export const normalizeNif = (value: string) => value.replace(/\s/g, "");
-export const isValidNif = (value: string) => /^\d{15}$/.test(normalizeNif(value));
+export const isValidNif = (value: string) => /^\d{20}$/.test(normalizeNif(value));
+export const isValidNis = (value: string) => /^\d{15}$/.test(normalizeNif(value));
+export const isValidTaxArticle = (value: string) => /^\d{11}$/.test(normalizeNif(value));
 
 export const CURRENCIES = ["USD", "EUR", "DZD"] as const;
 export const PRICE_BASES = ["FOB", "FCA", "EXW"] as const;

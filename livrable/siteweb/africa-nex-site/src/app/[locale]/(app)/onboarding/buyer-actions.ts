@@ -7,7 +7,8 @@ import { resolveLocale } from "@/lib/auth/next-path";
 import { getMyCompanyId } from "@/lib/data/company";
 import { isCountryCode } from "@/lib/countries";
 import { isValidPhone } from "@/lib/phone";
-import { BUYER_TYPES, SECTORS } from "@/lib/onboarding/reference";
+import { BUYER_TYPES } from "@/lib/onboarding/reference";
+import { isSector } from "@/lib/sectors";
 
 export type BuyerField = "companyName" | "buyerType" | "country" | "city" | "phone" | "whatsapp" | "interests" | "website";
 // Cles de traduction (espace "onboarding") ; values : saisie renvoyee en cas d'erreur.
@@ -51,7 +52,7 @@ export async function saveBuyer(_prev: BuyerState, formData: FormData): Promise<
   if (!v.city || v.city.length > 100) errors.city = "errorRequired";
   if (!v.phone || !isValidPhone(v.phone)) errors.phone = "errorPhone";
   if (!v.whatsapp || !isValidPhone(v.whatsapp)) errors.whatsapp = "errorPhone";
-  if (!v.interests.length || v.interests.some((s) => !(SECTORS as readonly string[]).includes(s))) errors.interests = "errorInterests";
+  if (!v.interests.length || v.interests.length > 12 || v.interests.some((s) => !isSector(s))) errors.interests = "errorInterests";
   let website: string | null = null;
   if (v.website) {
     try {

@@ -10,12 +10,13 @@ import { isValidPhone } from "@/lib/phone";
 import type { Database } from "@/lib/supabase/database.types";
 import { imageKind } from "@/lib/images";
 import {
-  CURRENCIES, LEGAL_FORMS, PRICE_BASES, SECTORS, UNITS, WILAYA_CODES,
-  isValidNif, normalizeHsCode, normalizeNif, parseAmount,
+  CURRENCIES, LEGAL_FORMS, PRICE_BASES, UNITS, WILAYA_CODES,
+  isValidNif, isValidNis, isValidTaxArticle, normalizeHsCode, normalizeNif, parseAmount,
 } from "@/lib/onboarding/reference";
 import { findCommune } from "@/lib/onboarding/communes";
+import { isSector } from "@/lib/sectors";
 
-export type IdentityField = "companyName" | "legalForm" | "sector" | "nif" | "rc" | "wilaya" | "city" | "address" | "phone" | "whatsapp";
+export type IdentityField = "companyName" | "legalForm" | "sector" | "nif" | "nis" | "taxArticle" | "rc" | "wilaya" | "city" | "address" | "phone" | "whatsapp";
 // Cles de traduction (espace "onboarding"), jamais de texte libre renvoye au navigateur.
 export type IdentityState = { errors: Partial<Record<IdentityField, string>>; formError?: string };
 
@@ -45,6 +46,8 @@ export async function saveIdentity(_prev: IdentityState, formData: FormData): Pr
     legalForm: text(formData, "legalForm"),
     sector: text(formData, "sector"),
     nif: normalizeNif(text(formData, "nif")),
+    nis: normalizeNif(text(formData, "nis")),
+    taxArticle: normalizeNif(text(formData, "taxArticle")),
     rc: text(formData, "rc"),
     wilaya: text(formData, "wilaya"),
     city: text(formData, "city"),
@@ -56,8 +59,10 @@ export async function saveIdentity(_prev: IdentityState, formData: FormData): Pr
   const errors: IdentityState["errors"] = {};
   if (v.companyName.length < 2 || v.companyName.length > 255) errors.companyName = "errorCompanyName";
   if (!(LEGAL_FORMS as readonly string[]).includes(v.legalForm)) errors.legalForm = "errorChoose";
-  if (!(SECTORS as readonly string[]).includes(v.sector)) errors.sector = "errorChoose";
+  if (!isSector(v.sector)) errors.sector = "errorChoose";
   if (!isValidNif(v.nif)) errors.nif = "errorNif";
+  if (!isValidNis(v.nis)) errors.nis = "errorNis";
+  if (!isValidTaxArticle(v.taxArticle)) errors.taxArticle = "errorTaxArticle";
   if (v.rc.length < 4 || v.rc.length > 40) errors.rc = "errorRc";
   if (!WILAYA_CODES.has(v.wilaya)) errors.wilaya = "errorChoose";
   // La commune doit appartenir a la wilaya choisie ; on enregistre son nom officiel.
@@ -101,7 +106,7 @@ export async function saveIdentity(_prev: IdentityState, formData: FormData): Pr
   const [{ error: privateError }] = await Promise.all([
     supabase
       .from("company_private")
-      .update({ tax_id: v.nif, rc_number: v.rc, address: v.address, contact_phone: v.phone, contact_whatsapp: v.whatsapp })
+      .update({ tax_id: v.nif, nis: v.nis, tax_article: v.taxArticle, rc_number: v.rc, address: v.address, contact_phone: v.phone, contact_whatsapp: v.whatsapp })
       .eq("company_id", companyId),
     supabase.from("profiles").update({ phone: v.phone }).eq("id", userId).is("phone", null),
     supabase.from("profiles").update({ whatsapp: v.whatsapp }).eq("id", userId).is("whatsapp", null),

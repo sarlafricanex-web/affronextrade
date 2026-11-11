@@ -6,7 +6,8 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { getMyCompany } from "@/lib/data/company";
 import { WILAYAS } from "@/lib/onboarding/reference";
 import { ClaimForm } from "@/components/claim/ClaimForm";
-import { ProducerAvatar, SECTOR_FILTER_KEY } from "@/components/producers/parts";
+import { ProducerAvatar } from "@/components/producers/parts";
+import { isSector } from "@/lib/sectors";
 
 export const instant = false;
 
@@ -52,9 +53,9 @@ export default async function ClaimPage({
   if (!user) redirect(`/${locale}/login`);
   if (!/^[a-z0-9-]{1,80}$/.test(slug)) notFound();
 
-  const [t, tp, { sent }, { data: company }] = await Promise.all([
+  const [t, ts, { sent }, { data: company }] = await Promise.all([
     getTranslations({ locale, namespace: "claim" }),
-    getTranslations({ locale, namespace: "producers" }),
+    getTranslations({ locale, namespace: "sectors" }),
     searchParams,
     user.supabase
       .from("companies")
@@ -85,7 +86,7 @@ export default async function ClaimPage({
   ];
   const wilaya = WILAYAS.find(([code]) => code === company.wilaya)?.[1];
   const place = [company.city, wilaya && company.city !== wilaya ? wilaya : null].filter(Boolean).join(", ");
-  const sector = company.sector && SECTOR_FILTER_KEY[company.sector] ? tp(SECTOR_FILTER_KEY[company.sector]) : null;
+  const sector = company.sector && isSector(company.sector) ? ts(company.sector) : null;
 
   return (
     <div className="flex flex-col gap-6">

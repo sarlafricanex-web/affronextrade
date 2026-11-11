@@ -4,10 +4,11 @@ import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { ProducerCard } from "@/lib/data/directory";
-import { SECTOR_FILTER_KEY, Stars } from "./parts";
+import { Stars } from "./parts";
+import { SECTIONS, isSector, sectionOf, type SectorSection } from "@/lib/sectors";
 
 // Annuaire d'apres la maquette Stitch 08 ("Commercial Registry"), alimente par nos vraies donnees.
-const FILTERS = ["all", "agrifood", "industry", "automotive", "crafts", "cosmetics", "agriculture"] as const;
+// Secteurs : onglets par section CITI (A, B, C, G), puis liste des divisions presentes.
 const SORTS = ["relevance", "rating", "name"] as const;
 const PAGE_SIZE = 12;
 
@@ -29,8 +30,13 @@ const SHIELD = "M12 2l8 3v6c0 5-3.5 9.5-8 11-4.5-1.5-8-6-8-11V5l8-3zM9 12l2 2 4-
 
 export function ProducerDirectory({ producers, unavailable = false }: { producers: ProducerCard[]; unavailable?: boolean }) {
   const t = useTranslations("producers");
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
+  const ts = useTranslations("sectors");
+  const [filter, setFilter] = useState<"all" | SectorSection>("all");
+  const [division, setDivision] = useState("all");
   const [query, setQuery] = useState("");
+  // Seules les sections et divisions ou figure au moins un producteur sont proposees.
+  const sections = SECTIONS.filter((s) => producers.some((p) => sectionOf(p.sector) === s));
+  const divisions = [...new Set(producers.filter((p) => isSector(p.sector) && (filter === "all" || sectionOf(p.sector) === filter)).map((p) => p.sector))].sort();
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [sort, setSort] = useState<(typeof SORTS)[number]>("relevance");
   const [page, setPage] = useState(1);
@@ -39,14 +45,15 @@ export function ProducerDirectory({ producers, unavailable = false }: { producer
     const q = fold(query.trim());
     const list = producers.filter(
       (p) =>
-        (filter === "all" || p.sector === filter) &&
+        (filter === "all" || sectionOf(p.sector) === filter) &&
+        (division === "all" || p.sector === division) &&
         (!verifiedOnly || p.verified) &&
         (!q || fold(p.name).includes(q) || fold(p.location).includes(q) || fold(p.wilaya ?? "").includes(q) || p.products.some((prod) => fold(prod).includes(q))),
     );
     if (sort === "rating") return [...list].sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0) || b.reviewCount - a.reviewCount);
     if (sort === "name") return [...list].sort((a, b) => a.name.localeCompare(b.name));
     return list;
-  }, [producers, filter, query, verifiedOnly, sort]);
+  }, [producers, filter, division, query, verifiedOnly, sort]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, pages);
@@ -99,18 +106,18 @@ export function ProducerDirectory({ producers, unavailable = false }: { producer
 
         <div className="overflow-x-auto pb-2">
           <div className="flex min-w-max gap-2" role="group" aria-label={t("sector")} style={{ borderBottom: `1px solid ${HAIR}` }}>
-            {FILTERS.map((key) => {
+            {(["all", ...sections] as const).map((key) => {
               const active = filter === key;
               return (
                 <button
                   key={key}
                   type="button"
                   aria-pressed={active}
-                  onClick={() => reset(setFilter)(key)}
+                  onClick={() => { setFilter(key); setDivision("all"); setPage(1); }}
                   className={`px-5 py-3 ${caps} ${active ? "font-bold" : ""}`}
                   style={{ letterSpacing: "0.08em", borderBottom: `2px solid ${active ? "var(--accent)" : "transparent"}`, background: active ? "white" : "transparent", color: active ? "var(--ink)" : "var(--muted)", marginBottom: -1 }}
                 >
-                  {t(key === "all" ? "filterAll" : SECTOR_FILTER_KEY[key])}
+                  {key === "all" ? t("filterAll") : ts(`short_${key}`)}
                 </button>
               );
             })}
@@ -123,6 +130,15 @@ export function ProducerDirectory({ producers, unavailable = false }: { producer
             <span style={{ color: "var(--muted)" }}>{t("countLabel", { count: filtered.length })}</span>
           </p>
           <div className="flex flex-wrap items-center gap-6">
+            {divisions.length > 1 && (
+              <label className={`flex items-center gap-2 ${caps}`} style={capsStyle}>
+                {ts("filterDivision")}
+                <select value={division} onChange={(e) => reset(setDivision)(e.target.value)} className="max-w-[16rem] px-3 py-1 text-sm normal-case" style={{ background: "white", border: `1px solid ${HAIR}`, color: "var(--ink)", letterSpacing: 0 }}>
+                  <option value="all">{ts("filterDivisionAll")}</option>
+                  {divisions.map((d) => <option key={d} value={d}>{ts(d)}</option>)}
+                </select>
+              </label>
+            )}
             <label className={`flex cursor-pointer select-none items-center gap-2 ${caps}`} style={capsStyle}>
               <input type="checkbox" checked={verifiedOnly} onChange={(e) => reset(setVerifiedOnly)(e.target.checked)} className="h-4 w-4" style={{ borderRadius: 0, accentColor: "var(--ink)" }} />
               {t("verifiedOnly")}
@@ -147,8 +163,8 @@ export function ProducerDirectory({ producers, unavailable = false }: { producer
             <li key={p.id} className="flex flex-col justify-between p-6" style={{ background: "white", border: `1px solid ${HAIR}` }}>
               <div>
                 <div className="mb-4 flex items-center justify-between gap-3 pb-3" style={{ borderBottom: `1px solid ${HAIR}` }}>
-                  <span className={`${caps} truncate`} style={capsStyle}>
-                    {[p.wilaya ?? p.location.split(",").pop()?.trim(), SECTOR_FILTER_KEY[p.sector] ? t(SECTOR_FILTER_KEY[p.sector]) : null].filter(Boolean).join(" • ")}
+                  <span className={`${caps} min-w-0 leading-snug`} style={capsStyle}>
+                    {[p.wilaya ?? p.location.split(",").pop()?.trim(), isSector(p.sector) ? ts(p.sector) : null].filter(Boolean).join(" • ")}
                   </span>
                   {p.verified ? (
                     <span className="inline-flex shrink-0 items-center gap-1 px-2 py-0.5 text-[11px] font-bold uppercase" style={{ background: "#ecfdf5", border: "1px solid #10b981", color: "#065f46", letterSpacing: "0.08em" }}>

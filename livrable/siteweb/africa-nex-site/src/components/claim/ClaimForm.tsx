@@ -58,7 +58,7 @@ export function ClaimForm({ slug, companyName, defaults: initial }: { slug: stri
       <div>
         <label htmlFor="cl-nif" className={label} style={labelStyle}>{t("nif")} *</label>
         <Prefixed prefix="NIF">
-          <input id="cl-nif" name="nif" required inputMode="numeric" placeholder="000000000000000" defaultValue={defaults.nif} className={inputClass} style={inputStyle} />
+          <input id="cl-nif" name="nif" required inputMode="numeric" maxLength={24} placeholder="00000000000000000000" defaultValue={defaults.nif} className={inputClass} style={inputStyle} />
         </Prefixed>
         <span className="mt-1 block text-xs" style={{ color: "var(--muted)" }}>{t("nifHelp")}</span>
         {err("nif")}

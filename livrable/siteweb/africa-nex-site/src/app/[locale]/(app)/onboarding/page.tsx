@@ -138,6 +138,8 @@ export default async function OnboardingPage({
                   legalForm: company?.legal_form ?? "",
                   sector: company?.sector ?? "",
                   nif: company?.private?.tax_id ?? "",
+                  nis: company?.private?.nis ?? "",
+                  taxArticle: company?.private?.tax_article ?? "",
                   rc: company?.private?.rc_number ?? "",
                   wilaya: company?.wilaya ?? "",
                   city: company?.city ?? "",

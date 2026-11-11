@@ -6,7 +6,8 @@ import { updateTag } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { resolveLocale } from "@/lib/auth/next-path";
 import { isValidPhone } from "@/lib/phone";
-import { SECTORS, WILAYA_CODES, isValidNif, normalizeNif } from "@/lib/onboarding/reference";
+import { WILAYA_CODES, isValidNif, isValidNis, isValidTaxArticle, normalizeNif } from "@/lib/onboarding/reference";
+import { isSector } from "@/lib/sectors";
 import { findCommune } from "@/lib/onboarding/communes";
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
@@ -33,7 +34,7 @@ function initialsOf(name: string) {
   return letters.toUpperCase();
 }
 
-export type AdminProducerField = "companyName" | "sector" | "wilaya" | "city" | "descriptionFr" | "descriptionEn" | "descriptionAr" | "website" | "nif" | "contactEmail" | "contactPhone" | "products";
+export type AdminProducerField = "companyName" | "sector" | "wilaya" | "city" | "descriptionFr" | "descriptionEn" | "descriptionAr" | "website" | "nif" | "nis" | "taxArticle" | "contactEmail" | "contactPhone" | "products";
 export type AdminProducerState = { errors: Partial<Record<AdminProducerField, string>>; formError?: string; values?: Record<string, string>; attempt?: number };
 
 // Creation (fiche etablie par AFRICA NEX, non revendiquee) ou modification d'un producteur.
@@ -41,14 +42,16 @@ export async function saveAdminProducer(_prev: AdminProducerState, formData: For
   const { locale, supabase, userId } = await adminContext(formData);
   const id = text(formData, "id");
   const raw = Object.fromEntries(
-    ["companyName", "sector", "wilaya", "city", "descriptionFr", "descriptionEn", "descriptionAr", "website", "nif", "contactEmail", "contactPhone", "products", "visibility"].map((k) => [k, text(formData, k)]),
+    ["companyName", "sector", "wilaya", "city", "descriptionFr", "descriptionEn", "descriptionAr", "website", "nif", "nis", "taxArticle", "contactEmail", "contactPhone", "products", "visibility"].map((k) => [k, text(formData, k)]),
   );
   const nif = normalizeNif(raw.nif);
+  const nis = normalizeNif(raw.nis);
+  const taxArticle = normalizeNif(raw.taxArticle);
   const productNames = [...new Set(raw.products.split(/\r?\n/).map((l) => l.trim()).filter(Boolean))];
 
   const errors: AdminProducerState["errors"] = {};
   if (raw.companyName.length < 2 || raw.companyName.length > 255) errors.companyName = "errorCompanyName";
-  if (!(SECTORS as readonly string[]).includes(raw.sector)) errors.sector = "errorChoose";
+  if (!isSector(raw.sector)) errors.sector = "errorChoose";
   if (!WILAYA_CODES.has(raw.wilaya)) errors.wilaya = "errorChoose";
   const commune = findCommune(raw.wilaya, raw.city);
   if (!commune) errors.city = raw.city ? "errorCommune" : "errorRequired";
@@ -64,6 +67,8 @@ export async function saveAdminProducer(_prev: AdminProducerState, formData: For
     }
   }
   if (raw.nif && !isValidNif(nif)) errors.nif = "errorNif";
+  if (raw.nis && !isValidNis(nis)) errors.nis = "errorNis";
+  if (raw.taxArticle && !isValidTaxArticle(taxArticle)) errors.taxArticle = "errorTaxArticle";
   if (raw.contactEmail && !EMAIL.test(raw.contactEmail)) errors.contactEmail = "errorEmail";
   if (raw.contactPhone && !isValidPhone(raw.contactPhone)) errors.contactPhone = "errorPhone";
   if (productNames.length > 30 || productNames.some((n) => n.length > 255)) errors.products = "errorProducts";
@@ -120,7 +125,7 @@ export async function saveAdminProducer(_prev: AdminProducerState, formData: For
 
   const { error: privError } = await supabase
     .from("company_private")
-    .upsert({ company_id: companyId, tax_id: raw.nif ? nif : null, contact_email: raw.contactEmail || null, contact_phone: raw.contactPhone || null });
+    .upsert({ company_id: companyId, tax_id: raw.nif ? nif : null, nis: raw.nis ? nis : null, tax_article: raw.taxArticle ? taxArticle : null, contact_email: raw.contactEmail || null, contact_phone: raw.contactPhone || null });
   if (privError) {
     if (privError.code === "23505") return fail({ errors: { nif: "errorNifTaken" } });
     console.error("Admin producer private failed:", privError.message);

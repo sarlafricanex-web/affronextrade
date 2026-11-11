@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { listAdminProducers } from "@/lib/data/admin-producers";
 import { WILAYAS } from "@/lib/onboarding/reference";
+import { isSector } from "@/lib/sectors";
 import { ProducerOps } from "@/components/admin/ProducerOps";
 
 export const instant = false;
@@ -22,9 +23,9 @@ export default async function AdminProducersPage({
   if (!user) redirect(`/${locale}/login`);
   if (user.role !== "admin") redirect(`/${locale}/dashboard`);
 
-  const [t, o, producers, { saved, done, error }] = await Promise.all([
+  const [t, ts, producers, { saved, done, error }] = await Promise.all([
     getTranslations({ locale, namespace: "admin" }),
-    getTranslations({ locale, namespace: "onboarding" }),
+    getTranslations({ locale, namespace: "sectors" }),
     listAdminProducers(user.supabase),
     searchParams,
   ]);
@@ -75,7 +76,7 @@ export default async function AdminProducersPage({
                       </Link>
                     )}
                     <span className="block text-xs" style={{ color: "var(--muted)" }}>
-                      {[p.city, wilaya].filter(Boolean).join(" · ")}{p.sector ? ` · ${o(`sector_${p.sector}`)}` : ""}
+                      {[p.city, wilaya].filter(Boolean).join(" · ")}{p.sector && isSector(p.sector) ? ` · ${ts(p.sector)}` : ""}
                     </span>
                   </td>
                   <td className={`${cell} whitespace-nowrap`}>

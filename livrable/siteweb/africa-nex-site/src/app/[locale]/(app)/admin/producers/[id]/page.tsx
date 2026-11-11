@@ -62,6 +62,8 @@ export default async function AdminProducerPage({
               descriptionAr: producer?.description_ar ?? "",
               website: producer?.website ?? "",
               nif: producer?.private?.tax_id ?? "",
+              nis: producer?.private?.nis ?? "",
+              taxArticle: producer?.private?.tax_article ?? "",
               contactEmail: producer?.private?.contact_email ?? "",
               contactPhone: producer?.private?.contact_phone ?? "",
             }}

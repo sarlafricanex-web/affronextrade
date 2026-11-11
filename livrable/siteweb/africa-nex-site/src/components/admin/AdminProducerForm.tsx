@@ -5,8 +5,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { saveAdminProducer, type AdminProducerField, type AdminProducerState } from "@/app/[locale]/(app)/admin/producers/actions";
 import { Alert, Field, TextInput } from "@/components/auth/fields";
 import { PhoneField } from "@/components/phone/PhoneField";
-import { SECTORS } from "@/lib/onboarding/reference";
 import { WilayaCommuneFields } from "@/components/onboarding/WilayaCommuneFields";
+import { SectorSelect } from "@/components/onboarding/SectorSelect";
 
 export type AdminProducerDefaults = {
   id: string;
@@ -19,6 +19,8 @@ export type AdminProducerDefaults = {
   descriptionAr: string;
   website: string;
   nif: string;
+  nis: string;
+  taxArticle: string;
   contactEmail: string;
   contactPhone: string;
 };
@@ -29,6 +31,7 @@ const box = { background: "var(--field-a)", border: "1px solid var(--field-b)", 
 export function AdminProducerForm({ defaults: initial }: { defaults: AdminProducerDefaults }) {
   const t = useTranslations("admin");
   const o = useTranslations("onboarding");
+  const ts = useTranslations("sectors");
   const locale = useLocale();
   const [state, action, pending] = useActionState<AdminProducerState, FormData>(saveAdminProducer, { errors: {} });
   const d = { ...initial, products: "", visibility: "published", ...(state.values ?? {}) };
@@ -51,11 +54,8 @@ export function AdminProducerForm({ defaults: initial }: { defaults: AdminProduc
       </Field>
 
       <div className="grid gap-6 sm:grid-cols-3">
-        <Field label={o("sector")} htmlFor="ap-sector">
-          <select id="ap-sector" name="sector" required defaultValue={d.sector} className="w-full px-4 py-3 text-sm" style={box}>
-            <option value="" disabled>{o("choose")}</option>
-            {SECTORS.map((s) => <option key={s} value={s}>{o(`sector_${s}`)}</option>)}
-          </select>
+        <Field label={ts("label")} htmlFor="ap-sector">
+          <SectorSelect id="ap-sector" defaultValue={d.sector} style={box} />
           {err("sector")}
         </Field>
         <WilayaCommuneFields idPrefix="ap" defaults={d} selectStyle={box} wilayaError={err("wilaya")} cityError={err("city")} />
@@ -78,8 +78,16 @@ export function AdminProducerForm({ defaults: initial }: { defaults: AdminProduc
         <p className="text-xs" style={{ color: "var(--muted)" }}>{t("apPrivateHint")}</p>
         <div className="grid gap-6 sm:grid-cols-2">
           <Field label={o("nif")} hint={o("optional")} htmlFor="ap-nif">
-            <TextInput id="ap-nif" name="nif" inputMode="numeric" dir="ltr" defaultValue={d.nif} placeholder="000000000000000" />
+            <TextInput id="ap-nif" name="nif" inputMode="numeric" maxLength={24} dir="ltr" defaultValue={d.nif} placeholder="00000000000000000000" />
             {err("nif")}
+          </Field>
+          <Field label={o("nis")} hint={o("optional")} htmlFor="ap-nis">
+            <TextInput id="ap-nis" name="nis" inputMode="numeric" maxLength={19} dir="ltr" defaultValue={d.nis} placeholder="000000000000000" />
+            {err("nis")}
+          </Field>
+          <Field label={o("taxArticle")} hint={o("optional")} htmlFor="ap-article">
+            <TextInput id="ap-article" name="taxArticle" inputMode="numeric" maxLength={14} dir="ltr" defaultValue={d.taxArticle} placeholder="00000000000" />
+            {err("taxArticle")}
           </Field>
           <Field label={o("website")} hint={o("optional")} htmlFor="ap-web">
             <TextInput id="ap-web" name="website" dir="ltr" defaultValue={d.website} placeholder="www.exemple.dz" />

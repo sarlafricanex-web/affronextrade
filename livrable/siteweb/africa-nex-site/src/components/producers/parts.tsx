@@ -1,14 +1,5 @@
 // Elements d'affichage partages par l'annuaire et la fiche producteur (sans etat, rendus serveur ou client).
 
-export const SECTOR_FILTER_KEY: Record<string, string> = {
-  agrifood: "filterAgrifood",
-  industry: "filterIndustry",
-  automotive: "filterAutomotive",
-  crafts: "filterCrafts",
-  cosmetics: "filterCosmetics",
-  agriculture: "filterAgriculture",
-};
-
 export function VerifiedBadge({ label }: { label: string }) {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" role="img" aria-label={label} className="shrink-0">

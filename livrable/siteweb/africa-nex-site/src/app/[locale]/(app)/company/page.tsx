@@ -73,7 +73,7 @@ export default async function CompanyPage({
 
   // Completion calculee sur les vrais champs de la fiche, rien d'autre.
   const checks = [
-    { key: "checkIdentity", ok: Boolean(company.private?.tax_id && company.private?.rc_number) },
+    { key: "checkIdentity", ok: Boolean(company.private?.tax_id && company.private?.nis && company.private?.tax_article && company.private?.rc_number) },
     { key: "checkDescriptionFr", ok: Boolean(company.description_fr) },
     { key: "checkDescriptionEn", ok: Boolean(company.description_en) },
     { key: "checkDescriptionAr", ok: Boolean(company.description_ar) },
@@ -214,6 +214,8 @@ export default async function CompanyPage({
                   legalForm: company.legal_form ?? "",
                   sector: company.sector ?? "",
                   nif: company.private?.tax_id ?? "",
+                  nis: company.private?.nis ?? "",
+                  taxArticle: company.private?.tax_article ?? "",
                   rc: company.private?.rc_number ?? "",
                   wilaya: company.wilaya ?? "",
                   city: company.city ?? "",

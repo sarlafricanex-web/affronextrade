@@ -7,7 +7,8 @@ import { saveBuyer, type BuyerField, type BuyerState } from "@/app/[locale]/(app
 import { Alert, Field, TextInput } from "@/components/auth/fields";
 import { PhoneField } from "@/components/phone/PhoneField";
 import { CountrySelect } from "@/components/country/CountrySelect";
-import { BUYER_TYPES, SECTORS } from "@/lib/onboarding/reference";
+import { BUYER_TYPES } from "@/lib/onboarding/reference";
+import { SECTIONS, SECTOR_SECTIONS } from "@/lib/sectors";
 
 export type BuyerDefaults = {
   companyName: string;
@@ -24,6 +25,7 @@ const legend = "mb-2 text-xs font-semibold uppercase";
 
 export function BuyerForm({ defaults: initial, mode = "onboarding" }: { defaults: BuyerDefaults; mode?: "onboarding" | "edit" }) {
   const t = useTranslations("onboarding");
+  const ts = useTranslations("sectors");
   const locale = useLocale();
   const [state, action, pending] = useActionState<BuyerState, FormData>(saveBuyer, { errors: {} });
   // Apres une erreur, la saisie est reaffichee (React reinitialise le formulaire apres chaque envoi).
@@ -86,14 +88,19 @@ export function BuyerForm({ defaults: initial, mode = "onboarding" }: { defaults
       <fieldset className="flex flex-col gap-2">
         <legend className={legend} style={{ letterSpacing: "0.08em", color: "var(--muted)" }}>{t("interests")}</legend>
         <p className="text-xs" style={{ color: "var(--muted)" }}>{t("interestsHelp")}</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {SECTORS.map((s) => (
-            <label key={s} className="flex cursor-pointer items-center gap-2 px-3 py-3 text-sm" style={{ border: "1px solid var(--field-b)" }}>
-              <input type="checkbox" name="interests" value={s} defaultChecked={defaults.interests.includes(s)} />
-              {t(`sector_${s}`)}
-            </label>
-          ))}
-        </div>
+        {SECTIONS.map((section) => (
+          <div key={section} className="flex flex-col gap-2">
+            <p className="mt-2 text-xs font-bold" style={{ color: "var(--ink)" }}>{ts(`section_${section}`)}</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {SECTOR_SECTIONS[section].map((s) => (
+                <label key={s} className="flex cursor-pointer items-start gap-2 px-3 py-2.5 text-sm" style={{ border: "1px solid var(--field-b)" }}>
+                  <input type="checkbox" name="interests" value={s} defaultChecked={defaults.interests.includes(s)} className="mt-0.5 shrink-0" />
+                  {ts(s)}
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
         {err("interests")}
       </fieldset>
 
