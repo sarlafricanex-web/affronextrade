@@ -388,7 +388,10 @@
     "startOnboarding": "Set up my company",
     "continueOnboarding": "Continue setup",
     "configuredNotice": "Well done, your company is set up. Your profile stays in draft: AFRICA NEX reviews it before presenting it to buyers.",
-    "navCatalog": "Catalogue"
+    "navCatalog": "Catalogue",
+    "startBuyerOnboarding": "Complete my profile",
+    "nextBuyerSetup": "Next step: tell us about your company and the products you are looking for.",
+    "buyerConfiguredNotice": "Thank you, your profile is complete. The AFRICA NEX team can now handle your quote requests."
   },
   "admin": {
     "eyebrow": "Contact form",
@@ -575,7 +578,26 @@
     "checkLogo": "Logo",
     "checkWebsite": "Website",
     "checkProduct": "At least one product",
-    "sidePublished": "Your profile is visible to buyers in the directory."
+    "sidePublished": "Your profile is visible to buyers in the directory.",
+    "buyerEyebrow": "Buyer space",
+    "buyerTitle": "Your company",
+    "buyerIntro": "A few details so the AFRICA NEX team can qualify your requests and match you with the right Algerian producers. It takes two minutes.",
+    "buyerType": "Buyer type",
+    "buyerType_importer": "Importer",
+    "buyerType_distributor": "Distributor",
+    "buyerType_wholesaler": "Wholesaler",
+    "buyerType_retailer": "Retailer",
+    "buyerType_industrial": "Manufacturer",
+    "buyerType_other": "Other",
+    "country": "Country",
+    "countryPlaceholder": "Choose your country",
+    "interests": "Products you are looking for",
+    "interestsHelp": "Tick at least one sector. You can change it at any time.",
+    "errorInterests": "Tick at least one sector.",
+    "buyerPrivacyNote": "This information stays confidential: producers never see your name or contact details. AFRICA NEX only passes on your requirement.",
+    "buyerFinish": "Finish",
+    "buyerSideIntermediary": "AFRICA NEX is your single point of contact: we consult producers, compare their offers and present you with a clear proposal.",
+    "buyerSideInterests": "Your sectors let us notify you when a matching producer joins the platform."
   },
   "catalog": {
     "eyebrow": "Producer space",

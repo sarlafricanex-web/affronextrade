@@ -7,6 +7,9 @@ export type LegalForm = (typeof LEGAL_FORMS)[number];
 export const SECTORS = ["agrifood", "agriculture", "industry", "automotive", "cosmetics", "crafts"] as const;
 export type Sector = (typeof SECTORS)[number];
 
+// Types d'acheteurs (contrainte de la colonne companies.buyer_type).
+export const BUYER_TYPES = ["importer", "distributor", "wholesaler", "retailer", "industrial", "other"] as const;
+
 // Les 58 wilayas, code officiel et nom usuel.
 export const WILAYAS: ReadonlyArray<readonly [string, string]> = [
   ["01", "Adrar"], ["02", "Chlef"], ["03", "Laghouat"], ["04", "Oum El Bouaghi"], ["05", "Batna"],

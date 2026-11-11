@@ -26,7 +26,7 @@ export async function getMyCompany(client: Client, userId: string) {
   const [{ data: company, error: companyError }, { data: privateData, error: privateError }] = await Promise.all([
     client
       .from("companies")
-      .select("id, company_name, legal_form, sector, wilaya, city, visibility, description_fr, description_en, description_ar, website, founded_year, headcount, logo_url")
+      .select("id, kind, company_name, legal_form, sector, wilaya, city, country, buyer_type, interests, visibility, description_fr, description_en, description_ar, website, founded_year, headcount, logo_url")
       .eq("id", membership.company_id)
       .single(),
     client

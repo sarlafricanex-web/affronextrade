@@ -6,8 +6,40 @@ import { getFirstProduct, getMyCompany } from "@/lib/data/company";
 import { ProductForm } from "@/components/onboarding/ProductForm";
 import { IdentityForm } from "@/components/onboarding/IdentityForm";
 import { PresentationForm } from "@/components/onboarding/PresentationForm";
+import { BuyerForm } from "@/components/onboarding/BuyerForm";
+import { buyerDefaults } from "@/lib/onboarding/buyer";
 
 export const instant = false;
+
+type User = NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>;
+
+// Acheteur : un seul ecran (entreprise, pays, contacts, secteurs recherches).
+async function BuyerOnboarding({ locale, user }: { locale: string; user: User }) {
+  const [t, defaults] = await Promise.all([
+    getTranslations({ locale, namespace: "onboarding" }),
+    buyerDefaults(user.supabase, user.userId),
+  ]);
+  return (
+    <div className="flex flex-col gap-8">
+      <header>
+        <p className="text-xs font-semibold uppercase" style={{ letterSpacing: "0.08em", color: "var(--muted)" }}>{t("buyerEyebrow")}</p>
+        <h1 className="mt-2 font-extrabold" style={{ fontSize: "var(--step-title)", lineHeight: 1 }}>{t("buyerTitle")}</h1>
+        <p className="mt-3" style={{ color: "var(--muted)", maxWidth: "60ch" }}>{t("buyerIntro")}</p>
+      </header>
+      <div className="grid lg:grid-cols-[1fr_300px] gap-8 items-start">
+        <section style={{ background: "white", border: "1px solid var(--field-b)", padding: "clamp(1.25rem, 3vw, 2rem)" }}>
+          <BuyerForm defaults={defaults} />
+        </section>
+        <aside className="flex flex-col gap-4 p-5" style={{ background: "white", border: "1px solid var(--field-b)" }}>
+          <h2 className="font-bold">{t("sideTitle")}</h2>
+          <p className="text-sm" style={{ color: "var(--muted)" }}>{t("buyerSideIntermediary")}</p>
+          <p className="text-sm" style={{ color: "var(--muted)" }}>{t("buyerSideInterests")}</p>
+          <p className="text-sm" style={{ color: "var(--muted)" }}>{t("sideHelp")}</p>
+        </aside>
+      </div>
+    </div>
+  );
+}
 
 const STEPS = ["stepIdentity", "stepPresentation", "stepProduct"] as const;
 
@@ -21,7 +53,7 @@ export default async function OnboardingPage({
   const { locale } = await params;
   const user = await getCurrentUser();
   if (!user) redirect(`/${locale}/login`);
-  // Premiere configuration reservee aux producteurs (celle des acheteurs viendra ensuite).
+  if (user.role === "buyer") return <BuyerOnboarding locale={locale} user={user} />;
   if (user.role !== "producer") redirect(`/${locale}/dashboard`);
 
   const [t, company, { step }] = await Promise.all([

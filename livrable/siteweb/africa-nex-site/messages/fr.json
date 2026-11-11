@@ -388,7 +388,10 @@
     "startOnboarding": "Configurer mon entreprise",
     "continueOnboarding": "Continuer la configuration",
     "configuredNotice": "Bravo, votre entreprise est configuree. Votre fiche reste en brouillon : AFRICA NEX la verifie avant de la presenter aux acheteurs.",
-    "navCatalog": "Catalogue"
+    "navCatalog": "Catalogue",
+    "startBuyerOnboarding": "Compléter mon profil",
+    "nextBuyerSetup": "Prochaine étape : présenter votre entreprise et les produits que vous recherchez.",
+    "buyerConfiguredNotice": "Merci, votre profil est complet. L'équipe AFRICA NEX peut maintenant traiter vos demandes de devis."
   },
   "admin": {
     "eyebrow": "Formulaire de contact",
@@ -575,7 +578,26 @@
     "checkLogo": "Logo",
     "checkWebsite": "Site web",
     "checkProduct": "Au moins un produit",
-    "sidePublished": "Votre fiche est visible des acheteurs dans l'annuaire."
+    "sidePublished": "Votre fiche est visible des acheteurs dans l'annuaire.",
+    "buyerEyebrow": "Espace acheteur",
+    "buyerTitle": "Votre entreprise",
+    "buyerIntro": "Quelques informations pour que l'équipe AFRICA NEX qualifie vos demandes et vous propose les bons producteurs algériens. Deux minutes suffisent.",
+    "buyerType": "Type d'acheteur",
+    "buyerType_importer": "Importateur",
+    "buyerType_distributor": "Distributeur",
+    "buyerType_wholesaler": "Grossiste",
+    "buyerType_retailer": "Détaillant",
+    "buyerType_industrial": "Industriel",
+    "buyerType_other": "Autre",
+    "country": "Pays",
+    "countryPlaceholder": "Choisissez votre pays",
+    "interests": "Produits recherchés",
+    "interestsHelp": "Cochez au moins un secteur. Vous pourrez le modifier à tout moment.",
+    "errorInterests": "Cochez au moins un secteur.",
+    "buyerPrivacyNote": "Ces informations restent confidentielles : les producteurs ne voient jamais votre nom ni vos coordonnées. AFRICA NEX leur transmet seulement votre besoin.",
+    "buyerFinish": "Terminer",
+    "buyerSideIntermediary": "AFRICA NEX est votre interlocuteur unique : nous consultons les producteurs, comparons leurs offres et vous présentons une proposition claire.",
+    "buyerSideInterests": "Vos secteurs nous permettent de vous prévenir quand un producteur correspondant rejoint la plateforme."
   },
   "catalog": {
     "eyebrow": "Espace producteur",

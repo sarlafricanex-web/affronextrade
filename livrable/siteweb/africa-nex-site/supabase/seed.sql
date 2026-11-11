@@ -7,22 +7,22 @@ insert into public.companies
    brand_initials, brand_color, logo_url,
    verified, visibility, claim_status, created_by_admin)
 values
-  ('1',  'ifri',               'Ifri',               'producer', 'Algeria', 'Ighzer Amokrane, Bejaia',    'agrifood',    'IF', '#0891b2', '/images/logos/ifri.png',    false, 'published', 'unclaimed', true),
-  ('2',  'cevital',            'Cevital',            'producer', 'Algeria', 'Bejaia',                     'agrifood',    'CV', '#059669', '/images/logos/cevital.png', false, 'published', 'unclaimed', true),
-  ('3',  'sim',                'SIM',                'producer', 'Algeria', 'Blida',                      'industry',    'SM', '#7c3aed', null,                        false, 'published', 'unclaimed', true),
-  ('4',  'condor-electronics', 'Condor Electronics', 'producer', 'Algeria', 'Bordj Bou Arreridj',         'industry',    'CE', '#dc2626', '/images/logos/condor.png',  false, 'published', 'unclaimed', true),
-  ('5',  'lalla-khedidja',     'Lalla Khedidja',     'producer', 'Algeria', 'Tizi Ouzou',                 'agrifood',    'LK', '#2563eb', null,                        false, 'published', 'unclaimed', true),
-  ('6',  'agrodiv',            'Agrodiv',            'producer', 'Algeria', 'Guelma',                     'agrifood',    'AG', '#ea580c', null,                        false, 'published', 'unclaimed', true),
-  ('7',  'toudja-olive-oil',   'Toudja Olive Oil',   'producer', 'Algeria', 'Bejaia',                     'agrifood',    'TO', '#65a30d', null,                        false, 'published', 'unclaimed', true),
-  ('8',  'biscuiterie-bimo',   'Biscuiterie Bimo',   'producer', 'Algeria', 'Blida',                      'agrifood',    'BB', '#b45309', null,                        false, 'published', 'unclaimed', true),
-  ('9',  'henkel-algerie',     'Henkel Algerie',     'producer', 'Algeria', 'Alger',                      'cosmetics',   'HA', '#be185d', null,                        false, 'published', 'unclaimed', true),
-  ('10', 'ceramique-saida',    'Ceramique Saida',    'producer', 'Algeria', 'Saida',                      'crafts',      'CS', '#9333ea', null,                        false, 'published', 'unclaimed', true),
-  ('11', 'fertial',            'Fertial',            'producer', 'Algeria', 'Annaba',                     'agriculture', 'FT', '#0d9488', null,                        false, 'published', 'unclaimed', true),
-  ('12', 'hodna-lait',         'Hodna Lait',         'producer', 'Algeria', 'M''sila',                    'agrifood',    'HL', '#4f46e5', null,                        false, 'published', 'unclaimed', true),
-  ('13', 'motrio-algerie',     'MOTRIO Algerie',     'producer', 'Algeria', 'Alger',                      'automotive',  'MO', '#dc2626', '/images/logos/motrio.png',  false, 'published', 'unclaimed', true),
-  ('14', 'iris-tyres',         'IRIS Tyres',         'producer', 'Algeria', 'Setif',                      'automotive',  'IT', '#ea580c', null,                        false, 'published', 'unclaimed', true),
-  ('15', 'fb-radiateur',       'FB Radiateur',       'producer', 'Algeria', 'Ain M''lila, Oum El Bouaghi', 'automotive', 'FB', '#1d4ed8', null,                        false, 'published', 'unclaimed', true),
-  ('16', 'cirta-automotive',   'Cirta Automotive',   'producer', 'Algeria', 'Constantine',                'automotive',  'CA', '#0f766e', null,                        false, 'published', 'unclaimed', true)
+  ('1',  'ifri',               'Ifri',               'producer', 'DZ', 'Ighzer Amokrane, Bejaia',    'agrifood',    'IF', '#0891b2', '/images/logos/ifri.png',    false, 'published', 'unclaimed', true),
+  ('2',  'cevital',            'Cevital',            'producer', 'DZ', 'Bejaia',                     'agrifood',    'CV', '#059669', '/images/logos/cevital.png', false, 'published', 'unclaimed', true),
+  ('3',  'sim',                'SIM',                'producer', 'DZ', 'Blida',                      'industry',    'SM', '#7c3aed', null,                        false, 'published', 'unclaimed', true),
+  ('4',  'condor-electronics', 'Condor Electronics', 'producer', 'DZ', 'Bordj Bou Arreridj',         'industry',    'CE', '#dc2626', '/images/logos/condor.png',  false, 'published', 'unclaimed', true),
+  ('5',  'lalla-khedidja',     'Lalla Khedidja',     'producer', 'DZ', 'Tizi Ouzou',                 'agrifood',    'LK', '#2563eb', null,                        false, 'published', 'unclaimed', true),
+  ('6',  'agrodiv',            'Agrodiv',            'producer', 'DZ', 'Guelma',                     'agrifood',    'AG', '#ea580c', null,                        false, 'published', 'unclaimed', true),
+  ('7',  'toudja-olive-oil',   'Toudja Olive Oil',   'producer', 'DZ', 'Bejaia',                     'agrifood',    'TO', '#65a30d', null,                        false, 'published', 'unclaimed', true),
+  ('8',  'biscuiterie-bimo',   'Biscuiterie Bimo',   'producer', 'DZ', 'Blida',                      'agrifood',    'BB', '#b45309', null,                        false, 'published', 'unclaimed', true),
+  ('9',  'henkel-algerie',     'Henkel Algerie',     'producer', 'DZ', 'Alger',                      'cosmetics',   'HA', '#be185d', null,                        false, 'published', 'unclaimed', true),
+  ('10', 'ceramique-saida',    'Ceramique Saida',    'producer', 'DZ', 'Saida',                      'crafts',      'CS', '#9333ea', null,                        false, 'published', 'unclaimed', true),
+  ('11', 'fertial',            'Fertial',            'producer', 'DZ', 'Annaba',                     'agriculture', 'FT', '#0d9488', null,                        false, 'published', 'unclaimed', true),
+  ('12', 'hodna-lait',         'Hodna Lait',         'producer', 'DZ', 'M''sila',                    'agrifood',    'HL', '#4f46e5', null,                        false, 'published', 'unclaimed', true),
+  ('13', 'motrio-algerie',     'MOTRIO Algerie',     'producer', 'DZ', 'Alger',                      'automotive',  'MO', '#dc2626', '/images/logos/motrio.png',  false, 'published', 'unclaimed', true),
+  ('14', 'iris-tyres',         'IRIS Tyres',         'producer', 'DZ', 'Setif',                      'automotive',  'IT', '#ea580c', null,                        false, 'published', 'unclaimed', true),
+  ('15', 'fb-radiateur',       'FB Radiateur',       'producer', 'DZ', 'Ain M''lila, Oum El Bouaghi', 'automotive', 'FB', '#1d4ed8', null,                        false, 'published', 'unclaimed', true),
+  ('16', 'cirta-automotive',   'Cirta Automotive',   'producer', 'DZ', 'Constantine',                'automotive',  'CA', '#0f766e', null,                        false, 'published', 'unclaimed', true)
 on conflict (legacy_id) do nothing;
 
 insert into public.products (company_id, product_name, sort_order, status, source)

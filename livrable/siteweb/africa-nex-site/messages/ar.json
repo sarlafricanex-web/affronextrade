@@ -388,7 +388,10 @@
     "startOnboarding": "إعداد مؤسستي",
     "continueOnboarding": "متابعة الإعداد",
     "configuredNotice": "أحسنت، تم إعداد مؤسستك. تبقى بطاقتك مسودة: تتحقق منها AFRICA NEX قبل عرضها على المشترين.",
-    "navCatalog": "الكتالوج"
+    "navCatalog": "الكتالوج",
+    "startBuyerOnboarding": "إكمال ملفي",
+    "nextBuyerSetup": "الخطوة التالية: قدّم مؤسستك والمنتجات التي تبحث عنها.",
+    "buyerConfiguredNotice": "شكرًا، ملفك مكتمل. يمكن لفريق AFRICA NEX الآن معالجة طلبات عروض الأسعار الخاصة بك."
   },
   "admin": {
     "eyebrow": "استمارة الاتصال",
@@ -575,7 +578,26 @@
     "checkLogo": "الشعار",
     "checkWebsite": "الموقع الإلكتروني",
     "checkProduct": "منتج واحد على الأقل",
-    "sidePublished": "بطاقتك مرئية للمشترين في الدليل."
+    "sidePublished": "بطاقتك مرئية للمشترين في الدليل.",
+    "buyerEyebrow": "فضاء المشتري",
+    "buyerTitle": "مؤسستك",
+    "buyerIntro": "بعض المعلومات ليتمكن فريق AFRICA NEX من دراسة طلباتك واقتراح المنتجين الجزائريين المناسبين. يكفي دقيقتان.",
+    "buyerType": "نوع المشتري",
+    "buyerType_importer": "مستورد",
+    "buyerType_distributor": "موزع",
+    "buyerType_wholesaler": "تاجر جملة",
+    "buyerType_retailer": "تاجر تجزئة",
+    "buyerType_industrial": "مصنّع",
+    "buyerType_other": "آخر",
+    "country": "البلد",
+    "countryPlaceholder": "اختر بلدك",
+    "interests": "المنتجات المطلوبة",
+    "interestsHelp": "اختر قطاعًا واحدًا على الأقل. يمكنك تغييره في أي وقت.",
+    "errorInterests": "اختر قطاعًا واحدًا على الأقل.",
+    "buyerPrivacyNote": "تبقى هذه المعلومات سرية: لا يرى المنتجون اسمك ولا بيانات اتصالك أبدًا. تنقل لهم AFRICA NEX احتياجك فقط.",
+    "buyerFinish": "إنهاء",
+    "buyerSideIntermediary": "AFRICA NEX هي جهة اتصالك الوحيدة: نستشير المنتجين ونقارن عروضهم ونقدم لك اقتراحًا واضحًا.",
+    "buyerSideInterests": "تسمح لنا قطاعاتك بإعلامك عند انضمام منتج مناسب إلى المنصة."
   },
   "catalog": {
     "eyebrow": "فضاء المنتج",

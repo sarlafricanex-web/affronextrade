@@ -36,13 +36,18 @@ export default async function DashboardPage({
     ]);
     if (profile?.onboarding_completed) action = { href: "/company", key: "navCompany" };
     else if (company) action = { href: company.description_fr ? "/onboarding?step=3" : "/onboarding?step=2", key: "continueOnboarding" };
+  } else if (user.role === "buyer") {
+    // Acheteur : profil d'entreprise a remplir avant de demander des devis.
+    const { data: profile } = await user.supabase.from("profiles").select("onboarding_completed").eq("id", user.userId).single();
+    if (!profile?.onboarding_completed) action = { href: "/onboarding", key: "startBuyerOnboarding" };
   }
+  const nextStep = user.role === "buyer" && action.href === "/onboarding" ? "nextBuyerSetup" : NEXT_STEP[user.role];
 
   return (
     <div className="flex flex-col gap-8">
-      {configured && user.role === "producer" && (
+      {configured && (user.role === "producer" || user.role === "buyer") && (
         <p role="status" className="p-4 font-semibold" style={{ background: "white", borderInlineStart: "4px solid var(--accent)" }}>
-          {t("configuredNotice")}
+          {t(user.role === "buyer" ? "buyerConfiguredNotice" : "configuredNotice")}
         </p>
       )}
       <header>
@@ -55,7 +60,7 @@ export default async function DashboardPage({
       <section style={{ background: "white", border: "1px solid var(--field-b)", padding: "clamp(1.25rem, 3vw, 2rem)" }}>
         <h2 className="font-extrabold" style={{ fontSize: "var(--step-heading)" }}>{t("comingSoonTitle")}</h2>
         <p className="mt-3" style={{ color: "var(--muted)" }}>{t("comingSoonText")}</p>
-        <p className="mt-5 font-semibold">{t(NEXT_STEP[user.role])}</p>
+        <p className="mt-5 font-semibold">{t(nextStep)}</p>
         {action && (
           <Link
             href={action.href}

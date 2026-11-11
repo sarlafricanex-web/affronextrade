@@ -56,6 +56,7 @@ export type Database = {
         Row: {
           brand_color: string | null
           brand_initials: string | null
+          buyer_type: string | null
           city: string | null
           claim_status: string
           company_name: string
@@ -70,6 +71,7 @@ export type Database = {
           founded_year: number | null
           headcount: string | null
           id: string
+          interests: string[]
           kind: string
           legacy_id: string | null
           legal_form: string | null
@@ -93,6 +95,7 @@ export type Database = {
         Insert: {
           brand_color?: string | null
           brand_initials?: string | null
+          buyer_type?: string | null
           city?: string | null
           claim_status?: string
           company_name: string
@@ -107,6 +110,7 @@ export type Database = {
           founded_year?: number | null
           headcount?: string | null
           id?: string
+          interests?: string[]
           kind?: string
           legacy_id?: string | null
           legal_form?: string | null
@@ -130,6 +134,7 @@ export type Database = {
         Update: {
           brand_color?: string | null
           brand_initials?: string | null
+          buyer_type?: string | null
           city?: string | null
           claim_status?: string
           company_name?: string
@@ -144,6 +149,7 @@ export type Database = {
           founded_year?: number | null
           headcount?: string | null
           id?: string
+          interests?: string[]
           kind?: string
           legacy_id?: string | null
           legal_form?: string | null

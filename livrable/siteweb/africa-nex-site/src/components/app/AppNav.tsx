@@ -11,7 +11,10 @@ const LINKS = {
     { href: "/company", key: "navCompany" },
     { href: "/catalog", key: "navCatalog" },
   ],
-  buyer: [{ href: "/dashboard", key: "navDashboard" }],
+  buyer: [
+    { href: "/dashboard", key: "navDashboard" },
+    { href: "/company", key: "navCompany" },
+  ],
   admin: [
     { href: "/dashboard", key: "navDashboard" },
     { href: "/admin", key: "navAdmin" },

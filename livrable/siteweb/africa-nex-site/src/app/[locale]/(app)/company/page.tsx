@@ -6,6 +6,9 @@ import { getMyCompany } from "@/lib/data/company";
 import { WILAYAS } from "@/lib/onboarding/reference";
 import { IdentityForm } from "@/components/onboarding/IdentityForm";
 import { PresentationForm } from "@/components/onboarding/PresentationForm";
+import { BuyerForm } from "@/components/onboarding/BuyerForm";
+import { buyerDefaults } from "@/lib/onboarding/buyer";
+import { countryName } from "@/lib/countries";
 
 export const instant = false;
 
@@ -21,6 +24,29 @@ export default async function CompanyPage({
   const { locale } = await params;
   const user = await getCurrentUser();
   if (!user) redirect(`/${locale}/login`);
+  if (user.role === "buyer") {
+    const [t, defaults, { saved }] = await Promise.all([
+      getTranslations({ locale, namespace: "onboarding" }),
+      buyerDefaults(user.supabase, user.userId),
+      searchParams,
+    ]);
+    if (!defaults.companyName) redirect(`/${locale}/onboarding`);
+    return (
+      <div className="flex flex-col gap-8">
+        {saved && (
+          <p role="status" className="p-4 font-semibold" style={{ background: "white", borderInlineStart: "4px solid var(--accent)" }}>{t("savedNotice")}</p>
+        )}
+        <header>
+          <p className="text-xs font-semibold uppercase" style={{ letterSpacing: "0.08em", color: "var(--muted)" }}>{t("buyerEyebrow")}</p>
+          <h1 className="mt-2 font-extrabold" style={{ fontSize: "var(--step-title)", lineHeight: 1 }}>{defaults.companyName}</h1>
+          <p className="mt-3" style={{ color: "var(--muted)" }}>{countryName(defaults.country, locale)} · {defaults.city}</p>
+        </header>
+        <section style={{ background: "white", border: "1px solid var(--field-b)", padding: "clamp(1.25rem, 3vw, 2rem)" }}>
+          <BuyerForm defaults={defaults} mode="edit" />
+        </section>
+      </div>
+    );
+  }
   if (user.role !== "producer") redirect(`/${locale}/dashboard`);
 
   const [t, company, { tab, saved }] = await Promise.all([
