@@ -366,7 +366,7 @@ export default async function ProducerProfilePage({ params }: { params: Params }
               </p>
               <h2 className="mb-2 font-extrabold" style={{ fontSize: "1.75rem", lineHeight: 1.2, letterSpacing: "-0.025em" }}>{t("quoteTitle")}</h2>
               <p className="mb-6 leading-relaxed" style={{ color: "#f4e6d6" }}>{t("quoteText")}</p>
-              <Link href="/register" className="mb-4 block w-full px-4 py-3.5 text-center font-bold uppercase" style={{ background: "#10b981", color: "white", letterSpacing: "0.04em" }}>
+              <Link href={`/register?role=buyer&next=${encodeURIComponent(`/${locale}/producers/${profile.slug}`)}`} className="mb-4 block w-full px-4 py-3.5 text-center font-bold uppercase" style={{ background: "#10b981", color: "white", letterSpacing: "0.04em" }}>
                 {t("requestQuote")}
               </Link>
               <ul className="space-y-2 pt-4 text-sm" style={{ borderTop: "1px solid #334155", color: "#cbd5e1" }}>

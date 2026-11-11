@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -23,6 +23,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  // "Creer un compte" garde la page d'origine ; depuis une fiche (avis), le compte propose est acheteur.
+  const search = useSyncExternalStore(() => () => {}, () => window.location.search, () => "");
+  const next = new URLSearchParams(search).get("next");
+  const registerHref = next
+    ? `/register?${new URLSearchParams({ next, ...(/\/producers\//.test(next) ? { role: "buyer" } : {}) }).toString()}`
+    : "/register";
 
   async function submit(event: { preventDefault: () => void }) {
     event.preventDefault();
@@ -66,7 +72,7 @@ export default function LoginPage() {
 
         <p className="text-center text-sm" style={{ color: "var(--muted)" }}>
           {t("noAccount")}{" "}
-          <Link href="/register" className="font-semibold underline" style={{ color: "var(--ink)" }}>{t("createLink")}</Link>
+          <Link href={registerHref} className="font-semibold underline" style={{ color: "var(--ink)" }}>{t("createLink")}</Link>
         </p>
       </form>
     </AuthShell>

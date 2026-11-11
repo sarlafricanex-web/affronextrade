@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
+import { safeNextPath } from "@/lib/auth/next-path";
 import { createClient } from "@/lib/supabase/client";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { GoogleButton } from "@/components/auth/GoogleButton";
@@ -19,8 +20,13 @@ const focusField = (id: string) => document.getElementById(id)?.focus();
 export default function RegisterPage() {
   const t = useTranslations("auth");
   const locale = useLocale();
-  const router = useRouter();
-  const [role, setRole] = useState<Role>("producer");
+  // Parametres de l'adresse (?role=buyer, ?next=/fr/claim/...) lus sans decalage d'hydratation :
+  // vide au rendu serveur, puis la vraie valeur dans le navigateur.
+  const search = useSyncExternalStore(() => () => {}, () => window.location.search, () => "");
+  const params = new URLSearchParams(search);
+  const next = params.get("next");
+  const [chosenRole, setRole] = useState<Role | null>(null);
+  const role: Role = chosenRole ?? (params.get("role") === "buyer" ? "buyer" : "producer");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -56,8 +62,10 @@ export default function RegisterPage() {
     }
 
     setLoading(true);
+    // Apres l'inscription, retour a la page d'origine (revendication, fiche...) si elle est sure.
+    const destination = safeNextPath(next, locale);
     const callback = new URL("/auth/callback", window.location.origin);
-    callback.searchParams.set("next", `/${locale}/dashboard`);
+    callback.searchParams.set("next", destination);
     const { data, error: signUpError } = await createClient().auth.signUp({
       email,
       password,
@@ -73,7 +81,7 @@ export default function RegisterPage() {
       return;
     }
     if (data.session) {
-      router.replace("/dashboard");
+      window.location.assign(destination);
       return;
     }
     // Confirmation d'email active (en production) : la session arrive apres le clic dans l'email.
@@ -153,7 +161,7 @@ export default function RegisterPage() {
 
         <p className="text-center text-sm" style={{ color: "var(--muted)" }}>
           {t("haveAccount")}{" "}
-          <Link href="/login" className="font-semibold underline" style={{ color: "var(--ink)" }}>{t("signIn")}</Link>
+          <Link href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"} className="font-semibold underline" style={{ color: "var(--ink)" }}>{t("signIn")}</Link>
         </p>
       </form>
     </AuthShell>
