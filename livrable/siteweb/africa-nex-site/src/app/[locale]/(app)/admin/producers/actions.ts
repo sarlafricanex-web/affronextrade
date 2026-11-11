@@ -158,6 +158,15 @@ export async function adminProducerAction(formData: FormData) {
   } else if (op === "verify" || op === "unverify") {
     // La base refuse le badge sur une fiche non revendiquee (contrainte verified_requires_claim).
     ({ error } = await supabase.from("companies").update({ verified: op === "verify" }).eq("id", id).eq("kind", "producer"));
+  } else if (op === "acceptDoc" || op === "rejectDoc") {
+    const docId = text(formData, "docId");
+    if (UUID.test(docId)) {
+      ({ error } = await supabase
+        .from("company_documents")
+        .update({ review_status: op === "acceptDoc" ? "accepted" : "rejected", reviewed_by: userId, reviewed_at: new Date().toISOString() })
+        .eq("id", docId)
+        .eq("company_id", id));
+    }
   } else if (op === "removeProduct") {
     const productId = text(formData, "productId");
     if (UUID.test(productId)) ({ error } = await supabase.from("products").delete().eq("id", productId).eq("company_id", id));

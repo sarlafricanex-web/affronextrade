@@ -9,17 +9,19 @@ import { PresentationForm } from "@/components/onboarding/PresentationForm";
 import { BuyerForm } from "@/components/onboarding/BuyerForm";
 import { buyerDefaults } from "@/lib/onboarding/buyer";
 import { countryName } from "@/lib/countries";
+import { DocumentsPanel } from "@/components/company/DocumentsPanel";
 
 export const instant = false;
 
-const TABS = ["presentation", "identity"] as const;
+const TABS = ["presentation", "identity", "documents"] as const;
+const TAB_LABEL = { presentation: "tabPresentation", identity: "tabIdentity", documents: "tabDocuments" } as const;
 
 export default async function CompanyPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ tab?: string; saved?: string }>;
+  searchParams: Promise<{ tab?: string; saved?: string; doc?: string }>;
 }) {
   const { locale } = await params;
   const user = await getCurrentUser();
@@ -49,7 +51,7 @@ export default async function CompanyPage({
   }
   if (user.role !== "producer") redirect(`/${locale}/dashboard`);
 
-  const [t, company, { tab, saved }] = await Promise.all([
+  const [t, company, { tab, saved, doc }] = await Promise.all([
     getTranslations({ locale, namespace: "onboarding" }),
     getMyCompany(user.supabase, user.userId),
     searchParams,
@@ -57,12 +59,12 @@ export default async function CompanyPage({
   // Pas encore d'entreprise : la premiere configuration la cree.
   if (!company) redirect(`/${locale}/onboarding`);
 
-  const { count: productCount } = await user.supabase
-    .from("products")
-    .select("id", { count: "exact", head: true })
-    .eq("company_id", company.id);
+  const [{ count: productCount }, { count: registrationCount }] = await Promise.all([
+    user.supabase.from("products").select("id", { count: "exact", head: true }).eq("company_id", company.id),
+    user.supabase.from("company_documents").select("id", { count: "exact", head: true }).eq("company_id", company.id).eq("kind", "registration"),
+  ]);
 
-  const current = tab === "identity" ? "identity" : "presentation";
+  const current = tab === "identity" || tab === "documents" ? tab : "presentation";
   const wilaya = WILAYAS.find(([code]) => code === company.wilaya)?.[1];
 
   // Completion calculee sur les vrais champs de la fiche, rien d'autre.
@@ -74,6 +76,7 @@ export default async function CompanyPage({
     { key: "checkLogo", ok: Boolean(company.logo_url) },
     { key: "checkWebsite", ok: Boolean(company.website) },
     { key: "checkProduct", ok: (productCount ?? 0) > 0 },
+    { key: "checkRegistration", ok: (registrationCount ?? 0) > 0 },
   ];
   const percent = Math.round((checks.filter((c) => c.ok).length / checks.length) * 100);
   const published = company.visibility === "published";
@@ -123,13 +126,15 @@ export default async function CompanyPage({
                   className="px-5 py-3 text-sm font-bold"
                   style={{ background: active ? "var(--ink)" : "white", color: active ? "white" : "var(--ink)", border: "1px solid var(--field-b)" }}
                 >
-                  {t(key === "presentation" ? "tabPresentation" : "tabIdentity")}
+                  {t(TAB_LABEL[key])}
                 </Link>
               );
             })}
           </nav>
           <section style={{ background: "white", border: "1px solid var(--field-b)", borderTop: "none", padding: "clamp(1.25rem, 3vw, 2rem)" }}>
-            {current === "presentation" ? (
+            {current === "documents" ? (
+              <DocumentsPanel client={user.supabase} companyId={company.id} locale={locale} notice={doc} />
+            ) : current === "presentation" ? (
               <PresentationForm
                 mode="edit"
                 defaults={{

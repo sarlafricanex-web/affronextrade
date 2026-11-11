@@ -268,27 +268,42 @@ export type Database = {
         Row: {
           company_id: string
           created_at: string
+          expires_on: string | null
+          file_type: string | null
           id: string
           is_public: boolean
           kind: string
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           storage_path: string
           title: string | null
         }
         Insert: {
           company_id: string
           created_at?: string
+          expires_on?: string | null
+          file_type?: string | null
           id?: string
           is_public?: boolean
           kind: string
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           storage_path: string
           title?: string | null
         }
         Update: {
           company_id?: string
           created_at?: string
+          expires_on?: string | null
+          file_type?: string | null
           id?: string
           is_public?: boolean
           kind?: string
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           storage_path?: string
           title?: string | null
         }
@@ -312,6 +327,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "producer_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_documents_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

@@ -23,8 +23,9 @@ export default async function AdminProducerPage({
   if (user.role !== "admin") redirect(`/${locale}/dashboard`);
 
   const isNew = id === "new";
-  const [t, producer, { done, error }] = await Promise.all([
+  const [t, td, producer, { done, error }] = await Promise.all([
     getTranslations({ locale, namespace: "admin" }),
+    getTranslations({ locale, namespace: "documents" }),
     isNew ? Promise.resolve(null) : getAdminProducer(user.supabase, id),
     searchParams,
   ]);
@@ -88,6 +89,43 @@ export default async function AdminProducerPage({
               ))}
             </ul>
             <p className="text-xs" style={{ color: "var(--muted)" }}>{t("apProductsOwnerNote")}</p>
+
+            <h2 className="mt-4 font-bold" style={{ borderTop: "1px solid var(--field-b)", paddingTop: "1rem" }}>{t("apDocuments", { count: producer.documents.length })}</h2>
+            {producer.documents.length === 0 && <p className="text-sm" style={{ color: "var(--muted)" }}>{t("apNoDocuments")}</p>}
+            <ul className="flex flex-col gap-3">
+              {producer.documents.map((d) => (
+                <li key={d.id} className="flex flex-col gap-1 text-sm">
+                  <span className="font-semibold">{d.title || td(`kind_${d.kind}`)}</span>
+                  <span className="text-xs" style={{ color: "var(--muted)" }}>
+                    {td(`kind_${d.kind}`)} · {d.is_public ? td("publicShort") : td("privateShort")}
+                    {d.expires_on ? ` · ${d.expires_on}` : ""} · <strong>{td(`status_${d.review_status}`)}</strong>
+                  </span>
+                  <span className="flex flex-wrap items-center gap-3">
+                    <a href={`/api/documents/${d.id}`} target="_blank" rel="noopener" className="text-xs font-bold uppercase underline" style={{ color: "var(--accent)" }}>{td("open")}</a>
+                    {d.review_status !== "accepted" && (
+                      <form action={adminProducerAction}>
+                        <input type="hidden" name="locale" value={locale} />
+                        <input type="hidden" name="id" value={producer.id} />
+                        <input type="hidden" name="op" value="acceptDoc" />
+                        <input type="hidden" name="docId" value={d.id} />
+                        <input type="hidden" name="back" value="edit" />
+                        <button type="submit" className="text-xs font-bold uppercase" style={{ color: "var(--accent)" }}>{t("docAccept")}</button>
+                      </form>
+                    )}
+                    {d.review_status !== "rejected" && (
+                      <form action={adminProducerAction}>
+                        <input type="hidden" name="locale" value={locale} />
+                        <input type="hidden" name="id" value={producer.id} />
+                        <input type="hidden" name="op" value="rejectDoc" />
+                        <input type="hidden" name="docId" value={d.id} />
+                        <input type="hidden" name="back" value="edit" />
+                        <button type="submit" className="text-xs font-bold uppercase" style={{ color: "#dc2626" }}>{t("docReject")}</button>
+                      </form>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </aside>
         )}
       </div>

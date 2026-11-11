@@ -6,6 +6,7 @@ import { saveFirstProduct, type ProductField, type ProductState } from "@/app/[l
 import { Alert, Field, TextInput } from "@/components/auth/fields";
 import { Link } from "@/i18n/navigation";
 import { CURRENCIES, PRICE_BASES, UNITS } from "@/lib/onboarding/reference";
+import { prepareUpload } from "@/lib/client/prepare-upload";
 
 export type ProductDefaults = {
   productName: string;
@@ -99,9 +100,10 @@ export function ProductForm({ defaults }: { defaults: ProductDefaults }) {
           </div>
           <label className="cursor-pointer px-5 py-3 text-sm font-bold uppercase" style={{ border: "1px solid var(--ink)", letterSpacing: "0.08em" }}>
             {photo ? t("changePhoto") : t("addPhoto")}
-            <input type="file" name="photo" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => {
-              const file = e.target.files?.[0];
-              setPreview(file ? URL.createObjectURL(file) : null);
+            <input type="file" name="photo" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={async (e) => {
+              // Photo de telephone reduite avant l'envoi : passe sous la limite de 4 Mo.
+              const result = await prepareUpload(e.currentTarget, { maxBytes: 4 * 1024 * 1024 });
+              setPreview(result.ok && result.file ? URL.createObjectURL(result.file) : null);
             }} />
           </label>
           <span className="text-xs" style={{ color: "var(--muted)" }}>{t("photoHint")}</span>

@@ -44,9 +44,10 @@ export default async function ProducerProfilePage({ params }: { params: Params }
   setRequestLocale(locale);
   const profile = await getProducerProfile(slug);
   if (!profile) notFound();
-  const [t, o, format] = await Promise.all([
+  const [t, o, td, format] = await Promise.all([
     getTranslations("producers"),
     getTranslations("onboarding"),
+    getTranslations("documents"),
     getFormatter(),
   ]);
 
@@ -118,6 +119,27 @@ export default async function ProducerProfilePage({ params }: { params: Params }
               </dl>
             )}
           </article>
+
+          {profile.documents.length > 0 && (
+            <article className="p-6" style={box}>
+              <h2 className="font-extrabold" style={{ fontSize: "var(--step-heading)" }}>{td("publicTitle")}</h2>
+              <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>{td("publicIntro")}</p>
+              <ul className="mt-4 flex flex-col gap-2">
+                {profile.documents.map((d) => (
+                  <li key={d.id} className="flex flex-wrap items-center justify-between gap-3 py-2 text-sm" style={{ borderBottom: "1px solid var(--field-b)" }}>
+                    <span>
+                      <span className="font-semibold">✓ {d.title || td(`kind_${d.kind}`)}</span>
+                      <span className="ms-2" style={{ color: "var(--muted)" }}>
+                        {td(`kind_${d.kind}`)}
+                        {d.expires_on ? ` · ${td("validUntil", { date: format.dateTime(new Date(`${d.expires_on}T12:00:00`), { dateStyle: "medium" }) })}` : ""}
+                      </span>
+                    </span>
+                    <a href={`/api/documents/${d.id}`} target="_blank" rel="noopener" className="text-xs font-bold uppercase" style={{ color: "var(--accent)", letterSpacing: "0.08em" }}>{td("open")}</a>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          )}
 
           <div>
             <h2 className="font-extrabold" style={{ fontSize: "var(--step-heading)" }}>{t("products")}</h2>

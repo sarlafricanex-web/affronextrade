@@ -77,7 +77,7 @@ export async function getProducerProfile(slug: string) {
   if (error) throw error;
   if (!c) return null;
 
-  const [{ data: products, error: productsError }, { data: reviews, error: reviewsError }] = await Promise.all([
+  const [{ data: products, error: productsError }, { data: reviews, error: reviewsError }, { data: documents }] = await Promise.all([
     client
       .from("products")
       .select("id, product_name, hs_code, description_fr, description_en, description_ar, unit, min_order_quantity, packaging, container_capacity_20ft, container_capacity_40ft, images, sort_order, created_at")
@@ -92,6 +92,8 @@ export async function getProducerProfile(slug: string) {
       .eq("status", "approved")
       .order("created_at", { ascending: false })
       .limit(20),
+    // Documents publics ET verifies par AFRICA NEX (la RLS ne renvoie rien d'autre au public).
+    client.from("company_documents").select("id, kind, title, expires_on").eq("company_id", c.id).order("kind"),
   ]);
   if (productsError) throw productsError;
   if (reviewsError) throw reviewsError;
@@ -128,6 +130,7 @@ export async function getProducerProfile(slug: string) {
       };
     }),
     reviews: reviews ?? [],
+    documents: documents ?? [],
   };
 }
 

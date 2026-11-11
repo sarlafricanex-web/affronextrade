@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { submitClaim, type ClaimField, type ClaimState } from "@/app/[locale]/(app)/claim/actions";
 import { Alert, Field, TextInput } from "@/components/auth/fields";
 import { PhoneField } from "@/components/phone/PhoneField";
+import { prepareUpload } from "@/lib/client/prepare-upload";
 
 export type ClaimDefaults = { nif: string; workEmail: string; phone: string; jobTitle: string; message: string };
 
@@ -55,7 +56,16 @@ export function ClaimForm({ slug, defaults: initial }: { slug: string; defaults:
             name="evidence"
             accept="application/pdf,image/png,image/jpeg"
             className="sr-only"
-            onChange={(e) => setFileName(e.target.files?.[0] ? { name: e.target.files[0].name, attempt: state.attempt } : null)}
+            onChange={async (e) => {
+              // Photo de telephone reduite avant l'envoi (limite de 4 Mo) ; PDF laisse tel quel.
+              const input = e.currentTarget;
+              const result = await prepareUpload(input, { maxBytes: 4 * 1024 * 1024, allowPdf: true });
+              if (!result.ok) {
+                setFileName({ name: t(result.reason === "tooBig" ? "errorEvidenceSize" : "errorEvidenceType"), attempt: state.attempt });
+                return;
+              }
+              setFileName(result.file ? { name: result.file.name, attempt: state.attempt } : null);
+            }}
           />
         </label>
         {shownFile && <span className="text-sm font-semibold" dir="ltr">{shownFile}</span>}
