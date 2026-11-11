@@ -66,7 +66,7 @@ export async function getFirstProduct(client: Client, companyId: string) {
 }
 
 const PRODUCT_COLUMNS =
-  "id, product_name, hs_code, description_fr, description_en, description_ar, currency, price_basis, unit, min_order_quantity, packaging, container_capacity_20ft, container_capacity_40ft, stock_quantity, images, status, updated_at";
+  "id, product_name, hs_code, description_fr, description_en, description_ar, currency, price_basis, unit, min_order_quantity, packaging, container_capacity_20ft, container_capacity_40ft, stock_quantity, images, status, updated_at, units_per_carton, carton_length_cm, carton_width_cm, carton_height_cm, carton_gross_weight_kg, max_stack_layers, storage_condition, palletized, cartons_per_pallet";
 
 // Catalogue de l'entreprise (brouillons compris) : la RLS limite aux membres.
 export async function listProducts(client: Client, companyId: string) {

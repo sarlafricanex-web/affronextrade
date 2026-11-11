@@ -650,6 +650,11 @@ export type Database = {
       }
       products: {
         Row: {
+          carton_gross_weight_kg: number | null
+          carton_height_cm: number | null
+          carton_length_cm: number | null
+          carton_width_cm: number | null
+          cartons_per_pallet: number | null
           category: string | null
           company_id: string
           container_capacity_20ft: number | null
@@ -664,8 +669,10 @@ export type Database = {
           id: string
           images: Json
           is_locked: boolean
+          max_stack_layers: number | null
           min_order_quantity: number | null
           packaging: string | null
+          palletized: boolean
           price_basis: string | null
           product_name: string
           slug: string | null
@@ -674,11 +681,18 @@ export type Database = {
           status: string
           stock_quantity: number | null
           stock_sync_frequency: string
+          storage_condition: string | null
           unit: string | null
           unit_price_ht: number | null
+          units_per_carton: number | null
           updated_at: string
         }
         Insert: {
+          carton_gross_weight_kg?: number | null
+          carton_height_cm?: number | null
+          carton_length_cm?: number | null
+          carton_width_cm?: number | null
+          cartons_per_pallet?: number | null
           category?: string | null
           company_id: string
           container_capacity_20ft?: number | null
@@ -693,8 +707,10 @@ export type Database = {
           id?: string
           images?: Json
           is_locked?: boolean
+          max_stack_layers?: number | null
           min_order_quantity?: number | null
           packaging?: string | null
+          palletized?: boolean
           price_basis?: string | null
           product_name: string
           slug?: string | null
@@ -703,11 +719,18 @@ export type Database = {
           status?: string
           stock_quantity?: number | null
           stock_sync_frequency?: string
+          storage_condition?: string | null
           unit?: string | null
           unit_price_ht?: number | null
+          units_per_carton?: number | null
           updated_at?: string
         }
         Update: {
+          carton_gross_weight_kg?: number | null
+          carton_height_cm?: number | null
+          carton_length_cm?: number | null
+          carton_width_cm?: number | null
+          cartons_per_pallet?: number | null
           category?: string | null
           company_id?: string
           container_capacity_20ft?: number | null
@@ -722,8 +745,10 @@ export type Database = {
           id?: string
           images?: Json
           is_locked?: boolean
+          max_stack_layers?: number | null
           min_order_quantity?: number | null
           packaging?: string | null
+          palletized?: boolean
           price_basis?: string | null
           product_name?: string
           slug?: string | null
@@ -732,8 +757,10 @@ export type Database = {
           status?: string
           stock_quantity?: number | null
           stock_sync_frequency?: string
+          storage_condition?: string | null
           unit?: string | null
           unit_price_ht?: number | null
+          units_per_carton?: number | null
           updated_at?: string
         }
         Relationships: [

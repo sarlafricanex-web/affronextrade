@@ -9,10 +9,12 @@ import { getMyCompanyId, getProduct, productImages, type ProductImage } from "@/
 import { contentTypeOf, readImage } from "@/lib/images";
 import { CURRENCIES, PRICE_BASES, UNITS, normalizeHsCode, parseAmount } from "@/lib/onboarding/reference";
 import type { Database } from "@/lib/supabase/database.types";
+import { STORAGE_CONDITIONS, estimateContainer, type StorageCondition } from "@/lib/logistics/container";
 
 export type CatalogField =
   | "productName" | "hsCode" | "descriptionFr" | "descriptionEn" | "descriptionAr" | "price" | "currency" | "priceBasis"
-  | "unit" | "moq" | "packaging" | "cap20" | "cap40" | "stock" | "status" | "photo";
+  | "unit" | "moq" | "packaging" | "stock" | "status" | "photo"
+  | "unitsPerCarton" | "cartonLength" | "cartonWidth" | "cartonHeight" | "cartonWeight" | "maxStack" | "storage" | "cartonsPerPallet";
 // values : saisie renvoyee en cas d'erreur (React reinitialise le formulaire apres chaque envoi).
 export type CatalogState = {
   errors: Partial<Record<CatalogField, string>>;
@@ -22,8 +24,16 @@ export type CatalogState = {
 };
 const TEXT_FIELDS = [
   "productName", "hsCode", "descriptionFr", "descriptionEn", "descriptionAr", "price", "currency", "priceBasis",
-  "unit", "moq", "packaging", "cap20", "cap40", "stock", "status",
+  "unit", "moq", "packaging", "stock", "status",
+  "unitsPerCarton", "cartonLength", "cartonWidth", "cartonHeight", "cartonWeight", "maxStack", "storage", "palletized", "cartonsPerPallet",
 ] as const;
+
+// Nombre facultatif > 0 et <= max : null si vide, NaN si invalide.
+function optionalPositive(value: string, max: number) {
+  if (value === "") return null;
+  const n = parseAmount(value);
+  return n !== null && n > 0 && n <= max ? n : NaN;
+}
 
 const MAX_PHOTOS = 5;
 const PHOTO_MAX_BYTES = 4 * 1024 * 1024;
@@ -67,10 +77,18 @@ export async function saveProduct(_prev: CatalogState, formData: FormData): Prom
     unit: text(formData, "unit"),
     moq: parseAmount(text(formData, "moq")),
     packaging: text(formData, "packaging"),
-    cap20: optionalInt(text(formData, "cap20")),
-    cap40: optionalInt(text(formData, "cap40")),
     stock: stockRaw === "" ? null : parseAmount(stockRaw),
     status: text(formData, "status"),
+    // Fiche logistique (facultative) : la capacite par conteneur en est deduite, jamais saisie.
+    unitsPerCarton: optionalPositive(text(formData, "unitsPerCarton"), 1_000_000),
+    cartonLength: optionalPositive(text(formData, "cartonLength"), 300),
+    cartonWidth: optionalPositive(text(formData, "cartonWidth"), 300),
+    cartonHeight: optionalPositive(text(formData, "cartonHeight"), 300),
+    cartonWeight: optionalPositive(text(formData, "cartonWeight"), 2000),
+    maxStack: optionalInt(text(formData, "maxStack")),
+    storage: text(formData, "storage"),
+    palletized: formData.get("palletized") === "on",
+    cartonsPerPallet: optionalInt(text(formData, "cartonsPerPallet")),
   };
 
   const errors: CatalogState["errors"] = {};
@@ -83,9 +101,14 @@ export async function saveProduct(_prev: CatalogState, formData: FormData): Prom
   if (!(UNITS as readonly string[]).includes(v.unit)) errors.unit = "errorChoose";
   if (v.moq === null || v.moq <= 0) errors.moq = "errorMoq";
   if (v.packaging.length > 200) errors.packaging = "errorTooLong";
-  if (Number.isNaN(v.cap20)) errors.cap20 = "errorWhole";
-  if (Number.isNaN(v.cap40)) errors.cap40 = "errorWhole";
   if (stockRaw !== "" && v.stock === null) errors.stock = "errorAmount";
+  for (const k of ["unitsPerCarton", "cartonLength", "cartonWidth", "cartonHeight", "cartonWeight"] as const) {
+    if (Number.isNaN(v[k])) errors[k] = "errorPositive";
+  }
+  if (Number.isNaN(v.maxStack) || (v.maxStack !== null && (v.maxStack < 1 || v.maxStack > 50))) errors.maxStack = "errorStack";
+  if (v.storage && !(STORAGE_CONDITIONS as readonly string[]).includes(v.storage)) errors.storage = "errorChoose";
+  if (Number.isNaN(v.cartonsPerPallet) || (v.cartonsPerPallet !== null && (v.cartonsPerPallet < 1 || v.cartonsPerPallet > 500))) errors.cartonsPerPallet = "errorPallet";
+  if (v.palletized && v.cartonsPerPallet === null) errors.cartonsPerPallet = "errorPallet";
   if (!["draft", "published"].includes(v.status)) errors.status = "errorChoose";
 
   // Photos : retraits demandes (seulement parmi celles du produit), puis une nouvelle eventuelle.
@@ -111,7 +134,36 @@ export async function saveProduct(_prev: CatalogState, formData: FormData): Prom
     images = [...images, { path, url: supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl }];
   }
 
+  // Capacite par conteneur recalculee ici (la valeur affichee dans le navigateur n'est qu'un apercu).
+  const num = (x: number | null) => (x === null || Number.isNaN(x) ? null : x);
+  const logistics = {
+    unitsPerCarton: num(v.unitsPerCarton),
+    lengthCm: num(v.cartonLength),
+    widthCm: num(v.cartonWidth),
+    heightCm: num(v.cartonHeight),
+    grossWeightKg: num(v.cartonWeight),
+    maxStackLayers: num(v.maxStack),
+    storage: (v.storage || null) as StorageCondition | null,
+    palletized: v.palletized,
+    cartonsPerPallet: num(v.cartonsPerPallet),
+  };
+  const est20 = estimateContainer(logistics, "20");
+  const est40 = estimateContainer(logistics, "40");
+  const hasCarton = logistics.lengthCm && logistics.widthCm && logistics.heightCm && logistics.grossWeightKg;
+
   const fields = {
+    units_per_carton: logistics.unitsPerCarton,
+    carton_length_cm: logistics.lengthCm,
+    carton_width_cm: logistics.widthCm,
+    carton_height_cm: logistics.heightCm,
+    carton_gross_weight_kg: logistics.grossWeightKg,
+    max_stack_layers: logistics.maxStackLayers,
+    storage_condition: logistics.storage,
+    palletized: logistics.palletized,
+    cartons_per_pallet: logistics.palletized ? logistics.cartonsPerPallet : null,
+    dimensions_cm: hasCarton ? { length: logistics.lengthCm, width: logistics.widthCm, height: logistics.heightCm, weight_kg: logistics.grossWeightKg } : null,
+    container_capacity_20ft: est20?.units ?? null,
+    container_capacity_40ft: est40?.units ?? null,
     product_name: v.productName,
     hs_code: v.hsCode,
     description_fr: v.descriptionFr || null,
@@ -123,8 +175,6 @@ export async function saveProduct(_prev: CatalogState, formData: FormData): Prom
     unit: v.unit,
     min_order_quantity: v.moq,
     packaging: v.packaging || null,
-    container_capacity_20ft: v.cap20,
-    container_capacity_40ft: v.cap40,
     stock_quantity: v.stock,
     status: v.status,
     images,
