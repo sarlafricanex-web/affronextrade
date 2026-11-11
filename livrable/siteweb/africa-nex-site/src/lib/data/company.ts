@@ -42,21 +42,31 @@ export async function getMyCompany(client: Client, userId: string) {
 
 export type MyCompany = NonNullable<Awaited<ReturnType<typeof getMyCompany>>>;
 
+// Le prix producteur n'est pas lisible dans la table (confidentiel) : chaque entreprise lit
+// les siens via la fonction product_prices(), reservee a ses membres et a l'admin.
+async function withPrices<T extends { id: string }>(client: Client, companyId: string, rows: T[]) {
+  if (!rows.length) return rows.map((r) => ({ ...r, unit_price_ht: null as number | null }));
+  const { data, error } = await client.rpc("product_prices", { p_company: companyId });
+  if (error) throw error;
+  const prices = new Map((data ?? []).map((p) => [p.product_id, p.unit_price_ht === null ? null : Number(p.unit_price_ht)]));
+  return rows.map((r) => ({ ...r, unit_price_ht: prices.get(r.id) ?? null }));
+}
+
 // Premier produit de l'entreprise (celui saisi a la premiere configuration), s'il existe.
 export async function getFirstProduct(client: Client, companyId: string) {
   const { data, error } = await client
     .from("products")
-    .select("id, product_name, hs_code, unit_price_ht, currency, price_basis, unit, min_order_quantity, images")
+    .select("id, product_name, hs_code, currency, price_basis, unit, min_order_quantity, images")
     .eq("company_id", companyId)
     .order("created_at", { ascending: true })
     .limit(1)
     .maybeSingle();
   if (error) throw error;
-  return data;
+  return data ? (await withPrices(client, companyId, [data]))[0] : null;
 }
 
 const PRODUCT_COLUMNS =
-  "id, product_name, hs_code, description_fr, description_en, description_ar, unit_price_ht, currency, price_basis, unit, min_order_quantity, packaging, container_capacity_20ft, container_capacity_40ft, stock_quantity, images, status, updated_at";
+  "id, product_name, hs_code, description_fr, description_en, description_ar, currency, price_basis, unit, min_order_quantity, packaging, container_capacity_20ft, container_capacity_40ft, stock_quantity, images, status, updated_at";
 
 // Catalogue de l'entreprise (brouillons compris) : la RLS limite aux membres.
 export async function listProducts(client: Client, companyId: string) {
@@ -67,7 +77,7 @@ export async function listProducts(client: Client, companyId: string) {
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return data;
+  return withPrices(client, companyId, data);
 }
 
 export async function getProduct(client: Client, companyId: string, productId: string) {
@@ -79,7 +89,7 @@ export async function getProduct(client: Client, companyId: string, productId: s
     .eq("id", productId)
     .maybeSingle();
   if (error) throw error;
-  return data;
+  return data ? (await withPrices(client, companyId, [data]))[0] : null;
 }
 
 export type Product = NonNullable<Awaited<ReturnType<typeof getProduct>>>;

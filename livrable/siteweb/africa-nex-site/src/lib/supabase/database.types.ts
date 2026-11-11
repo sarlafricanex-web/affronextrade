@@ -1434,6 +1434,13 @@ export type Database = {
       is_owner_of: { Args: { target_company: string }; Returns: boolean }
       is_privileged: { Args: never; Returns: boolean }
       my_role: { Args: never; Returns: string }
+      product_prices: {
+        Args: { p_company: string }
+        Returns: {
+          product_id: string
+          unit_price_ht: number
+        }[]
+      }
       try_uuid: { Args: { p: string }; Returns: string }
     }
     Enums: {
