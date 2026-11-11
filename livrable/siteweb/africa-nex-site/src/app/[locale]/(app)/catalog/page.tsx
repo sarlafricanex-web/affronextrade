@@ -39,9 +39,8 @@ export default async function CatalogPage({
   const companyId = await getMyCompanyId(user.supabase, user.userId);
   if (!companyId) redirect(`/${locale}/onboarding`);
 
-  const [c, t, format, products, { saved, deleted }, views] = await Promise.all([
+  const [c, format, products, { saved, deleted }, views] = await Promise.all([
     getTranslations({ locale, namespace: "catalog" }),
-    getTranslations({ locale, namespace: "onboarding" }),
     getFormatter({ locale }),
     listProducts(user.supabase, companyId),
     searchParams,
@@ -50,7 +49,8 @@ export default async function CatalogPage({
   const published = products.filter((p) => p.status === "published").length;
   const drafts = products.length - published;
   const withoutPhoto = products.filter((p) => productImages(p).length === 0).length;
-  const unit = (u: string | null) => (u ? t(`unit_${u}`) : "");
+  // Unites courtes dans le tableau (L, kg, t...) : les libelles complets le font deborder.
+  const unit = (u: string | null) => (u ? c(`unitShort_${u}`) : "");
 
   const rows: CatalogRow[] = products.map((p) => ({
     id: p.id,

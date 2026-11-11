@@ -25,6 +25,25 @@ const head = "px-4 py-3 text-start text-[11px] font-bold uppercase whitespace-no
 const caps = { letterSpacing: "0.08em", color: "var(--muted)" } as const;
 const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
+function EditIcon({ id, name, label }: { id: string; name: string; label: string }) {
+  return (
+    <Link href={`/catalog/${id}`} title={label} aria-label={`${label} ${name}`} className="flex h-8 w-8 items-center justify-center" style={{ border: `1px solid ${HAIR}`, color: "var(--ink)", background: "white" }}>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" /></svg>
+    </Link>
+  );
+}
+
+function StatusBadge({ status, label }: { status: "published" | "draft"; label: string }) {
+  return (
+    <span
+      className="inline-block px-2 py-1 text-[10px] font-bold uppercase whitespace-nowrap"
+      style={{ letterSpacing: "0.08em", ...(status === "published" ? { background: "#ecfdf5", border: "1px solid #10b981", color: "#065f46" } : { background: "#fff7ed", border: "1px solid #f97316", color: "#9a3412" }) }}
+    >
+      {label}
+    </span>
+  );
+}
+
 export function CatalogTable({ rows }: { rows: CatalogRow[] }) {
   const c = useTranslations("catalog");
   const [query, setQuery] = useState("");
@@ -53,8 +72,45 @@ export function CatalogTable({ rows }: { rows: CatalogRow[] }) {
         </label>
       </div>
 
-      <div className="relative overflow-x-auto">
-        <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 860 }}>
+      {/* Telephone : une carte par produit, toutes les informations visibles sans faire glisser. */}
+      <ul className="md:hidden">
+        {shown.map((r) => (
+          <li key={r.id} className="flex flex-col gap-3 p-4" style={{ borderBottom: `1px solid ${HAIR}` }}>
+            <div className="flex items-start gap-3">
+              {r.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={r.photo} alt="" className="h-16 w-16 shrink-0 object-cover" style={{ border: `1px solid ${HAIR}` }} />
+              ) : (
+                <span className="flex h-16 w-16 shrink-0 items-center justify-center text-[10px] font-bold uppercase" style={{ background: "#f5efe6", border: `1px solid ${HAIR}`, color: "var(--muted)" }}>{c("noPhoto")}</span>
+              )}
+              <div className="min-w-0 flex-1">
+                <Link href={`/catalog/${r.id}`} className="font-bold" style={{ color: "var(--ink)" }}>{r.name}</Link>
+                <div className="mt-1"><StatusBadge status={r.status} label={c(`status_${r.status}`)} /></div>
+              </div>
+            </div>
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              {[
+                [c("colHs"), r.hsCode],
+                [c("colPrice"), r.price ? `${r.price}${r.priceBasis ? ` ${r.priceBasis}` : ""}` : null],
+                [c("colMoq"), r.moq],
+                [c("colStock"), r.stock],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <dt className="text-[10px] font-bold uppercase" style={caps}>{label}</dt>
+                  <dd className="font-semibold" style={{ color: value ? "var(--ink)" : "#f97316" }}>{value ?? c("missing")}</dd>
+                </div>
+              ))}
+            </dl>
+            <div className="flex items-center gap-2">
+              <EditIcon id={r.id} name={r.name} label={c("edit")} />
+              <DeleteProductButton id={r.id} name={r.name} compact />
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <div className="relative hidden overflow-x-auto md:block">
+        <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 780 }}>
           <thead>
             <tr style={{ background: "#ece3d4", borderBottom: `1px solid ${HAIR}` }}>
               <th scope="col" className={head} style={caps}>{c("colRef")}</th>
@@ -100,17 +156,12 @@ export function CatalogTable({ rows }: { rows: CatalogRow[] }) {
                 </td>
                 <td className="px-4 py-4 text-end whitespace-nowrap" style={{ fontFeatureSettings: '"tnum" 1' }}>{r.stock ?? <span style={{ color: "var(--muted)" }}>-</span>}</td>
                 <td className="px-4 py-4">
-                  <span
-                    className="inline-block px-2 py-1 text-[10px] font-bold uppercase whitespace-nowrap"
-                    style={{ letterSpacing: "0.08em", ...(r.status === "published" ? { background: "#ecfdf5", border: "1px solid #10b981", color: "#065f46" } : { background: "#fff7ed", border: "1px solid #f97316", color: "#9a3412" }) }}
-                  >
-                    {c(`status_${r.status}`)}
-                  </span>
+                  <StatusBadge status={r.status} label={c(`status_${r.status}`)} />
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
-                  <div className="flex items-center justify-end gap-4">
-                    <Link href={`/catalog/${r.id}`} className="text-xs font-bold uppercase" style={{ color: "var(--ink)", letterSpacing: "0.08em" }}>{c("edit")}</Link>
-                    <DeleteProductButton id={r.id} name={r.name} />
+                  <div className="flex items-center justify-end gap-2">
+                    <EditIcon id={r.id} name={r.name} label={c("edit")} />
+                    <DeleteProductButton id={r.id} name={r.name} compact />
                   </div>
                 </td>
               </tr>

@@ -934,7 +934,13 @@
     "saveAsDraft": "إرجاع إلى مسودة",
     "publish": "نشر",
     "savePublished": "حفظ مع إبقائه منشورًا",
-    "centralized": "تمر جميع الطلبات والطلبيات عبر AFRICA NEX."
+    "centralized": "تمر جميع الطلبات والطلبيات عبر AFRICA NEX.",
+    "unitShort_l": "لتر",
+    "unitShort_kg": "كغ",
+    "unitShort_t": "طن",
+    "unitShort_unit": "وحدة",
+    "unitShort_carton": "كرتونة",
+    "unitShort_pallet": "منصة"
   },
   "claim": {
     "eyebrow": "إجراء المطالبة بملف",

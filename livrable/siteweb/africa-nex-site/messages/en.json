@@ -934,7 +934,13 @@
     "saveAsDraft": "Back to draft",
     "publish": "Publish",
     "savePublished": "Save and keep published",
-    "centralized": "All requests and orders go through AFRICA NEX."
+    "centralized": "All requests and orders go through AFRICA NEX.",
+    "unitShort_l": "L",
+    "unitShort_kg": "kg",
+    "unitShort_t": "t",
+    "unitShort_unit": "pc",
+    "unitShort_carton": "carton",
+    "unitShort_pallet": "pallet"
   },
   "claim": {
     "eyebrow": "Profile claim procedure",

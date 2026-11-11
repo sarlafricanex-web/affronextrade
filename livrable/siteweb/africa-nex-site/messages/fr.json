@@ -934,7 +934,13 @@
     "saveAsDraft": "Repasser en brouillon",
     "publish": "Publier",
     "savePublished": "Enregistrer et garder publié",
-    "centralized": "Toutes les demandes et commandes passent par AFRICA NEX."
+    "centralized": "Toutes les demandes et commandes passent par AFRICA NEX.",
+    "unitShort_l": "L",
+    "unitShort_kg": "kg",
+    "unitShort_t": "t",
+    "unitShort_unit": "u.",
+    "unitShort_carton": "carton",
+    "unitShort_pallet": "palette"
   },
   "claim": {
     "eyebrow": "Procédure de revendication de fiche",
