@@ -2,8 +2,19 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Reveal } from "@/components/Reveal";
-import { ProducerDirectory } from "@/components/ProducerDirectory";
+import { ProducerDirectory } from "@/components/producers/ProducerDirectory";
+import { getProducerCards, type ProducerCard } from "@/lib/data/directory";
 import { makePageMetadata } from "@/lib/seo";
+
+// Si la base ne repond pas, la page reste en ligne avec un message plutot qu'une erreur.
+async function loadProducers(): Promise<{ producers: ProducerCard[]; unavailable: boolean }> {
+  try {
+    return { producers: await getProducerCards(), unavailable: false };
+  } catch (e) {
+    console.error("Directory load failed:", e);
+    return { producers: [], unavailable: true };
+  }
+}
 
 export async function generateMetadata({
   params,
@@ -21,7 +32,7 @@ export default async function ProducersPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("producers");
+  const [t, { producers, unavailable }] = await Promise.all([getTranslations("producers"), loadProducers()]);
 
   return (
     <div style={{ paddingTop: "3.5rem" }}>
@@ -77,7 +88,7 @@ export default async function ProducersPage({
       </section>
 
       {/* Producer directory */}
-      <ProducerDirectory />
+      <ProducerDirectory producers={producers} unavailable={unavailable} />
 
       {/* CTA */}
       <section style={{ background: "var(--field-a)", padding: "var(--section-gap) var(--page-margin)" }}>

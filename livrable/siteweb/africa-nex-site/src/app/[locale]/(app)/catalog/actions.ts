@@ -2,6 +2,7 @@
 
 import { randomBytes } from "crypto";
 import { redirect } from "next/navigation";
+import { updateTag } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { resolveLocale } from "@/lib/auth/next-path";
 import { getMyCompanyId, getProduct, productImages, type ProductImage } from "@/lib/data/company";
@@ -141,6 +142,7 @@ export async function saveProduct(_prev: CatalogState, formData: FormData): Prom
   const removable = [...toRemove].filter((p) => p.startsWith(`${companyId}/`));
   if (removable.length) await supabase.storage.from("product-images").remove(removable);
 
+  updateTag("producers"); // annuaire et fiche publique a jour
   redirect(`/${locale}/catalog?saved=1`);
 }
 
@@ -156,5 +158,6 @@ export async function deleteProduct(formData: FormData) {
       if (paths.length) await supabase.storage.from("product-images").remove(paths);
     }
   }
+  updateTag("producers");
   redirect(`/${locale}/catalog?deleted=1`);
 }

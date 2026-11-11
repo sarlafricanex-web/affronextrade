@@ -2,6 +2,7 @@
 
 import { randomBytes } from "crypto";
 import { redirect } from "next/navigation";
+import { updateTag } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getFirstProduct, getMyCompanyId } from "@/lib/data/company";
 import { resolveLocale } from "@/lib/auth/next-path";
@@ -108,6 +109,7 @@ export async function saveIdentity(_prev: IdentityState, formData: FormData): Pr
   }
 
   // Depuis "Mon entreprise" : on reste sur la page, avec confirmation.
+  updateTag("producers"); // annuaire public a jour si la fiche est en ligne
   if (text(formData, "mode") === "edit") redirect(`/${locale}/company?tab=identity&saved=1`);
   redirect(text(formData, "intent") === "later" ? `/${locale}/dashboard` : `/${locale}/onboarding?step=2`);
 }
@@ -204,6 +206,7 @@ export async function savePresentation(_prev: PresentationState, formData: FormD
     return { errors: {}, formError: "errorGeneric" };
   }
 
+  updateTag("producers");
   if (text(formData, "mode") === "edit") redirect(`/${locale}/company?tab=presentation&saved=1`);
   redirect(text(formData, "intent") === "later" ? `/${locale}/dashboard` : `/${locale}/onboarding?step=3`);
 }
@@ -292,6 +295,7 @@ export async function saveFirstProduct(_prev: ProductState, formData: FormData):
     return { errors: {}, formError: "errorGeneric" };
   }
 
+  updateTag("producers");
   if (text(formData, "intent") !== "later") {
     // Configuration terminee : le tableau de bord ne la propose plus.
     await supabase.from("profiles").update({ onboarding_completed: true }).eq("id", userId);
