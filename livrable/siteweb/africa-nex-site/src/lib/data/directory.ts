@@ -1,6 +1,7 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
+import { WILAYAS } from "@/lib/onboarding/reference";
 
 // Annuaire public : client sans cookies (visiteur anonyme), donc utilisable en cache.
 // Le cache est invalide par updateTag("producers") quand une fiche ou un produit change.
@@ -10,6 +11,7 @@ export type ProducerCard = {
   slug: string;
   name: string;
   location: string;
+  wilaya: string | null;
   sector: string;
   verified: boolean;
   claimStatus: string;
@@ -27,7 +29,7 @@ export async function getProducerCards(): Promise<ProducerCard[]> {
   cacheLife("hours");
   const { data, error } = await createPublicClient()
     .from("producer_cards")
-    .select("id, slug, name, location, sector, verified, claim_status, initials, color, logo, products, avg_rating, review_count")
+    .select("id, slug, name, location, wilaya, sector, verified, claim_status, initials, color, logo, products, avg_rating, review_count")
     .order("verified", { ascending: false })
     .order("name");
   if (error) throw error;
@@ -36,6 +38,7 @@ export async function getProducerCards(): Promise<ProducerCard[]> {
     slug: r.slug!,
     name: r.name!,
     location: r.location ?? "",
+    wilaya: WILAYAS.find(([code]) => code === r.wilaya)?.[1] ?? null,
     sector: r.sector ?? "",
     verified: Boolean(r.verified),
     claimStatus: r.claim_status ?? "unclaimed",
