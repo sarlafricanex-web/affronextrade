@@ -21,7 +21,8 @@ export type CatalogRow = {
 };
 
 const HAIR = "#d8cebb";
-const head = "px-4 py-3 text-start text-[11px] font-bold uppercase whitespace-nowrap";
+// Titres de colonnes sur deux lignes si besoin : le tableau tient dans la largeur sans defiler.
+const head = "px-3 py-3 text-start text-[11px] font-bold uppercase align-bottom";
 const caps = { letterSpacing: "0.08em", color: "var(--muted)" } as const;
 const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
@@ -126,8 +127,8 @@ export function CatalogTable({ rows }: { rows: CatalogRow[] }) {
           <tbody>
             {shown.map((r, i) => (
               <tr key={r.id} className="align-top" style={{ borderBottom: `1px solid ${HAIR}` }}>
-                <td className="px-4 py-4 font-semibold" style={{ color: "var(--muted)", fontFeatureSettings: '"tnum" 1' }}>{String(i + 1).padStart(2, "0")}</td>
-                <td className="px-4 py-4" style={{ minWidth: 280 }}>
+                <td className="px-3 py-4 font-semibold" style={{ color: "var(--muted)", fontFeatureSettings: '"tnum" 1' }}>{String(i + 1).padStart(2, "0")}</td>
+                <td className="px-3 py-4" style={{ minWidth: 220 }}>
                   <div className="flex items-start gap-3">
                     {r.photo ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -141,8 +142,8 @@ export function CatalogTable({ rows }: { rows: CatalogRow[] }) {
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-4 whitespace-nowrap font-semibold" dir="ltr" style={{ fontFeatureSettings: '"tnum" 1' }}>{r.hsCode ?? <span style={{ color: "#f97316" }}>{c("missing")}</span>}</td>
-                <td className="px-4 py-4 text-end whitespace-nowrap">
+                <td className="px-3 py-4 whitespace-nowrap font-semibold" dir="ltr" style={{ fontFeatureSettings: '"tnum" 1' }}>{r.hsCode ?? <span style={{ color: "#f97316" }}>{c("missing")}</span>}</td>
+                <td className="px-3 py-4 text-end whitespace-nowrap">
                   {r.price ? (
                     <>
                       <span className="block font-bold" style={{ fontFeatureSettings: '"tnum" 1' }}>{r.price}</span>
@@ -150,15 +151,15 @@ export function CatalogTable({ rows }: { rows: CatalogRow[] }) {
                     </>
                   ) : <span style={{ color: "#f97316" }}>{c("missing")}</span>}
                 </td>
-                <td className="px-4 py-4 text-end">
+                <td className="px-3 py-4 text-end">
                   <span className="block whitespace-nowrap font-semibold" style={{ fontFeatureSettings: '"tnum" 1' }}>{r.moq ?? "-"}</span>
                   {r.packaging && <span className="text-xs" style={{ color: "var(--muted)" }}>{r.packaging}</span>}
                 </td>
-                <td className="px-4 py-4 text-end whitespace-nowrap" style={{ fontFeatureSettings: '"tnum" 1' }}>{r.stock ?? <span style={{ color: "var(--muted)" }}>-</span>}</td>
-                <td className="px-4 py-4">
+                <td className="px-3 py-4 text-end whitespace-nowrap" style={{ fontFeatureSettings: '"tnum" 1' }}>{r.stock ?? <span style={{ color: "var(--muted)" }}>-</span>}</td>
+                <td className="px-3 py-4">
                   <StatusBadge status={r.status} label={c(`status_${r.status}`)} />
                 </td>
-                <td className="px-4 py-4 whitespace-nowrap">
+                <td className="px-3 py-4 whitespace-nowrap">
                   <div className="flex items-center justify-end gap-2">
                     <EditIcon id={r.id} name={r.name} label={c("edit")} />
                     <DeleteProductButton id={r.id} name={r.name} compact />
