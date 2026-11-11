@@ -239,8 +239,9 @@ export function ProductEditor({ product: initial }: { product: EditorProduct }) 
                 <img src={preview} alt={c("photoAlt")} className="aspect-square w-full object-cover" />
               </div>
             )}
-            {product.images.length < MAX_PHOTOS && !preview && (
-              <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 p-3 text-center" style={{ background: "#fff8f3", border: `2px dashed ${HAIR}` }}>
+            {/* La case reste dans la page une fois la photo choisie (masquee) : sinon le fichier ne serait pas envoye. */}
+            {product.images.length < MAX_PHOTOS && (
+              <label hidden={Boolean(preview)} className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 p-3 text-center" style={{ background: "#fff8f3", border: `2px dashed ${HAIR}` }}>
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" style={{ color: "var(--muted)" }}><path d="M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6M15 9h.01" /></svg>
                 <span className="text-xs font-bold uppercase" style={{ letterSpacing: "0.08em" }}>+ {t("addPhoto")}</span>
                 <input
