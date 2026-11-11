@@ -7,6 +7,7 @@ import { getFirstProduct, getMyCompanyId } from "@/lib/data/company";
 import { resolveLocale } from "@/lib/auth/next-path";
 import { isValidPhone } from "@/lib/phone";
 import type { Database } from "@/lib/supabase/database.types";
+import { imageKind } from "@/lib/images";
 import {
   CURRENCIES, LEGAL_FORMS, PRICE_BASES, SECTORS, UNITS, WILAYA_CODES,
   isValidNif, normalizeHsCode, normalizeNif, parseAmount,
@@ -119,14 +120,6 @@ export type PresentationState = { errors: Partial<Record<PresentationField, stri
 
 const HEADCOUNTS = ["1-9", "10-49", "50-249", "250+"];
 const LOGO_MAX_BYTES = 2 * 1024 * 1024;
-
-// Type reel du fichier d'apres ses premiers octets (le nom et le type annonces ne prouvent rien).
-function imageKind(bytes: Uint8Array): "png" | "jpg" | "webp" | null {
-  if (bytes.length > 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return "png";
-  if (bytes.length > 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "jpg";
-  if (bytes.length > 12 && String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" && String.fromCharCode(...bytes.slice(8, 12)) === "WEBP") return "webp";
-  return null;
-}
 
 export async function savePresentation(_prev: PresentationState, formData: FormData): Promise<PresentationState> {
   const locale = resolveLocale(text(formData, "locale"));

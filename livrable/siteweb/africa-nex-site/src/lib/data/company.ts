@@ -54,3 +54,37 @@ export async function getFirstProduct(client: Client, companyId: string) {
   if (error) throw error;
   return data;
 }
+
+const PRODUCT_COLUMNS =
+  "id, product_name, hs_code, description_fr, description_en, description_ar, unit_price_ht, currency, price_basis, unit, min_order_quantity, packaging, container_capacity_20ft, container_capacity_40ft, stock_quantity, images, status, updated_at";
+
+// Catalogue de l'entreprise (brouillons compris) : la RLS limite aux membres.
+export async function listProducts(client: Client, companyId: string) {
+  const { data, error } = await client
+    .from("products")
+    .select(PRODUCT_COLUMNS)
+    .eq("company_id", companyId)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function getProduct(client: Client, companyId: string, productId: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(productId)) return null;
+  const { data, error } = await client
+    .from("products")
+    .select(PRODUCT_COLUMNS)
+    .eq("company_id", companyId)
+    .eq("id", productId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export type Product = NonNullable<Awaited<ReturnType<typeof getProduct>>>;
+export type ProductImage = { path: string; url: string };
+export const productImages = (p: { images: unknown } | null | undefined): ProductImage[] =>
+  Array.isArray(p?.images)
+    ? (p.images as ProductImage[]).filter((i) => i && typeof i.path === "string" && typeof i.url === "string")
+    : [];

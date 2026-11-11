@@ -9,6 +9,7 @@ const LINKS = {
   producer: [
     { href: "/dashboard", key: "navDashboard" },
     { href: "/company", key: "navCompany" },
+    { href: "/catalog", key: "navCatalog" },
   ],
   buyer: [{ href: "/dashboard", key: "navDashboard" }],
   admin: [
@@ -44,7 +45,7 @@ export function AppNav({ role, name }: { role: string; name: string }) {
       </div>
       <nav className="flex md:flex-col overflow-x-auto">
         {LINKS[space].map((link) => {
-          const active = pathname === link.href;
+          const active = pathname === link.href || (link.href === "/catalog" && pathname.startsWith("/catalog/"));
           return (
             <Link
               key={link.href}
