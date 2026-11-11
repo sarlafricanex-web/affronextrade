@@ -970,7 +970,15 @@
     "estimateNote": "Estimation prudente, confirmée par AFRICA NEX avant toute offre.",
     "errorPositive": "Nombre positif attendu.",
     "errorStack": "Entre 1 et 50.",
-    "errorPallet": "Indiquez le nombre de cartons par palette (1 à 500)."
+    "errorPallet": "Indiquez le nombre de cartons par palette (1 à 500).",
+    "storageName_ambient": "Ambiant",
+    "storageHint_ambient": "Température normale, conteneur sec",
+    "storageName_controlled": "Température dirigée",
+    "storageHint_controlled": "Entre 10 et 25 °C, conteneur frigorifique",
+    "storageName_chilled": "Réfrigéré",
+    "storageHint_chilled": "0 à 8 °C, conteneur frigorifique",
+    "storageName_frozen": "Congelé",
+    "storageHint_frozen": "-18 °C, conteneur frigorifique"
   },
   "claim": {
     "eyebrow": "Procédure de revendication de fiche",

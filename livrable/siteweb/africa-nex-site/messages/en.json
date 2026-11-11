@@ -970,7 +970,15 @@
     "estimateNote": "Conservative estimate, confirmed by AFRICA NEX before any offer.",
     "errorPositive": "Positive number expected.",
     "errorStack": "Between 1 and 50.",
-    "errorPallet": "Enter the number of cartons per pallet (1 to 500)."
+    "errorPallet": "Enter the number of cartons per pallet (1 to 500).",
+    "storageName_ambient": "Ambient",
+    "storageHint_ambient": "Normal temperature, dry container",
+    "storageName_controlled": "Controlled temperature",
+    "storageHint_controlled": "10 to 25 °C, reefer container",
+    "storageName_chilled": "Chilled",
+    "storageHint_chilled": "0 to 8 °C, reefer container",
+    "storageName_frozen": "Frozen",
+    "storageHint_frozen": "-18 °C, reefer container"
   },
   "claim": {
     "eyebrow": "Profile claim procedure",

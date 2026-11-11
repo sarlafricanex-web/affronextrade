@@ -970,7 +970,15 @@
     "estimateNote": "تقدير حذر، تؤكده AFRICA NEX قبل أي عرض.",
     "errorPositive": "يجب إدخال عدد موجب.",
     "errorStack": "بين 1 و50.",
-    "errorPallet": "أدخل عدد الكراتين في كل منصة (من 1 إلى 500)."
+    "errorPallet": "أدخل عدد الكراتين في كل منصة (من 1 إلى 500).",
+    "storageName_ambient": "عادي",
+    "storageHint_ambient": "درجة حرارة عادية، حاوية جافة",
+    "storageName_controlled": "درجة حرارة مضبوطة",
+    "storageHint_controlled": "من 10 إلى 25 °م، حاوية مبردة",
+    "storageName_chilled": "مبرّد",
+    "storageHint_chilled": "من 0 إلى 8 °م، حاوية مبردة",
+    "storageName_frozen": "مجمّد",
+    "storageHint_frozen": "-18 °م، حاوية مبردة"
   },
   "claim": {
     "eyebrow": "إجراء المطالبة بملف",

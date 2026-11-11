@@ -249,22 +249,29 @@ export function ProductEditor({ product: initial }: { product: EditorProduct }) 
           {/* Fiche du carton d'expedition : la capacite par conteneur en est calculee, jamais saisie. */}
           <div className="flex flex-col gap-5 pt-4" style={{ borderTop: `1px solid ${HAIR}` }}>
             <p className="text-[11px] font-bold uppercase" style={labelStyle}>{c("cartonTitle")}</p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="pe-upc">{c("unitsPerCarton")}</Label>
-                <Suffixed suffix={unitShort || "?"}>
-                  <input id="pe-upc" name="unitsPerCarton" dir="ltr" inputMode="decimal" placeholder="20" defaultValue={product.unitsPerCarton} className={`${inputCls} text-end`} style={{ background: FIELD, border: 0, outline: "none" }} />
-                </Suffixed>
-                {err("unitsPerCarton")}
-              </div>
-              <div>
-                <Label htmlFor="pe-storage">{c("storage")}</Label>
-                <select id="pe-storage" name="storage" defaultValue={product.storage || "ambient"} className={inputCls} style={fieldStyle}>
-                  {STORAGE_CONDITIONS.map((s) => <option key={s} value={s}>{c(`storage_${s}`)}</option>)}
-                </select>
-                {err("storage")}
-              </div>
+            <div className="sm:max-w-xs">
+              <Label htmlFor="pe-upc">{c("unitsPerCarton")}</Label>
+              <Suffixed suffix={unitShort || "?"}>
+                <input id="pe-upc" name="unitsPerCarton" dir="ltr" inputMode="decimal" placeholder="20" defaultValue={product.unitsPerCarton} className={`${inputCls} text-end`} style={{ background: FIELD, border: 0, outline: "none" }} />
+              </Suffixed>
+              {err("unitsPerCarton")}
             </div>
+            {/* Les 4 conditions visibles d'un coup d'oeil (une liste deroulante cachait les choix). */}
+            <fieldset>
+              <legend className={labelCls} style={labelStyle}>{c("storage")}</legend>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {STORAGE_CONDITIONS.map((s) => (
+                  <label key={s} className="flex cursor-pointer items-start gap-2 p-3 text-sm" style={{ border: `1px solid ${HAIR}`, background: "white" }}>
+                    <input type="radio" name="storage" value={s} defaultChecked={(product.storage || "ambient") === s} className="mt-0.5 h-4 w-4 shrink-0" style={{ accentColor: "var(--ink)" }} />
+                    <span>
+                      <span className="block font-semibold">{c(`storageName_${s}`)}</span>
+                      <span className="block text-xs" style={{ color: "var(--muted)" }}>{c(`storageHint_${s}`)}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {err("storage")}
+            </fieldset>
             <div>
               <p className="mb-2 text-[11px] font-bold uppercase" style={labelStyle}>{c("cartonDims")}</p>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
