@@ -93,6 +93,13 @@ export async function getProduct(client: Client, companyId: string, productId: s
 }
 
 export type Product = NonNullable<Awaited<ReturnType<typeof getProduct>>>;
+
+// Consultations de la fiche publique sur les 30 derniers jours (RLS : membres et admin).
+export async function countRecentViews(client: Client, companyId: string) {
+  const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+  const { count } = await client.from("profile_views").select("id", { count: "exact", head: true }).eq("company_id", companyId).gte("created_at", since);
+  return count ?? 0;
+}
 export type ProductImage = { path: string; url: string };
 export const productImages = (p: { images: unknown } | null | undefined): ProductImage[] =>
   Array.isArray(p?.images)
