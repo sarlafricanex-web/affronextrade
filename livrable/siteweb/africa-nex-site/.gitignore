@@ -48,3 +48,6 @@ next-env.d.ts
 # supabase cli
 /supabase/.temp/
 /supabase/.branches/
+
+# Sorties des tests de bout en bout (captures, fichiers generes)
+/tests/e2e/.output/
