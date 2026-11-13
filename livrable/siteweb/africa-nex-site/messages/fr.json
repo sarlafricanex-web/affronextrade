@@ -1343,9 +1343,6 @@
     "buyersOnlyTitle": "Réservé aux acheteurs",
     "buyersOnlyText": "Les demandes de devis sont envoyées depuis un compte acheteur.",
     "backDashboard": "Retour au tableau de bord",
-    "profileFirstTitle": "Complétez d'abord votre profil",
-    "profileFirstText": "AFRICA NEX a besoin de connaître votre entreprise (pays, activité, contacts) pour traiter vos demandes de devis.",
-    "profileFirstCta": "Compléter mon profil",
     "errorTitle": "Indiquez le produit recherché (2 caractères minimum).",
     "errorQuantity": "Indiquez une quantité supérieure à zéro.",
     "errorContainerCount": "Entre 1 et 100 conteneurs.",
@@ -1390,6 +1387,8 @@
     "next_closed_text": "Cette demande est terminée.",
     "next_cancelled_title": "Demande annulée",
     "next_cancelled_text": "Vous pouvez envoyer une nouvelle demande à tout moment.",
-    "cancel": "Annuler la demande"
+    "cancel": "Annuler la demande",
+    "profileFirstBanner": "Dernière étape avant votre demande de devis : présentez votre entreprise. Vous retrouverez ensuite votre formulaire.",
+    "profileSavedNotice": "Profil enregistré. Vous pouvez maintenant envoyer votre demande de devis."
   }
 }

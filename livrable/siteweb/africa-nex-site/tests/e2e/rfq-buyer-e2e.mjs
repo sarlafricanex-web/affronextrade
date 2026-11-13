@@ -74,9 +74,22 @@ try {
   await loginAs(producer);
   await go("/fr/rfq/new");
   report("Producteur : reserve aux acheteurs", await run(`return document.body.innerText.includes("Réservé aux acheteurs");`));
+  // Nouvel acheteur : profil d'abord, puis retour automatique au formulaire (producteur conserve)
   await loginAs(newBuyer);
-  await go("/fr/rfq/new");
-  report("Acheteur sans profil : invite a le completer", await run(`return document.body.innerText.includes("Complétez d'abord votre profil");`));
+  await go("/fr/rfq/new?producer=ifri", `return !!document.getElementById("b-name");`);
+  report("Acheteur sans profil : envoye a son profil avec message", await run(`return location.pathname === "/fr/onboarding" && /Dernière étape avant votre demande de devis/.test(document.querySelector("main [role=note]")?.textContent ?? "");`), await run(`return location.pathname + " | " + (document.querySelector("main [role=note]")?.textContent ?? "aucun bandeau");`));
+  await run(`${SET}
+    setV(document.getElementById("b-name"), "Lagos Trading Ltd");
+    document.querySelector("input[name=buyerType][value=importer]").click();
+    setV(document.getElementById("b-city"), "Lagos");
+    setV(document.getElementById("b-whatsapp"), "+221 77 765 43 21");
+    document.querySelector("input[name=interests][value=C10]").click();
+    document.getElementById("b-country").click(); return true;`);
+  await sleep(400);
+  await run(`[...document.querySelectorAll("[role=option]")].find((x) => x.textContent.includes("Nigéria") || x.textContent.includes("Nigeria")).click(); return true;`);
+  await sleep(300);
+  await run(`[...document.querySelectorAll("main button[type=submit]")].at(-1).click(); return true;`);
+  report("Profil enregistre : retour au formulaire, Ifri toujours selectionne", await waitFor(`return location.pathname === "/fr/rfq/new" && location.search.includes("producer=ifri") && document.body.innerText.includes("Profil enregistré.") && document.body.innerText.includes("Ifri");`), await run(`return location.pathname + location.search;`));
   await loginAs(buyer);
   await go(`/fr/register?role=buyer&next=${encodeURIComponent("/fr/rfq/new?producer=ifri")}`, `return location.pathname === "/fr/rfq/new";`);
   report("Deja connecte : l'inscription renvoie directement au formulaire", await run(`return location.pathname === "/fr/rfq/new" && location.search === "?producer=ifri";`));

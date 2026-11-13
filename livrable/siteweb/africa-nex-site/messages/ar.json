@@ -1343,9 +1343,6 @@
     "buyersOnlyTitle": "مخصص للمشترين",
     "buyersOnlyText": "تُرسل طلبات عروض الأسعار من حساب مشترٍ.",
     "backDashboard": "العودة إلى لوحة التحكم",
-    "profileFirstTitle": "أكمل ملفك أولًا",
-    "profileFirstText": "تحتاج AFRICA NEX إلى معرفة مؤسستك (البلد، النشاط، معلومات الاتصال) لمعالجة طلباتك.",
-    "profileFirstCta": "إكمال ملفي",
     "errorTitle": "أدخل المنتج المطلوب (حرفان على الأقل).",
     "errorQuantity": "أدخل كمية أكبر من الصفر.",
     "errorContainerCount": "بين حاوية واحدة و100 حاوية.",
@@ -1390,6 +1387,8 @@
     "next_closed_text": "انتهى هذا الطلب.",
     "next_cancelled_title": "الطلب ملغى",
     "next_cancelled_text": "يمكنك إرسال طلب جديد في أي وقت.",
-    "cancel": "إلغاء الطلب"
+    "cancel": "إلغاء الطلب",
+    "profileFirstBanner": "خطوة أخيرة قبل طلب عرض السعر: قدّم مؤسستك، ثم ستعود إلى استمارتك.",
+    "profileSavedNotice": "تم حفظ الملف. يمكنك الآن إرسال طلب عرض السعر."
   }
 }

@@ -3,7 +3,7 @@
 import { randomBytes } from "crypto";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { resolveLocale } from "@/lib/auth/next-path";
+import { resolveLocale, safeNextPath } from "@/lib/auth/next-path";
 import { getMyCompanyId } from "@/lib/data/company";
 import { isCountryCode } from "@/lib/countries";
 import { isValidPhone } from "@/lib/phone";
@@ -99,5 +99,14 @@ export async function saveBuyer(_prev: BuyerState, formData: FormData): Promise<
     return fail({ errors: {}, formError: "errorGeneric" });
   }
 
-  redirect(text(formData, "mode") === "edit" ? `/${locale}/company?saved=1` : `/${locale}/dashboard?configured=1`);
+  if (text(formData, "mode") === "edit") redirect(`/${locale}/company?saved=1`);
+  // Arrive depuis "Demander un devis" : on le renvoie au formulaire de demande qu'il avait ouvert.
+  const next = text(formData, "next");
+  if (next && isRfqPath(next, locale)) redirect(`${next}${next.includes("?") ? "&" : "?"}profile=1`);
+  redirect(`/${locale}/dashboard?configured=1`);
+}
+
+// Seules les pages de demande de devis du site sont acceptees comme destination de retour.
+function isRfqPath(next: string, locale: string) {
+  return safeNextPath(next, locale) === next && /^\/(fr|en|ar)\/rfq\/new(\?[\w=&%-]*)?$/.test(next);
 }

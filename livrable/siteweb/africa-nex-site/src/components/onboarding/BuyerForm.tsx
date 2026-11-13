@@ -23,7 +23,8 @@ export type BuyerDefaults = {
 
 const legend = "mb-2 text-xs font-semibold uppercase";
 
-export function BuyerForm({ defaults: initial, mode = "onboarding" }: { defaults: BuyerDefaults; mode?: "onboarding" | "edit" }) {
+// next : page ou revenir apres l'enregistrement (ex. le formulaire de demande de devis).
+export function BuyerForm({ defaults: initial, mode = "onboarding", next }: { defaults: BuyerDefaults; mode?: "onboarding" | "edit"; next?: string }) {
   const t = useTranslations("onboarding");
   const ts = useTranslations("sectors");
   const locale = useLocale();
@@ -40,6 +41,7 @@ export function BuyerForm({ defaults: initial, mode = "onboarding" }: { defaults
     <form key={state.attempt ?? 0} action={action} className="flex flex-col gap-6">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="mode" value={mode} />
+      {next && <input type="hidden" name="next" value={next} />}
       {state.formError && <Alert tone="error">{t(state.formError)}</Alert>}
 
       <Field label={t("companyName")} htmlFor="b-name">

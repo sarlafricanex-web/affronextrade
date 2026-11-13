@@ -1343,9 +1343,6 @@
     "buyersOnlyTitle": "For buyers only",
     "buyersOnlyText": "Quote requests are sent from a buyer account.",
     "backDashboard": "Back to dashboard",
-    "profileFirstTitle": "Complete your profile first",
-    "profileFirstText": "AFRICA NEX needs to know your company (country, activity, contacts) to handle your quote requests.",
-    "profileFirstCta": "Complete my profile",
     "errorTitle": "Enter the product wanted (2 characters minimum).",
     "errorQuantity": "Enter a quantity above zero.",
     "errorContainerCount": "Between 1 and 100 containers.",
@@ -1390,6 +1387,8 @@
     "next_closed_text": "This request is complete.",
     "next_cancelled_title": "Request cancelled",
     "next_cancelled_text": "You can send a new request at any time.",
-    "cancel": "Cancel request"
+    "cancel": "Cancel request",
+    "profileFirstBanner": "One last step before your quote request: introduce your company. You will then be taken back to your form.",
+    "profileSavedNotice": "Profile saved. You can now send your quote request."
   }
 }

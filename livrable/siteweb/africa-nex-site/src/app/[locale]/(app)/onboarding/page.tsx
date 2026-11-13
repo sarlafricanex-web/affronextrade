@@ -16,13 +16,19 @@ export const instant = false;
 type User = NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>;
 
 // Acheteur : un seul ecran (entreprise, pays, contacts, secteurs recherches).
-async function BuyerOnboarding({ locale, user }: { locale: string; user: User }) {
-  const [t, defaults] = await Promise.all([
+async function BuyerOnboarding({ locale, user, next }: { locale: string; user: User; next?: string }) {
+  const [t, tr, defaults] = await Promise.all([
     getTranslations({ locale, namespace: "onboarding" }),
+    getTranslations({ locale, namespace: "rfq" }),
     buyerDefaults(user.supabase, user.userId),
   ]);
+  // Venu de "Demander un devis" : il retrouvera son formulaire juste apres ce profil.
+  const fromRfq = next && /^\/(fr|en|ar)\/rfq\/new(\?[\w=&%-]*)?$/.test(next) ? next : undefined;
   return (
     <div className="flex flex-col gap-8">
+      {fromRfq && (
+        <p role="note" className="p-4 text-sm font-semibold" style={{ background: "white", borderInlineStart: "4px solid #10b981" }}>{tr("profileFirstBanner")}</p>
+      )}
       <header>
         <p className="text-xs font-semibold uppercase" style={{ letterSpacing: "0.08em", color: "var(--muted)" }}>{t("buyerEyebrow")}</p>
         <h1 className="mt-2 font-extrabold" style={{ fontSize: "var(--step-title)", lineHeight: 1 }}>{t("buyerTitle")}</h1>
@@ -30,7 +36,7 @@ async function BuyerOnboarding({ locale, user }: { locale: string; user: User })
       </header>
       <div className="grid lg:grid-cols-[1fr_300px] gap-8 items-start">
         <section style={{ background: "white", border: "1px solid var(--field-b)", padding: "clamp(1.25rem, 3vw, 2rem)" }}>
-          <BuyerForm defaults={defaults} />
+          <BuyerForm defaults={defaults} next={fromRfq} />
         </section>
         <aside className="flex flex-col gap-4 p-5" style={{ background: "white", border: "1px solid var(--field-b)" }}>
           <h2 className="font-bold">{t("sideTitle")}</h2>
@@ -50,12 +56,12 @@ export default async function OnboardingPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ step?: string }>;
+  searchParams: Promise<{ step?: string; next?: string }>;
 }) {
   const { locale } = await params;
   const user = await getCurrentUser();
   if (!user) redirect(`/${locale}/login`);
-  if (user.role === "buyer") return <BuyerOnboarding locale={locale} user={user} />;
+  if (user.role === "buyer") return <BuyerOnboarding locale={locale} user={user} next={(await searchParams).next} />;
   if (user.role !== "producer") redirect(`/${locale}/dashboard`);
 
   const [t, company, { step }] = await Promise.all([

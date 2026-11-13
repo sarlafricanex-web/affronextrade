@@ -16,12 +16,12 @@ export default async function NewRfqPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ product?: string; producer?: string }>;
+  searchParams: Promise<{ product?: string; producer?: string; profile?: string }>;
 }) {
   const { locale } = await params;
   const user = await getCurrentUser();
   if (!user) redirect(`/${locale}/login`);
-  const [t, { product, producer }] = await Promise.all([getTranslations({ locale, namespace: "rfq" }), searchParams]);
+  const [t, { product, producer, profile: profileSaved }] = await Promise.all([getTranslations({ locale, namespace: "rfq" }), searchParams]);
 
   const notice = (title: string, text: string, href: string, cta: string) => (
     <div className="flex flex-col gap-4 p-6" style={{ background: "white", border: `1px solid ${HAIR}`, maxWidth: 640 }}>
@@ -32,12 +32,17 @@ export default async function NewRfqPage({
   );
   if (user.role !== "buyer") return notice(t("buyersOnlyTitle"), t("buyersOnlyText"), "/dashboard", t("backDashboard"));
   const { data: profile } = await user.supabase.from("profiles").select("onboarding_completed").eq("id", user.userId).single();
-  if (!profile?.onboarding_completed) return notice(t("profileFirstTitle"), t("profileFirstText"), "/onboarding", t("profileFirstCta"));
+  if (!profile?.onboarding_completed) {
+    // Profil d'abord, puis retour automatique sur ce formulaire (produit ou producteur conserves).
+    const qs = new URLSearchParams({ ...(product ? { product } : {}), ...(producer ? { producer } : {}) }).toString();
+    redirect(`/${locale}/onboarding?next=${encodeURIComponent(`/${locale}/rfq/new${qs ? `?${qs}` : ""}`)}`);
+  }
 
   const context = await getRfqContext(user.supabase, { productId: product, producerSlug: producer });
 
   return (
     <div className="flex flex-col gap-6">
+      {profileSaved && <p role="status" className="p-4 font-semibold" style={{ background: "white", borderInlineStart: "4px solid #10b981" }}>{t("profileSavedNotice")}</p>}
       <header>
         <nav aria-label={t("breadcrumb")} className="mb-2 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase" style={{ ...caps, color: "var(--muted)" }}>
           <Link href="/rfq" className="hover:underline">{t("navList")}</Link>
