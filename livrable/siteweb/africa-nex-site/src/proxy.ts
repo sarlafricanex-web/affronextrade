@@ -3,11 +3,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
 import { adopt, refreshSession } from "./lib/supabase/session";
 import { previewGate } from "./lib/preview-gate";
+import { safeNextPath } from "./lib/auth/next-path";
 
 const handleI18nRouting = createMiddleware(routing);
 
 // Confort de navigation seulement : la vraie securite est dans les regles RLS de la base.
-const PROTECTED = ["/dashboard", "/onboarding", "/company", "/catalog", "/claim", "/admin"];
+const PROTECTED = ["/dashboard", "/onboarding", "/company", "/catalog", "/claim", "/admin", "/rfq"];
 const AUTH_PAGES = ["/login", "/register", "/forgot-password"];
 
 const isUnder = (path: string, prefix: string) => path === prefix || path.startsWith(`${prefix}/`);
@@ -38,7 +39,9 @@ export default async function proxy(request: NextRequest) {
       return adopt(NextResponse.redirect(login), carrier);
     }
     if (claims && AUTH_PAGES.some((prefix) => isUnder(rest, prefix))) {
-      return adopt(NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url)), carrier);
+      // Deja connecte : on va directement ou il voulait aller (ex. demander un devis), sinon au tableau de bord.
+      const target = safeNextPath(request.nextUrl.searchParams.get("next"), locale);
+      return adopt(NextResponse.redirect(new URL(target, request.url)), carrier);
     }
   }
 

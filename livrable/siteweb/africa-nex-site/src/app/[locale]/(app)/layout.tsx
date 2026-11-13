@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { AppNav } from "@/components/app/AppNav";
+import { countOffersReady } from "@/lib/data/rfq";
 
 // Pages par utilisateur : rendues a chaque requete, sans validation de navigation instantanee.
 export const instant = false;
@@ -29,10 +30,12 @@ async function AppShell({ children, params }: { children: React.ReactNode; param
   const user = await getCurrentUser();
   // Deuxieme verrou apres le proxy : une page protegee ne s'affiche jamais sans session valide.
   if (!user) redirect(`/${locale}/login`);
+  // Notifications dans l'espace : compteurs a cote des liens du menu.
+  const badges: Record<string, number> = user.role === "buyer" ? { "/rfq": await countOffersReady(user.supabase, user.userId) } : {};
 
   return (
     <div className="mx-auto md:grid md:grid-cols-[240px_1fr]" style={{ maxWidth: 1280, minHeight: "70svh" }}>
-      <AppNav role={user.role} name={user.fullName} />
+      <AppNav role={user.role} name={user.fullName} badges={badges} />
       <div style={{ padding: "2.5rem var(--page-margin)", minWidth: 0 }}>{children}</div>
     </div>
   );

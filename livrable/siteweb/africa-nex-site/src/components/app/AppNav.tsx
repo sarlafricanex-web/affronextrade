@@ -13,6 +13,8 @@ const LINKS = {
   ],
   buyer: [
     { href: "/dashboard", key: "navDashboard" },
+    { href: "/rfq", key: "navRfqs" },
+    { href: "/rfq/new", key: "navRfqNew" },
     { href: "/company", key: "navCompany" },
   ],
   admin: [
@@ -27,7 +29,8 @@ const LINKS = {
 
 const SPACE_KEY = { producer: "spaceProducer", buyer: "spaceBuyer", admin: "spaceAdmin" } as const;
 
-export function AppNav({ role, name }: { role: string; name: string }) {
+// badges : notifications dans l'espace (ex. offres pretes a comparer), par lien.
+export function AppNav({ role, name, badges = {} }: { role: string; name: string; badges?: Record<string, number> }) {
   const t = useTranslations("app");
   const pathname = usePathname();
   const router = useRouter();
@@ -51,12 +54,16 @@ export function AppNav({ role, name }: { role: string; name: string }) {
       </div>
       <nav className="flex md:flex-col overflow-x-auto">
         {LINKS[space].map((link) => {
-          const active = pathname === link.href || ((link.href === "/catalog" || link.href === "/admin/producers") && pathname.startsWith(`${link.href}/`));
+          const active =
+            pathname === link.href ||
+            ((link.href === "/catalog" || link.href === "/admin/producers") && pathname.startsWith(`${link.href}/`)) ||
+            (link.href === "/rfq" && pathname.startsWith("/rfq/") && pathname !== "/rfq/new");
+          const badge = badges[link.href] ?? 0;
           return (
             <Link
               key={link.href}
               href={link.href}
-              className="px-5 py-3 text-sm font-semibold whitespace-nowrap"
+              className="flex items-center justify-between gap-3 px-5 py-3 text-sm font-semibold whitespace-nowrap"
               style={{
                 background: active ? "var(--ground)" : "transparent",
                 borderInlineStart: active ? "3px solid var(--ink)" : "3px solid transparent",
@@ -64,6 +71,11 @@ export function AppNav({ role, name }: { role: string; name: string }) {
               }}
             >
               {t(link.key)}
+              {badge > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center px-1.5 text-[11px] font-bold" style={{ background: "#f97316", color: "white" }} aria-label={t("badgeLabel", { count: badge })}>
+                  {badge}
+                </span>
+              )}
             </Link>
           );
         })}

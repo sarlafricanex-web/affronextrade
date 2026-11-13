@@ -27,7 +27,7 @@ export default function LoginPage() {
   const search = useSyncExternalStore(() => () => {}, () => window.location.search, () => "");
   const next = new URLSearchParams(search).get("next");
   const registerHref = next
-    ? `/register?${new URLSearchParams({ next, ...(/\/producers\//.test(next) ? { role: "buyer" } : {}) }).toString()}`
+    ? `/register?${new URLSearchParams({ next, ...(/\/(producers|rfq)\//.test(next) ? { role: "buyer" } : {}) }).toString()}`
     : "/register";
 
   async function submit(event: { preventDefault: () => void }) {

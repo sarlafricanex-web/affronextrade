@@ -39,6 +39,7 @@ Chrome doit être installé. Autre emplacement : variable `CHROME_PATH`.
 | `directory` | Annuaire public, filtres par secteur, fiche publique |
 | `reviews` | Avis des acheteurs et modération |
 | `claim` | Revendication d'une fiche, validation et refus par l'admin |
+| `rfq-buyer` | Demande de devis côté acheteur : en unités ou en conteneurs, pièce jointe, liste, compteur, annulation, isolement |
 | `admin-producers` | Console admin des producteurs |
 | `return`, `redirect` | Retour à la bonne page après inscription ou connexion |
 | `phone` | Téléphone international et pays |

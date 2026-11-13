@@ -275,7 +275,7 @@ export default async function ProducerProfilePage({ params }: { params: Params }
                           </div>
                         </div>
                         <div className="p-4 pt-0">
-                          <a href="#devis" className={`block w-full py-2.5 text-center ${CAPS}`} style={{ ...capsStyle, border: "1px solid var(--ink)", color: "var(--ink)" }}>{t("requestQuoteProduct")}</a>
+                          <Link href={`/register?role=buyer&next=${encodeURIComponent(`/${locale}/rfq/new?product=${p.id}`)}`} className={`block w-full py-2.5 text-center ${CAPS}`} style={{ ...capsStyle, border: "1px solid var(--ink)", color: "var(--ink)" }}>{t("requestQuoteProduct")}</Link>
                         </div>
                       </li>
                     );
@@ -368,7 +368,8 @@ export default async function ProducerProfilePage({ params }: { params: Params }
               </p>
               <h2 className="mb-2 font-extrabold" style={{ fontSize: "1.75rem", lineHeight: 1.2, letterSpacing: "-0.025em" }}>{t("quoteTitle")}</h2>
               <p className="mb-6 leading-relaxed" style={{ color: "#f4e6d6" }}>{t("quoteText")}</p>
-              <Link href={`/register?role=buyer&next=${encodeURIComponent(`/${locale}/producers/${profile.slug}`)}`} className="mb-4 block w-full px-4 py-3.5 text-center font-bold uppercase" style={{ background: "#10b981", color: "white", letterSpacing: "0.04em" }}>
+              {/* Visiteur : inscription acheteur puis formulaire ; deja connecte : le proxy l'envoie directement au formulaire. */}
+              <Link href={`/register?role=buyer&next=${encodeURIComponent(`/${locale}/rfq/new?producer=${profile.slug}`)}`} className="mb-4 block w-full px-4 py-3.5 text-center font-bold uppercase" style={{ background: "#10b981", color: "white", letterSpacing: "0.04em" }}>
                 {t("requestQuote")}
               </Link>
               <ul className="space-y-2 pt-4 text-sm" style={{ borderTop: "1px solid #334155", color: "#cbd5e1" }}>

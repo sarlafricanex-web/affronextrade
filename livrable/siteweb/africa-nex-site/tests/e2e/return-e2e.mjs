@@ -64,7 +64,8 @@ try {
   report("Demander un devis : role Acheteur preselectionne", /acheteur/i.test(await run(pressedRole)), await run(pressedRole));
   const e2 = `test-return-b-${Date.now()}-${randomBytes(2).toString("hex")}@example.com`; emails.push(e2);
   await signUp(e2);
-  report("Apres inscription : retour sur la fiche", await waitFor(`return location.pathname === "/fr/producers/cevital";`), await run(`return location.pathname;`));
+  // Depuis le lot 5a, l'acheteur arrive directement sur le formulaire de demande pour ce producteur.
+  report("Apres inscription : formulaire de demande pour Cevital", await waitFor(`return location.pathname === "/fr/rfq/new" && location.search === "?producer=cevital";`), await run(`return location.pathname + location.search;`));
   const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 });
   const buyer = list.users.find((u) => u.email === e2);
   const { data: prof } = buyer ? await admin.from("profiles").select("role").eq("id", buyer.id).single() : { data: null };

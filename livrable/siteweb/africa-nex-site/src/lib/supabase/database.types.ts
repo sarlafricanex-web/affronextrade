@@ -1175,6 +1175,9 @@ export type Database = {
           attachments: Json
           buyer_company_id: string | null
           buyer_profile_id: string
+          container_count: number | null
+          container_reefer: boolean
+          container_size: string | null
           created_at: string
           currency: string | null
           description: string | null
@@ -1185,6 +1188,7 @@ export type Database = {
           needed_by: string | null
           product_id: string | null
           quantity: number | null
+          quantity_mode: string
           reference: string
           source_company_id: string | null
           status: string
@@ -1197,6 +1201,9 @@ export type Database = {
           attachments?: Json
           buyer_company_id?: string | null
           buyer_profile_id: string
+          container_count?: number | null
+          container_reefer?: boolean
+          container_size?: string | null
           created_at?: string
           currency?: string | null
           description?: string | null
@@ -1207,6 +1214,7 @@ export type Database = {
           needed_by?: string | null
           product_id?: string | null
           quantity?: number | null
+          quantity_mode?: string
           reference?: string
           source_company_id?: string | null
           status?: string
@@ -1219,6 +1227,9 @@ export type Database = {
           attachments?: Json
           buyer_company_id?: string | null
           buyer_profile_id?: string
+          container_count?: number | null
+          container_reefer?: boolean
+          container_size?: string | null
           created_at?: string
           currency?: string | null
           description?: string | null
@@ -1229,6 +1240,7 @@ export type Database = {
           needed_by?: string | null
           product_id?: string | null
           quantity?: number | null
+          quantity_mode?: string
           reference?: string
           source_company_id?: string | null
           status?: string
