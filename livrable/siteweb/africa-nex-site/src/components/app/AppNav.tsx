@@ -20,6 +20,7 @@ const LINKS = {
   admin: [
     { href: "/dashboard", key: "navDashboard" },
     { href: "/admin", key: "navAdmin" },
+    { href: "/admin/rfqs", key: "navAdminRfqs" },
     { href: "/admin/accounts", key: "navAccounts" },
     { href: "/admin/producers", key: "navProducers" },
     { href: "/admin/claims", key: "navClaims" },
@@ -56,7 +57,7 @@ export function AppNav({ role, name, badges = {} }: { role: string; name: string
         {LINKS[space].map((link) => {
           const active =
             pathname === link.href ||
-            ((link.href === "/catalog" || link.href === "/admin/producers") && pathname.startsWith(`${link.href}/`)) ||
+            ((link.href === "/catalog" || link.href === "/admin/producers" || link.href === "/admin/rfqs") && pathname.startsWith(`${link.href}/`)) ||
             (link.href === "/rfq" && pathname.startsWith("/rfq/") && pathname !== "/rfq/new");
           const badge = badges[link.href] ?? 0;
           return (
