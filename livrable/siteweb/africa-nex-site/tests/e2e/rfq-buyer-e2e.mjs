@@ -62,7 +62,7 @@ try {
   await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 1300, deviceScaleFactor: 1, mobile: false });
   const SET = `const setV = (el, v) => { const p = el.tagName === "SELECT" ? HTMLSelectElement.prototype : el.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(p, "value").set.call(el, v); el.dispatchEvent(new Event("input", { bubbles: true })); el.dispatchEvent(new Event("change", { bubbles: true })); };`;
   const submit = `document.querySelector("form").noValidate = true; [...document.querySelectorAll("main button[type=submit]")].at(-1).click();`;
-  const pickCountry = async (name) => { await run(`document.getElementById("rfq-country").click(); return true;`); await sleep(400); await run(`[...document.querySelectorAll("[role=option]")].find((x) => x.textContent.includes(${JSON.stringify(name)}))?.click(); return true;`); await sleep(300); };
+  const pickCountry = async (name) => { await run(`document.getElementById("rfq-country").click(); return true;`); await waitFor(`return [...document.querySelectorAll("[role=option]")].some((x) => x.textContent.includes(${JSON.stringify(name)}));`, 20); await run(`[...document.querySelectorAll("[role=option]")].find((x) => x.textContent.includes(${JSON.stringify(name)}))?.click(); return true;`); await sleep(300); };
   const attach = async (file) => { const { root } = await send("DOM.getDocument"); const { nodeId } = await send("DOM.querySelector", { nodeId: root.nodeId, selector: "input[name=file]" }); await send("DOM.setFileInputFiles", { nodeId, files: [file.replace(/\//g, "\\")] }); await sleep(800); };
 
   // Acces
@@ -73,11 +73,11 @@ try {
   report("Fiche publique : Demander un devis mene au formulaire", await run(`return [...document.querySelectorAll("#devis a")].some((a) => decodeURIComponent(a.getAttribute("href")).includes("/fr/rfq/new?producer=ifri"));`));
   await loginAs(producer);
   await go("/fr/rfq/new");
-  report("Producteur : reserve aux acheteurs", await run(`return document.body.innerText.includes("Réservé aux acheteurs");`));
+  report("Producteur : reserve aux acheteurs", await waitFor(`return document.body.innerText.includes("Réservé aux acheteurs");`));
   // Nouvel acheteur : profil d'abord, puis retour automatique au formulaire (producteur conserve)
   await loginAs(newBuyer);
   await go("/fr/rfq/new?producer=ifri", `return !!document.getElementById("b-name");`);
-  report("Acheteur sans profil : envoye a son profil avec message", await run(`return location.pathname === "/fr/onboarding" && /Dernière étape avant votre demande de devis/.test(document.querySelector("main [role=note]")?.textContent ?? "");`), await run(`return location.pathname + " | " + (document.querySelector("main [role=note]")?.textContent ?? "aucun bandeau");`));
+  report("Acheteur sans profil : envoye a son profil avec message", await waitFor(`return location.pathname === "/fr/onboarding" && /Dernière étape avant votre demande de devis/.test(document.querySelector("main [role=note]")?.textContent ?? "");`), await run(`return location.pathname + " | " + (document.querySelector("main [role=note]")?.textContent ?? "aucun bandeau");`));
   await run(`${SET}
     setV(document.getElementById("b-name"), "Lagos Trading Ltd");
     document.querySelector("input[name=buyerType][value=importer]").click();
@@ -85,15 +85,16 @@ try {
     setV(document.getElementById("b-whatsapp"), "+221 77 765 43 21");
     document.querySelector("input[name=interests][value=C10]").click();
     document.getElementById("b-country").click(); return true;`);
-  await sleep(400);
-  await run(`[...document.querySelectorAll("[role=option]")].find((x) => x.textContent.includes("Nigéria") || x.textContent.includes("Nigeria")).click(); return true;`);
+  const NIGERIA = `[...document.querySelectorAll("[role=option]")].find((x) => x.textContent.includes("Nigéria") || x.textContent.includes("Nigeria"))`;
+  await waitFor(`return !!${NIGERIA};`);
+  await run(`${NIGERIA}.click(); return true;`);
   await sleep(300);
   await run(`[...document.querySelectorAll("main button[type=submit]")].at(-1).click(); return true;`);
   report("Profil enregistre : retour au formulaire, Ifri toujours selectionne", await waitFor(`return location.pathname === "/fr/rfq/new" && location.search.includes("producer=ifri") && document.body.innerText.includes("Profil enregistré.") && document.body.innerText.includes("Ifri");`), await run(`return location.pathname + location.search;`));
   await loginAs(buyer);
   await go(`/fr/register?role=buyer&next=${encodeURIComponent("/fr/rfq/new?producer=ifri")}`, `return location.pathname === "/fr/rfq/new";`);
   report("Deja connecte : l'inscription renvoie directement au formulaire", await run(`return location.pathname === "/fr/rfq/new" && location.search === "?producer=ifri";`));
-  report("Producteur Ifri pre-selectionne", await run(`return /producteur sélectionné/i.test(document.body.innerText) && document.body.innerText.includes("Ifri");`));
+  report("Producteur Ifri pre-selectionne", await waitFor(`return /producteur sélectionné/i.test(document.body.innerText) && document.body.innerText.includes("Ifri");`));
 
   // Demande 1 : depuis un produit, en unites, avec piece jointe
   await go(`/fr/rfq/new?product=${product.id}`, `return !!document.getElementById("rfq-title");`);

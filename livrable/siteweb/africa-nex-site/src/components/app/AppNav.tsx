@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 const LINKS = {
   producer: [
     { href: "/dashboard", key: "navDashboard" },
+    { href: "/requests", key: "navRequests" },
     { href: "/company", key: "navCompany" },
     { href: "/catalog", key: "navCatalog" },
   ],
@@ -57,7 +58,7 @@ export function AppNav({ role, name, badges = {} }: { role: string; name: string
         {LINKS[space].map((link) => {
           const active =
             pathname === link.href ||
-            ((link.href === "/catalog" || link.href === "/admin/producers" || link.href === "/admin/rfqs") && pathname.startsWith(`${link.href}/`)) ||
+            ((link.href === "/catalog" || link.href === "/requests" || link.href === "/admin/producers" || link.href === "/admin/rfqs") && pathname.startsWith(`${link.href}/`)) ||
             (link.href === "/rfq" && pathname.startsWith("/rfq/") && pathname !== "/rfq/new");
           const badge = badges[link.href] ?? 0;
           return (

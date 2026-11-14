@@ -90,12 +90,15 @@ try {
   // Garde-fou d'anonymat
   await run(`${SET} setV(document.getElementById("d-specs"), "Pour le client ${buyerName}, bidons 5 L."); ${tick(pc.id)} return true;`);
   await sleep(300);
-  await run(`${sendBrief} return true;`);
-  report("Brief avec le nom de l'acheteur : refuse", await waitFor(`return document.body.innerText.includes("Le brief contient le nom, l'email ou le téléphone de l'acheteur");`));
+  // Le formulaire est remonte a chaque reponse : on le marque, puis on attend qu'il soit remplace.
+  const MARK = `document.getElementById("d-specs").closest("form").dataset.old = "1";`;
+  const REMOUNTED = `!document.querySelector("form[data-old]") && !!document.getElementById("d-specs")`;
+  await run(`${MARK} ${sendBrief} return true;`);
+  report("Brief avec le nom de l'acheteur : refuse", await waitFor(`return ${REMOUNTED} && document.body.innerText.includes("Le brief contient le nom, l'email ou le téléphone de l'acheteur");`));
   await run(`${SET} setV(document.getElementById("d-specs"), "Rappeler le 0803 123 4567 pour details."); ${tick(pc.id)} return true;`);
   await sleep(300);
-  await run(`${sendBrief} return true;`);
-  report("Brief avec le telephone de l'acheteur : refuse", await waitFor(`return document.body.innerText.includes("Le brief contient le nom, l'email ou le téléphone de l'acheteur");`));
+  await run(`${MARK} ${sendBrief} return true;`);
+  report("Brief avec le telephone de l'acheteur : refuse", await waitFor(`return ${REMOUNTED} && document.body.innerText.includes("Le brief contient le nom, l'email ou le téléphone de l'acheteur");`));
   const { count: none } = await admin.from("rfq_dispatches").select("id", { count: "exact", head: true }).eq("rfq_id", rfq.id);
   report("Aucun envoi apres les refus", none === 0, String(none));
 

@@ -41,6 +41,7 @@ Chrome doit être installé. Autre emplacement : variable `CHROME_PATH`.
 | `claim` | Revendication d'une fiche, validation et refus par l'admin |
 | `rfq-admin` | Console des demandes : prise en charge, garde-fou d'anonymat du brief, envoi aux producteurs, cloisonnement |
 | `rfq-buyer` | Demande de devis côté acheteur : en unités ou en conteneurs, pièce jointe, liste, compteur, annulation, isolement |
+| `rfq-producer` | Demandes reçues côté producteur : liste, compteur, devis (refus, envoi, mise à jour), déclin, verrouillage, cloisonnement |
 | `admin-producers` | Console admin des producteurs |
 | `return`, `redirect` | Retour à la bonne page après inscription ou connexion |
 | `phone` | Téléphone international et pays |

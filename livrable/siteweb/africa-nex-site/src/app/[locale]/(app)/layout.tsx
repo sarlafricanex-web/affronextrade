@@ -5,6 +5,14 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { AppNav } from "@/components/app/AppNav";
 import { countOffersReady } from "@/lib/data/rfq";
 import { countRfqsToQualify } from "@/lib/data/admin-rfqs";
+import { countNewRequests } from "@/lib/data/requests";
+import { getMyCompanyId } from "@/lib/data/company";
+
+// Producteur : nouvelles demandes de devis pas encore ouvertes.
+async function producerBadges(client: Parameters<typeof getMyCompanyId>[0], userId: string): Promise<Record<string, number>> {
+  const companyId = await getMyCompanyId(client, userId);
+  return companyId ? { "/requests": await countNewRequests(client, companyId) } : {};
+}
 
 // Pages par utilisateur : rendues a chaque requete, sans validation de navigation instantanee.
 export const instant = false;
@@ -35,6 +43,7 @@ async function AppShell({ children, params }: { children: React.ReactNode; param
   const badges: Record<string, number> =
     user.role === "buyer" ? { "/rfq": await countOffersReady(user.supabase, user.userId) }
     : user.role === "admin" ? { "/admin/rfqs": await countRfqsToQualify(user.supabase) }
+    : user.role === "producer" ? await producerBadges(user.supabase, user.userId)
     : {};
 
   return (

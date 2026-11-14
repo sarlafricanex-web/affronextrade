@@ -136,6 +136,11 @@ export default async function AdminRfqPage({
                         <span className="block font-semibold">{c.company_name}</span>
                         <span className="block text-xs" dir="ltr" style={{ color: "var(--muted)", textAlign: "start" }}>{d.reference} · {t("rfqRespondBy", { date: date(d.respond_by) ?? "-" })}</span>
                         {!c.owner_profile_id && <span className="block text-xs font-semibold" style={{ color: "#c2410c" }}>{t("rfqOffline")}</span>}
+                        {[d.quotes].flat().filter(Boolean).map((q, qi) => q && (
+                          <span key={qi} className="mt-1 block text-xs font-semibold" dir="ltr" style={{ color: "#065f46", textAlign: "start" }}>
+                            {t("rfqQuoteSummary", { price: Number(q.unit_price_ht).toLocaleString(locale), currency: q.currency, basis: q.price_basis ?? "", quantity: Number(q.quantity).toLocaleString(locale), unit: d.unit ? tc(`unitShort_${d.unit}`) : "", days: q.production_lead_days ?? 0, valid: date(q.valid_until) ?? "-" })}
+                          </span>
+                        ))}
                       </span>
                       <span className="px-2 py-1 text-[10px] font-bold uppercase" style={{ ...caps, background: d.status === "quoted" ? "#ecfdf5" : d.status === "declined" ? "#fef2f2" : "#f5efe6", border: `1px solid ${HAIR}` }}>{t(`dispatch_${d.status}`)}</span>
                     </li>
