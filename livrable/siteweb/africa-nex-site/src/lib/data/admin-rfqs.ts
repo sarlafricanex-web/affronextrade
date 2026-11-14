@@ -28,18 +28,59 @@ export async function getAdminRfq(client: Client, id: string) {
     .maybeSingle();
   if (error) throw error;
   if (!rfq) return null;
-  const [{ data: profile }, { data: contact }, { data: dispatches }] = await Promise.all([
+  const [{ data: profile }, { data: contact }, { data: dispatches }, { data: offers }] = await Promise.all([
     client.from("profiles").select("full_name, email, phone, whatsapp").eq("id", rfq.buyer_profile_id).maybeSingle(),
     rfq.buyer_company_id ? client.from("company_private").select("contact_phone, contact_whatsapp").eq("company_id", rfq.buyer_company_id).maybeSingle() : Promise.resolve({ data: null }),
     client
       .from("rfq_dispatches")
-      .select("id, reference, status, respond_by, viewed_at, created_at, brief_title, unit, company:companies(id, company_name, slug, claim_status, owner_profile_id), quotes(unit_price_ht, currency, price_basis, quantity, production_lead_days, valid_until, status)")
+      .select(`id, reference, status, respond_by, viewed_at, created_at, brief_title, unit, company:companies(id, company_name, slug, claim_status, owner_profile_id, wilaya, city), quotes(${QUOTE_COLUMNS})`)
       .eq("rfq_id", id)
       .order("created_at"),
+    client.from("offers").select(`${OFFER_COLUMNS}, offer_margins(${MARGIN_COLUMNS})`).eq("rfq_id", id).order("label"),
   ]);
   // Date de reponse proposee par defaut aux producteurs : dans 7 jours.
-  const defaultRespondBy = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
-  return { ...rfq, buyerProfile: profile, buyerContact: contact, dispatches: dispatches ?? [], defaultRespondBy };
+  const now = Date.now();
+  const defaultRespondBy = new Date(now + 7 * 864e5).toISOString().slice(0, 10);
+  const today = new Date(now).toISOString().slice(0, 10);
+  return { ...rfq, buyerProfile: profile, buyerContact: contact, dispatches: dispatches ?? [], offers: offers ?? [], defaultRespondBy, today };
+}
+
+const QUOTE_COLUMNS =
+  "id, unit_price_ht, currency, price_basis, port_of_loading, quantity, production_lead_days, available_at_port_on, payment_terms, valid_until, notes, attachments, status, author_profile_id, created_at, updated_at";
+const OFFER_COLUMNS =
+  "id, label, unit_price, currency, incoterm, incoterm_place, quantity, total_amount, lead_time_days, origin_region, packaging, certifications, payment_terms, cagex_insured, valid_until, notes, status, published_at";
+const MARGIN_COLUMNS = "source_quote_id, producer_unit_price, producer_currency, freight_cost, insurance_rate, insurance_cost, commission_rate, commission_amount";
+
+// Composeur d'offre : la demande, le devis source (et son producteur, jamais montre a
+// l'acheteur) et l'offre deja composee depuis ce devis s'il y en a une.
+export async function getOfferComposer(client: Client, rfqId: string, quoteId: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(rfqId) || !/^[0-9a-f-]{36}$/i.test(quoteId)) return null;
+  const [{ data: rfq }, { data: quote }, { data: margin }, { data: labels }] = await Promise.all([
+    client.from("rfqs").select("id, reference, title, status, quantity, unit, quantity_mode, container_size, container_reefer, container_count, incoterm, destination_country, destination_port, target_unit_price, currency").eq("id", rfqId).maybeSingle(),
+    client.from("quotes").select(`${QUOTE_COLUMNS}, company:companies(company_name, wilaya, city, owner_profile_id), dispatch:rfq_dispatches(id, rfq_id, reference, unit)`).eq("id", quoteId).maybeSingle(),
+    client.from("offer_margins").select(`${MARGIN_COLUMNS}, offer:offers(${OFFER_COLUMNS})`).eq("source_quote_id", quoteId).maybeSingle(),
+    client.from("offers").select("label, offer_margins(source_quote_id)").eq("rfq_id", rfqId),
+  ]);
+  const dispatch = quote ? ((Array.isArray(quote.dispatch) ? quote.dispatch[0] : quote.dispatch) as { id: string; rfq_id: string; reference: string; unit: string | null } | null) : null;
+  if (!rfq || !quote || dispatch?.rfq_id !== rfqId) return null;
+  const offer = margin ? ((Array.isArray(margin.offer) ? margin.offer[0] : margin.offer) as Record<string, unknown> | null) : null;
+  // Prochaine lettre libre pour une nouvelle offre (A, B, C...).
+  const used = new Set((labels ?? []).map((l) => l.label));
+  const nextLabel = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").find((l) => !used.has(l)) ?? "Z";
+  const today = new Date().toISOString().slice(0, 10);
+  return { rfq, quote, dispatch, margin, offer, nextLabel, today };
+}
+
+// Saisie par AFRICA NEX du devis d'un producteur joint hors ligne.
+export async function getQuoteEntry(client: Client, rfqId: string, dispatchId: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(rfqId) || !/^[0-9a-f-]{36}$/i.test(dispatchId)) return null;
+  const { data } = await client
+    .from("rfq_dispatches")
+    .select(`id, rfq_id, reference, status, brief_title, brief_specs, quantity, unit, destination_country, requested_incoterm, respond_by, company:companies(company_name, owner_profile_id), quotes(${QUOTE_COLUMNS})`)
+    .eq("id", dispatchId)
+    .eq("rfq_id", rfqId)
+    .maybeSingle();
+  return data;
 }
 
 export type AdminRfq = NonNullable<Awaited<ReturnType<typeof getAdminRfq>>>;

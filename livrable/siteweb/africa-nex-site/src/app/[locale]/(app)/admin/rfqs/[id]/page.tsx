@@ -11,6 +11,8 @@ import { isSector } from "@/lib/sectors";
 import { StatusBadge } from "@/components/rfq/RfqList";
 import { DispatchForm } from "@/components/admin/DispatchForm";
 import { closeRfq, qualifyRfq } from "../actions";
+import { changeOffer } from "../offer-actions";
+import { oneOf } from "@/lib/data/requests";
 
 export const instant = false;
 
@@ -57,6 +59,24 @@ export default async function AdminRfqPage({
     rfq.description,
   ].filter(Boolean).join("\n");
 
+  // Devis recus, compares (meilleur prix par devise) ; offres deja composees par devis.
+  type Company = { id: string; company_name: string; slug: string; claim_status: string; owner_profile_id: string | null; wilaya: string | null; city: string | null };
+  const quotes = rfq.dispatches
+    .flatMap((d) => {
+      const q = oneOf(d.quotes);
+      return q && q.status !== "withdrawn" && q.status !== "draft" ? [{ d, q, company: d.company as unknown as Company }] : [];
+    })
+    .sort((a, b) => Number(a.q.unit_price_ht) - Number(b.q.unit_price_ht));
+  const bestPrice = new Map<string, number>();
+  for (const { q } of quotes) if (!bestPrice.has(q.currency)) bestPrice.set(q.currency, Number(q.unit_price_ht));
+  const offerByQuote = new Map(rfq.offers.map((o) => [oneOf(o.offer_margins)?.source_quote_id ?? "", o]));
+  const canOffer = ["qualified", "dispatched", "offered"].includes(rfq.status);
+  const canEnterQuote = (d: (typeof rfq.dispatches)[number]) => {
+    const q = oneOf(d.quotes);
+    return d.status !== "expired" && (!q || q.status === "submitted" || q.status === "draft") && ["dispatched", "offered", "qualified"].includes(rfq.status);
+  };
+  const q0Notes = quotes.filter(({ q }) => q.notes).map(({ q, company }) => ({ id: q.id, name: company.company_name, notes: q.notes }));
+
   const rows = [
     { label: tr("specQuantity"), value: volume },
     { label: tr("specDestination"), value: destinationLabel(rfq, locale) || null },
@@ -101,6 +121,115 @@ export default async function AdminRfqPage({
         </div>
       </header>
 
+      {quotes.length > 0 && (
+        <section style={{ background: "white", border: `1px solid ${HAIR}` }} aria-labelledby="quotes-title">
+          <h2 id="quotes-title" className="px-5 py-3 text-xs font-bold uppercase" style={{ ...caps, background: "#f5efe6", borderBottom: `1px solid ${HAIR}` }}>{t("compareTitle", { count: quotes.length })}</h2>
+          <div style={{ overflowX: "auto" }}>
+            <table className="w-full text-sm" style={{ minWidth: 760 }}>
+              <thead>
+                <tr className="text-[10px] font-bold uppercase" style={{ ...caps, color: "var(--muted)", textAlign: "start" }}>
+                  {[t("compareProducer"), t("comparePrice"), t("compareQuantity"), t("compareLead"), t("compareValid"), t("comparePayment"), ""].map((h, i) => (
+                    <th key={i} className="px-4 py-3" style={{ textAlign: "start" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {quotes.map(({ q, d, company }) => {
+                  const best = bestPrice.get(q.currency) === Number(q.unit_price_ht) && quotes.length > 1;
+                  const offer = offerByQuote.get(q.id);
+                  const expired = q.valid_until != null && q.valid_until < rfq.today;
+                  return (
+                    <tr key={q.id} data-quote={q.id} style={{ borderTop: `1px solid ${HAIR}`, background: best ? "#f0fdf4" : undefined }}>
+                      <td className="px-4 py-3">
+                        <span className="block font-semibold">{company.company_name}</span>
+                        <span className="block text-xs" style={{ color: "var(--muted)" }}>{[company.city, WILAYAS.find(([c]) => c === company.wilaya)?.[1]].filter(Boolean).join(", ")}</span>
+                        {q.author_profile_id !== company.owner_profile_id && <span className="block text-xs font-semibold" style={{ color: "#c2410c" }}>{t("compareEnteredByUs")}</span>}
+                      </td>
+                      <td className="px-4 py-3" dir="ltr" style={{ textAlign: "start" }}>
+                        <span className="block font-bold">{Number(q.unit_price_ht).toLocaleString(locale)} {q.currency} / {d.unit ? tc(`unitShort_${d.unit}`) : ""}</span>
+                        <span className="block text-xs" style={{ color: "var(--muted)" }}>{[q.price_basis, q.port_of_loading].filter(Boolean).join(" · ")}</span>
+                        {best && <span className="mt-1 inline-block px-2 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, background: "#10b981", color: "white" }}>{t("compareBest")}</span>}
+                      </td>
+                      <td className="px-4 py-3" dir="ltr" style={{ textAlign: "start" }}>{Number(q.quantity).toLocaleString(locale)} {d.unit ? tc(`unitShort_${d.unit}`) : ""}</td>
+                      <td className="px-4 py-3">{q.production_lead_days != null ? t("offerDays", { days: q.production_lead_days }) : "-"}</td>
+                      <td className="px-4 py-3" style={{ color: expired ? "#dc2626" : undefined }}>{date(q.valid_until) ?? "-"}{expired ? ` · ${t("compareExpired")}` : ""}</td>
+                      <td className="px-4 py-3 text-xs" style={{ maxWidth: 220 }}>
+                        {q.payment_terms ?? "-"}
+                        {rfqAttachments(q).map((f, i) => (
+                          <a key={f.path} href={`/api/rfq-files/${rfq.id}?quote=${q.id}&i=${i}`} className="mt-1 block font-semibold underline">{f.name}</a>
+                        ))}
+                      </td>
+                      <td className="px-4 py-3">
+                        {offer ? (
+                          <Link href={`/admin/rfqs/${rfq.id}/offer?quote=${q.id}`} className="text-xs font-bold uppercase underline" style={caps}>{t("compareOfferLink", { label: offer.label })}</Link>
+                        ) : canOffer ? (
+                          <Link href={`/admin/rfqs/${rfq.id}/offer?quote=${q.id}`} className="inline-block px-3 py-2 text-xs font-bold uppercase" style={{ ...caps, background: "var(--ink)", color: "white" }}>{t("compareCompose")}</Link>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {q0Notes.length > 0 && (
+            <ul className="flex flex-col gap-2 px-5 py-4 text-xs" style={{ borderTop: `1px solid ${HAIR}` }}>
+              {q0Notes.map((n) => <li key={n.id}><strong>{n.name} :</strong> {n.notes}</li>)}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {rfq.offers.length > 0 && (
+        <section style={{ background: "white", border: `1px solid ${HAIR}` }} aria-labelledby="offers-title">
+          <h2 id="offers-title" className="px-5 py-3 text-xs font-bold uppercase" style={{ ...caps, background: "#f5efe6", borderBottom: `1px solid ${HAIR}` }}>{t("offersTitle")}</h2>
+          <ul>
+            {rfq.offers.map((o) => {
+              const m = oneOf(o.offer_margins);
+              return (
+                <li key={o.id} data-offer={o.label} className="flex flex-col gap-3 px-5 py-4 md:flex-row md:items-center md:justify-between" style={{ borderTop: `1px solid ${HAIR}` }}>
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-2">
+                      <span className="px-2 py-0.5 text-xs font-bold" style={{ background: "var(--ink)", color: "white" }}>{t("offerName", { label: o.label })}</span>
+                      <span className="px-2 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, border: `1px solid ${HAIR}`, background: o.status === "published" ? "#ecfdf5" : o.status === "accepted" ? "#10b981" : "#f5efe6", color: o.status === "accepted" ? "white" : undefined }}>{t(`offerStatus_${o.status}`)}</span>
+                    </p>
+                    <p className="mt-1 font-bold" dir="ltr" style={{ textAlign: "start" }}>
+                      {Number(o.unit_price).toLocaleString(locale, { minimumFractionDigits: 2 })} {o.currency} · {o.incoterm} {o.incoterm_place ?? ""} · {t("offerTotal", { total: `${Number(o.total_amount).toLocaleString(locale, { minimumFractionDigits: 2 })} ${o.currency}` })}
+                    </p>
+                    {m && (
+                      <p className="mt-1 text-xs font-semibold" style={{ color: "#c2410c" }}>
+                        {t("offerMarginLine", {
+                          commission: `${Number(m.commission_amount).toLocaleString(locale, { minimumFractionDigits: 2 })} ${o.currency}`,
+                          rate: Number(m.commission_rate).toLocaleString(locale),
+                          insurance: `${Number(m.insurance_cost ?? 0).toLocaleString(locale, { minimumFractionDigits: 2 })} ${o.currency}`,
+                          producer: `${Number(m.producer_unit_price).toLocaleString(locale)} ${m.producer_currency ?? ""}`,
+                        })}
+                      </p>
+                    )}
+                    <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>{t("offerValidLine", { date: date(o.valid_until) ?? "-" })}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {o.status === "draft" && m?.source_quote_id && (
+                      <Link href={`/admin/rfqs/${rfq.id}/offer?quote=${m.source_quote_id}`} className="px-3 py-2 text-xs font-bold uppercase" style={{ ...caps, border: "1px solid var(--ink)" }}>{t("offerEdit")}</Link>
+                    )}
+                    {(o.status === "draft" ? (["publish", "delete"] as const) : o.status === "published" ? (["withdraw"] as const) : []).map((op) => (
+                      <form key={op} action={changeOffer}>
+                        <input type="hidden" name="locale" value={locale} />
+                        <input type="hidden" name="id" value={o.id} />
+                        <input type="hidden" name="op" value={op} />
+                        <button type="submit" className="px-3 py-2 text-xs font-bold uppercase" style={{ ...caps, ...(op === "publish" ? { background: "#10b981", color: "white" } : op === "delete" ? { border: "1px solid #dc2626", color: "#dc2626", background: "white" } : { border: "1px solid var(--ink)", background: "white" }) }}>
+                          {t(`offerOp_${op}`)}
+                        </button>
+                      </form>
+                    ))}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex flex-col gap-6" style={{ minWidth: 0 }}>
           <section style={{ background: "white", border: `1px solid ${HAIR}` }}>
@@ -142,7 +271,14 @@ export default async function AdminRfqPage({
                           </span>
                         ))}
                       </span>
-                      <span className="px-2 py-1 text-[10px] font-bold uppercase" style={{ ...caps, background: d.status === "quoted" ? "#ecfdf5" : d.status === "declined" ? "#fef2f2" : "#f5efe6", border: `1px solid ${HAIR}` }}>{t(`dispatch_${d.status}`)}</span>
+                      <span className="flex flex-wrap items-center gap-2">
+                        {canEnterQuote(d) && (
+                          <Link href={`/admin/rfqs/${rfq.id}/quote/${d.id}`} className="px-2 py-1 text-[10px] font-bold uppercase underline" style={{ ...caps, color: "#c2410c" }}>
+                            {oneOf(d.quotes) ? t("quoteEntryEdit") : t("quoteEntryLink")}
+                          </Link>
+                        )}
+                        <span className="px-2 py-1 text-[10px] font-bold uppercase" style={{ ...caps, background: d.status === "quoted" ? "#ecfdf5" : d.status === "declined" ? "#fef2f2" : "#f5efe6", border: `1px solid ${HAIR}` }}>{t(`dispatch_${d.status}`)}</span>
+                      </span>
                     </li>
                   );
                 })}

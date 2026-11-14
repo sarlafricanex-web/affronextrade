@@ -517,6 +517,7 @@ export type Database = {
           created_at: string
           freight_cost: number | null
           insurance_cost: number | null
+          insurance_rate: number | null
           offer_id: string
           producer_currency: string | null
           producer_unit_price: number | null
@@ -529,6 +530,7 @@ export type Database = {
           created_at?: string
           freight_cost?: number | null
           insurance_cost?: number | null
+          insurance_rate?: number | null
           offer_id: string
           producer_currency?: string | null
           producer_unit_price?: number | null
@@ -541,6 +543,7 @@ export type Database = {
           created_at?: string
           freight_cost?: number | null
           insurance_cost?: number | null
+          insurance_rate?: number | null
           offer_id?: string
           producer_currency?: string | null
           producer_unit_price?: number | null

@@ -42,6 +42,7 @@ Chrome doit être installé. Autre emplacement : variable `CHROME_PATH`.
 | `rfq-admin` | Console des demandes : prise en charge, garde-fou d'anonymat du brief, envoi aux producteurs, cloisonnement |
 | `rfq-buyer` | Demande de devis côté acheteur : en unités ou en conteneurs, pièce jointe, liste, compteur, annulation, isolement |
 | `rfq-producer` | Demandes reçues côté producteur : liste, compteur, devis (refus, envoi, mise à jour), déclin, verrouillage, cloisonnement |
+| `rfq-offer` | Comparatif des devis, saisie hors ligne, composition de l'offre (grille de commission, assurance, fret), garde-fou d'anonymat, publication, retrait |
 | `admin-producers` | Console admin des producteurs |
 | `return`, `redirect` | Retour à la bonne page après inscription ou connexion |
 | `phone` | Téléphone international et pays |

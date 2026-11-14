@@ -1,0 +1,209 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth/current-user";
+import { resolveLocale } from "@/lib/auth/next-path";
+import { parseAmount } from "@/lib/onboarding/reference";
+import { readQuoteForm, storeQuoteFile, type QuoteState } from "@/lib/quote-input";
+import { priceOffer } from "@/lib/offer-pricing";
+
+const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
+const UUID = /^[0-9a-f-]{36}$/i;
+const INCOTERMS = ["EXW", "FCA", "FOB", "CFR", "CIF", "DAP", "DDP"];
+const WITH_FREIGHT = ["CFR", "CIF", "DAP", "DDP"];
+const one = <T,>(x: unknown) => (Array.isArray(x) ? (x[0] ?? null) : (x ?? null)) as T | null;
+
+async function adminContext(formData: FormData) {
+  const locale = resolveLocale(text(formData, "locale"));
+  const user = await getCurrentUser();
+  if (!user) redirect(`/${locale}/login`);
+  if (user.role !== "admin") redirect(`/${locale}/dashboard`);
+  return { locale, supabase: user.supabase, userId: user.userId };
+}
+
+// AFRICA NEX saisit le devis d'un producteur joint hors ligne (fiche non revendiquee,
+// telephone, salon...). Memes regles que le formulaire du producteur.
+export async function enterQuote(_prev: QuoteState, formData: FormData): Promise<QuoteState> {
+  const { locale, supabase, userId } = await adminContext(formData);
+  const id = text(formData, "id");
+  if (!UUID.test(id)) redirect(`/${locale}/admin/rfqs`);
+  const { values, errors, fields, upload } = await readQuoteForm(formData);
+  const fail = (s: Omit<QuoteState, "values" | "attempt">): QuoteState => ({ ...s, values, attempt: Date.now() });
+  if (Object.keys(errors).length) return fail({ errors });
+
+  const { data: dispatch } = await supabase.from("rfq_dispatches").select("id, rfq_id, company_id, status, quotes(id, status)").eq("id", id).maybeSingle();
+  if (!dispatch) redirect(`/${locale}/admin/rfqs`);
+  const existing = one<{ id: string; status: string }>(dispatch.quotes);
+  if (dispatch.status === "expired" || (existing && existing.status !== "submitted" && existing.status !== "draft")) return fail({ errors: {}, formError: "errorLocked" });
+
+  let quoteId = existing?.id ?? null;
+  if (existing) {
+    const { error } = await supabase.from("quotes").update(fields).eq("id", existing.id);
+    if (error) { console.error("Admin quote update failed:", error.message); return fail({ errors: {}, formError: "errorGeneric" }); }
+  } else {
+    // Un producteur qui avait decline peut finalement repondre par telephone.
+    if (dispatch.status === "declined") await supabase.from("rfq_dispatches").update({ status: "viewed" }).eq("id", id);
+    const { data: created, error } = await supabase.from("quotes").insert({ ...fields, dispatch_id: id, company_id: dispatch.company_id, author_profile_id: userId }).select("id").single();
+    if (error || !created) { console.error("Admin quote insert failed:", error?.code, error?.message); return fail({ errors: {}, formError: "errorGeneric" }); }
+    quoteId = created.id;
+  }
+  if (upload && quoteId) await storeQuoteFile(supabase, id, quoteId, upload, formData.get("file") as File);
+  await supabase.from("audit_log").insert({ actor_profile_id: userId, action: "quote.enter", entity: "quote", entity_id: quoteId, payload: { dispatch: id } });
+  redirect(`/${locale}/admin/rfqs/${dispatch.rfq_id}?done=quote`);
+}
+
+export type OfferField =
+  | "label" | "producerPrice" | "quantity" | "incoterm" | "incotermPlace" | "commissionRate" | "insuranceRate" | "freight"
+  | "leadDays" | "originRegion" | "packaging" | "certifications" | "paymentTerms" | "validUntil" | "notes";
+export type OfferState = { errors: Partial<Record<OfferField, string>>; formError?: string; values?: Record<string, string>; attempt?: number };
+
+const OFFER_KEYS: OfferField[] = ["label", "producerPrice", "quantity", "incoterm", "incotermPlace", "commissionRate", "insuranceRate", "freight", "leadDays", "originRegion", "packaging", "certifications", "paymentTerms", "validUntil", "notes"];
+
+// Offre AFRICA NEX a l'acheteur, composee a partir d'un devis producteur. Le prix est
+// toujours recalcule ici (le calculateur de l'ecran n'est qu'un apercu). La marge reste
+// dans offer_margins, jamais visible de l'acheteur ni du producteur.
+export async function saveOffer(_prev: OfferState, formData: FormData): Promise<OfferState> {
+  const { locale, supabase, userId } = await adminContext(formData);
+  const rfqId = text(formData, "rfqId");
+  const quoteId = text(formData, "quoteId");
+  if (!UUID.test(rfqId) || !UUID.test(quoteId)) redirect(`/${locale}/admin/rfqs`);
+  const publish = text(formData, "intent") === "publish";
+  const v = Object.fromEntries(OFFER_KEYS.map((k) => [k, text(formData, k)])) as Record<OfferField, string>;
+  v.label = v.label.toUpperCase();
+  const fail = (s: Omit<OfferState, "values" | "attempt">): OfferState => ({ ...s, values: v, attempt: Date.now() });
+
+  const errors: OfferState["errors"] = {};
+  const today = new Date().toISOString().slice(0, 10);
+  const rate = (s: string) => { const n = parseAmount(s); return n !== null && n >= 0 && n <= 100 ? n : null; };
+  if (!/^[A-Z0-9]{1,20}$/.test(v.label)) errors.label = "offerErrorLabel";
+  const producerPrice = parseAmount(v.producerPrice);
+  if (producerPrice === null || producerPrice <= 0) errors.producerPrice = "offerErrorPrice";
+  const quantity = parseAmount(v.quantity);
+  if (quantity === null || quantity <= 0) errors.quantity = "rfqErrorQuantity";
+  if (!INCOTERMS.includes(v.incoterm)) errors.incoterm = "rfqErrorChoose";
+  const commissionRate = rate(v.commissionRate);
+  if (commissionRate === null) errors.commissionRate = "offerErrorRate";
+  const insuranceRate = rate(v.insuranceRate);
+  if (insuranceRate === null) errors.insuranceRate = "offerErrorRate";
+  const freight = v.freight ? parseAmount(v.freight) : 0;
+  if (freight === null || freight < 0) errors.freight = "offerErrorFreight";
+  else if (WITH_FREIGHT.includes(v.incoterm) && !(freight > 0)) errors.freight = "offerErrorFreightNeeded";
+  const leadDays = v.leadDays ? (/^\d{1,3}$/.test(v.leadDays) ? Number(v.leadDays) : NaN) : null;
+  if (leadDays !== null && !Number.isInteger(leadDays)) errors.leadDays = "offerErrorLeadDays";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v.validUntil) || v.validUntil < today) errors.validUntil = "offerErrorValidUntil";
+  for (const k of ["incotermPlace", "originRegion", "packaging", "certifications"] as const) if (v[k].length > 200) errors[k] = "rfqErrorTooLong";
+  if (v.paymentTerms.length > 500) errors.paymentTerms = "rfqErrorTooLong";
+  if (v.notes.length > 5000) errors.notes = "rfqErrorTooLong";
+  if (Object.keys(errors).length) return fail({ errors });
+
+  const { data: quote } = await supabase
+    .from("quotes")
+    .select("id, currency, status, company:companies(company_name, slug), dispatch:rfq_dispatches(rfq_id)")
+    .eq("id", quoteId)
+    .maybeSingle();
+  if (!quote || one<{ rfq_id: string }>(quote.dispatch)?.rfq_id !== rfqId) return fail({ errors: {}, formError: "offerErrorQuote" });
+  const { data: rfq } = await supabase.from("rfqs").select("status").eq("id", rfqId).maybeSingle();
+  if (!rfq || !["qualified", "dispatched", "offered"].includes(rfq.status)) return fail({ errors: {}, formError: "offerErrorRfqClosed" });
+
+  // Garde-fou d'anonymat : l'offre ne doit jamais nommer le producteur.
+  const producer = one<{ company_name: string; slug: string }>(quote.company);
+  const offerText = [v.incotermPlace, v.originRegion, v.packaging, v.certifications, v.paymentTerms, v.notes].join("\n").toLowerCase();
+  if ((producer?.company_name ?? "").length >= 3 && offerText.includes(producer!.company_name.toLowerCase())) return fail({ errors: { notes: "offerErrorLeak" } });
+
+  const price = priceOffer({ producerUnitPrice: producerPrice!, quantity: quantity!, commissionRate: commissionRate!, insuranceRate: insuranceRate!, freight: freight! });
+  const offerRow = {
+    rfq_id: rfqId,
+    label: v.label,
+    unit_price: price.unitPrice,
+    currency: quote.currency,
+    incoterm: v.incoterm,
+    incoterm_place: v.incotermPlace || null,
+    quantity: quantity!,
+    total_amount: price.total,
+    lead_time_days: leadDays,
+    origin_region: v.originRegion || null,
+    packaging: v.packaging || null,
+    certifications: v.certifications || null,
+    payment_terms: v.paymentTerms || null,
+    cagex_insured: insuranceRate! > 0,
+    valid_until: v.validUntil,
+    notes: v.notes || null,
+  };
+
+  // Une offre par devis : on retrouve celle deja composee depuis ce devis.
+  const { data: margin } = await supabase.from("offer_margins").select("offer_id, offers(status)").eq("source_quote_id", quoteId).maybeSingle();
+  const current = one<{ status: string }>(margin?.offers);
+  if (current && current.status !== "draft") return fail({ errors: {}, formError: "offerErrorNotDraft" });
+
+  let offerId = margin?.offer_id ?? null;
+  if (offerId) {
+    const { error } = await supabase.from("offers").update(offerRow).eq("id", offerId);
+    if (error) return fail(error.code === "23505" ? { errors: { label: "offerErrorLabelTaken" } } : { errors: {}, formError: "rfqErrorGeneric" });
+  } else {
+    const { data: created, error } = await supabase.from("offers").insert({ ...offerRow, created_by: userId }).select("id").single();
+    if (error || !created) {
+      if (error?.code !== "23505") console.error("Offer insert failed:", error?.message);
+      return fail(error?.code === "23505" ? { errors: { label: "offerErrorLabelTaken" } } : { errors: {}, formError: "rfqErrorGeneric" });
+    }
+    offerId = created.id;
+  }
+  const { error: marginError } = await supabase.from("offer_margins").upsert({
+    offer_id: offerId,
+    source_quote_id: quoteId,
+    producer_unit_price: producerPrice!,
+    producer_currency: quote.currency,
+    freight_cost: price.freight,
+    insurance_rate: insuranceRate!,
+    insurance_cost: price.insurance,
+    commission_rate: commissionRate!,
+    commission_amount: price.commission,
+  });
+  if (marginError) { console.error("Offer margin failed:", marginError.message); return fail({ errors: {}, formError: "rfqErrorGeneric" }); }
+
+  if (publish) await publishOffer(supabase, offerId, rfqId, quoteId);
+  await supabase.from("audit_log").insert({
+    actor_profile_id: userId,
+    action: publish ? "offer.publish" : "offer.save",
+    entity: "offer",
+    entity_id: offerId,
+    payload: { rfq: rfqId, quote: quoteId, unit_price: price.unitPrice, commission_rate: commissionRate, insurance_rate: insuranceRate, freight: price.freight },
+  });
+  redirect(`/${locale}/admin/rfqs/${rfqId}?done=${publish ? "offerPublished" : "offerSaved"}`);
+}
+
+type Client = Awaited<ReturnType<typeof adminContext>>["supabase"];
+
+// Publication : l'acheteur voit l'offre, la demande passe "offres pretes", le devis source est retenu.
+async function publishOffer(supabase: Client, offerId: string, rfqId: string, quoteId: string | null) {
+  await supabase.from("offers").update({ status: "published", published_at: new Date().toISOString() }).eq("id", offerId).eq("status", "draft");
+  await supabase.from("rfqs").update({ status: "offered" }).eq("id", rfqId).in("status", ["qualified", "dispatched"]);
+  if (quoteId) await supabase.from("quotes").update({ status: "selected" }).eq("id", quoteId).eq("status", "submitted");
+}
+
+// Publier un brouillon, retirer une offre publiee (retour en brouillon) ou supprimer un brouillon.
+export async function changeOffer(formData: FormData) {
+  const { locale, supabase, userId } = await adminContext(formData);
+  const id = text(formData, "id");
+  const op = text(formData, "op");
+  if (!UUID.test(id) || !["publish", "withdraw", "delete"].includes(op)) redirect(`/${locale}/admin/rfqs`);
+  const { data: offer } = await supabase.from("offers").select("id, rfq_id, status, valid_until, offer_margins(source_quote_id)").eq("id", id).maybeSingle();
+  if (!offer) redirect(`/${locale}/admin/rfqs`);
+  const quoteId = one<{ source_quote_id: string | null }>(offer.offer_margins)?.source_quote_id ?? null;
+  const back = (done: string) => redirect(`/${locale}/admin/rfqs/${offer.rfq_id}?done=${done}`);
+
+  if (op === "publish" && offer.status === "draft") {
+    if (offer.valid_until && offer.valid_until < new Date().toISOString().slice(0, 10)) back("offerExpired");
+    await publishOffer(supabase, id, offer.rfq_id, quoteId);
+  } else if (op === "withdraw" && offer.status === "published") {
+    await supabase.from("offers").update({ status: "draft", published_at: null }).eq("id", id).eq("status", "published");
+    if (quoteId) await supabase.from("quotes").update({ status: "submitted" }).eq("id", quoteId).eq("status", "selected");
+    const { count } = await supabase.from("offers").select("id", { count: "exact", head: true }).eq("rfq_id", offer.rfq_id).eq("status", "published");
+    if (!count) await supabase.from("rfqs").update({ status: "dispatched" }).eq("id", offer.rfq_id).eq("status", "offered");
+  } else if (op === "delete" && offer.status === "draft") {
+    await supabase.from("offers").delete().eq("id", id).eq("status", "draft");
+  } else {
+    back("offerUnchanged");
+  }
+  await supabase.from("audit_log").insert({ actor_profile_id: userId, action: `offer.${op}`, entity: "offer", entity_id: id, payload: { rfq: offer.rfq_id } });
+  back(op === "publish" ? "offerPublished" : op === "withdraw" ? "offerWithdrawn" : "offerDeleted");
+}

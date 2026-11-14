@@ -2,7 +2,8 @@
 
 import { useActionState, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { submitQuote, type QuoteField, type QuoteState } from "@/app/[locale]/(app)/requests/actions";
+import { submitQuote } from "@/app/[locale]/(app)/requests/actions";
+import type { QuoteField, QuoteState } from "@/lib/quote-input";
 import { Alert, Field, TextInput } from "@/components/auth/fields";
 import { prepareUpload } from "@/lib/client/prepare-upload";
 import { CURRENCIES } from "@/lib/onboarding/reference";
@@ -26,11 +27,26 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
   );
 }
 
-// Proposition commerciale du producteur a AFRICA NEX (maquette 16).
-export function QuoteForm({ dispatchId, defaults, unitLabel, update }: { dispatchId: string; defaults: QuoteDefaults; unitLabel: string; update: boolean }) {
+// Proposition commerciale du producteur a AFRICA NEX (maquette 16). AFRICA NEX reutilise
+// le meme formulaire pour saisir le devis d'un producteur hors ligne (onSubmit et libelles).
+export function QuoteForm({
+  dispatchId,
+  defaults,
+  unitLabel,
+  update,
+  onSubmit = submitQuote,
+  labels,
+}: {
+  dispatchId: string;
+  defaults: QuoteDefaults;
+  unitLabel: string;
+  update: boolean;
+  onSubmit?: (prev: QuoteState, formData: FormData) => Promise<QuoteState>;
+  labels?: { submit: string; note: string };
+}) {
   const t = useTranslations("requests");
   const locale = useLocale();
-  const [state, action, pending] = useActionState<QuoteState, FormData>(submitQuote, { errors: {} });
+  const [state, action, pending] = useActionState<QuoteState, FormData>(onSubmit, { errors: {} });
   const v = { ...defaults, ...(state.values ?? {}) };
   const [price, setPrice] = useState(v.unitPrice);
   const [qty, setQty] = useState(v.quantity);
@@ -145,9 +161,9 @@ export function QuoteForm({ dispatchId, defaults, unitLabel, update }: { dispatc
       </Step>
 
       <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between" style={{ borderTop: `1px solid ${HAIR}` }}>
-        <p className="text-xs" style={{ color: "var(--muted)", maxWidth: "48ch" }}>{t("submitNote")}</p>
+        <p className="text-xs" style={{ color: "var(--muted)", maxWidth: "48ch" }}>{labels?.note ?? t("submitNote")}</p>
         <button type="submit" disabled={pending || preparing} className="mt-4 px-8 py-4 text-sm font-bold uppercase disabled:opacity-60" style={{ ...caps, background: "#10b981", color: "white" }}>
-          {pending ? t("sending") : update ? t("submitUpdate") : t("submit")}
+          {pending ? t("sending") : labels?.submit ?? (update ? t("submitUpdate") : t("submit"))}
         </button>
       </div>
     </form>
