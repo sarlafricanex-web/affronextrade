@@ -816,7 +816,8 @@
     "offerErrorLeak": "L'offre cite le nom du producteur : retirez-le.",
     "offerErrorQuote": "Devis introuvable pour cette demande.",
     "offerErrorRfqClosed": "La demande n'accepte plus d'offre.",
-    "offerErrorNotDraft": "Cette offre est publiée : retirez-la avant de la modifier."
+    "offerErrorNotDraft": "Cette offre est publiée : retirez-la avant de la modifier.",
+    "rfqOpen": "Ouvrir la fiche"
   },
   "phone": {
     "countryCode": "Indicatif du pays : {code}. Changer de pays",

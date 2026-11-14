@@ -52,7 +52,36 @@ export default async function AdminRfqsPage({ params, searchParams }: { params: 
         })}
       </nav>
 
-      <div className="overflow-x-auto" style={{ background: "white", border: "1px solid var(--field-b)" }}>
+      {/* Telephone : une carte par demande, entierement cliquable. */}
+      <ul className="flex flex-col gap-3 md:hidden">
+        {shown.length === 0 && <li className="p-6 text-center" style={{ background: "white", color: "var(--muted)" }}>{t("rfqsEmpty")}</li>}
+        {shown.map((r) => {
+          const buyer = r.buyer as unknown as { company_name: string; country: string | null } | null;
+          const dispatches = (r.rfq_dispatches ?? []) as { status: string }[];
+          const quoted = dispatches.filter((d) => d.status === "quoted").length;
+          return (
+            <li key={r.id}>
+              <Link href={`/admin/rfqs/${r.id}`} className="flex flex-col gap-2 p-4" style={{ background: "white", border: "1px solid var(--field-b)" }}>
+                <span className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs font-semibold" dir="ltr" style={{ color: "var(--muted)" }}>{r.reference}</span>
+                  <StatusBadge status={r.status} label={tr(`status_${r.status}`)} />
+                </span>
+                <span className="font-bold" style={{ color: "#059669" }}>{r.title}</span>
+                <span className="text-sm">{[buyer?.company_name, buyer?.country ? countryName(buyer.country, locale) : null].filter(Boolean).join(" · ")}</span>
+                <span className="text-sm" style={{ color: "var(--muted)" }}>
+                  {[volumeLabel(r, tr, tc, locale), destinationLabel(r, locale), r.incoterm].filter(Boolean).join(" · ")}
+                </span>
+                <span className="flex flex-wrap items-center justify-between gap-2 text-xs" style={{ color: "var(--muted)" }}>
+                  <span>{format.dateTime(new Date(r.created_at), { dateStyle: "medium" })}{dispatches.length ? ` · ${t("rfqDispatchCount", { sent: dispatches.length, quoted })}` : ""}</span>
+                  <span className="font-bold uppercase underline" style={{ letterSpacing: "0.08em", color: "var(--ink)" }}>{t("rfqOpen")}</span>
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="hidden overflow-x-auto md:block" style={{ background: "white", border: "1px solid var(--field-b)" }}>
         <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 760 }}>
           <thead>
             <tr style={{ borderBottom: "2px solid var(--field-b)" }}>
@@ -75,7 +104,7 @@ export default async function AdminRfqsPage({ params, searchParams }: { params: 
               return (
                 <tr key={r.id} style={{ borderBottom: "1px solid var(--field-b)" }}>
                   <td className={cell}>
-                    <Link href={`/admin/rfqs/${r.id}`} className="font-semibold hover:underline">{r.title}</Link>
+                    <Link href={`/admin/rfqs/${r.id}`} className="font-semibold underline" style={{ color: "#059669", textUnderlineOffset: "3px" }}>{r.title}</Link>
                     <span className="block text-xs" dir="ltr" style={{ color: "var(--muted)", textAlign: "start" }}>{r.reference}</span>
                   </td>
                   <td className={cell}>

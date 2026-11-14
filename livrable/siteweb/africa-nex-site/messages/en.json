@@ -816,7 +816,8 @@
     "offerErrorLeak": "The offer names the producer: remove it.",
     "offerErrorQuote": "Quote not found for this request.",
     "offerErrorRfqClosed": "The request no longer accepts offers.",
-    "offerErrorNotDraft": "This offer is published: withdraw it before editing."
+    "offerErrorNotDraft": "This offer is published: withdraw it before editing.",
+    "rfqOpen": "Open"
   },
   "phone": {
     "countryCode": "Country code: {code}. Change country",

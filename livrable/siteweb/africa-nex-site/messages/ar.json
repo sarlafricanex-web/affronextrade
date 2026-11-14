@@ -816,7 +816,8 @@
     "offerErrorLeak": "العرض يذكر اسم المنتج: احذفه.",
     "offerErrorQuote": "عرض السعر غير موجود لهذا الطلب.",
     "offerErrorRfqClosed": "لم يعد الطلب يقبل عروضاً.",
-    "offerErrorNotDraft": "هذا العرض منشور: اسحبه قبل تعديله."
+    "offerErrorNotDraft": "هذا العرض منشور: اسحبه قبل تعديله.",
+    "rfqOpen": "فتح الملف"
   },
   "phone": {
     "countryCode": "رمز البلد: {code}. تغيير البلد",
