@@ -264,10 +264,16 @@ const cellText = (v: ExcelJS.CellValue): string => {
   return String(v).replace(/^'/, "").trim();
 };
 
-// Date saisie a la main : 31/12/2026 ou 2026-12-31.
+// Date saisie a la main (31/12/2026 ou 2026-12-31) ou numero de serie Excel : Excel enregistre
+// parfois la date sous son numero (46356 = 30/11/2026) en perdant le format de la cellule.
 const normalizeDate = (s: string) => {
   const fr = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/.exec(s);
-  return fr ? `${fr[3]}-${fr[2].padStart(2, "0")}-${fr[1].padStart(2, "0")}` : s;
+  if (fr) return `${fr[3]}-${fr[2].padStart(2, "0")}-${fr[1].padStart(2, "0")}`;
+  if (/^\d{5}(\.\d+)?$/.test(s)) {
+    const serial = Math.floor(Number(s));
+    if (serial > 30000 && serial < 80000) return new Date(Date.UTC(1899, 11, 30) + serial * 864e5).toISOString().slice(0, 10);
+  }
+  return s;
 };
 
 export async function readPriceListWorkbook(buffer: ArrayBuffer, labels: Labels) {

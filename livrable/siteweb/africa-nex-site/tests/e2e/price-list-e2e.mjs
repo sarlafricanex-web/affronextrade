@@ -87,7 +87,9 @@ try {
   set(prices, sk, rA, "price", 5.5);
   set(prices, sk, rA, "priceBasis", "FOB");
   set(prices, sk, rA, "pricePlace", "Port d'Alger");
-  set(prices, sk, rA, "priceValidUntil", new Date(`${day(30)}T00:00:00Z`));
+  // Date enregistree par Excel sous son numero de serie (format de cellule perdu).
+  set(prices, sk, rA, "priceValidUntil", Math.round((Date.parse(`${day(30)}T00:00:00Z`) - Date.UTC(1899, 11, 30)) / 864e5));
+  prices.getCell(rA, sk.get("priceValidUntil")).numFmt = "General";
   set(prices, sk, rA, "stock", 1200);
   set(prices, sk, rA, "leadDays", 30);
   set(prices, sk, rA, "crossRefs", "1444 TV, P520A");
