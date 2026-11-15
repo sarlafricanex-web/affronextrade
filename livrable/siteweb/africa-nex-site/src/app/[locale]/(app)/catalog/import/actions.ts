@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { resolveLocale } from "@/lib/auth/next-path";
 import { getCompanyTier, getMyCompanyId, listProducts } from "@/lib/data/company";
 import { UNITS } from "@/lib/onboarding/reference";
-import { PRICE_FIELDS, packagingValues, readPackagingInput, readPriceInput, todayIso, type PackField, type PriceField } from "@/lib/catalog/price-list";
+import { PACK_FIELDS, PRICE_FIELDS, packagingValues, readPackagingInput, readPriceInput, todayIso, type PackField, type PriceField } from "@/lib/catalog/price-list";
 import { readPriceListWorkbook } from "@/lib/catalog/price-list-excel";
 import { packLabelMaps } from "@/lib/catalog/pack-labels";
 import { packagingFields, packagingWarnings, readLogisticsExtras, type PackWarning } from "@/lib/catalog/packaging-logic";
@@ -112,25 +112,31 @@ export async function importPriceList(_prev: ImportState, formData: FormData): P
     const existing = values.id ? byId.get(values.id) : undefined;
     const target = existing?.id ?? (values.sku ? `sku:${values.sku.toLowerCase()}` : null);
     if (!target || (values.id && !existing)) { issues.push({ row, sheet: "packaging", ref, fields: [{ field: "id", error: "importErrorUnknown" }] }); continue; }
+    // Ligne de conditionnement entierement vide (ancien modele, feuille non remplie) : aucun changement,
+    // jamais un effacement de la fiche existante.
+    if (![...PACK_FIELDS, "storage", "maxStack"].some((k) => (values[k] ?? "").trim())) continue;
     const packed = readPackagingInput((k: PackField) => values[k] ?? "");
     const extras = readLogisticsExtras((k) => values[k] ?? "");
     const errs = Object.entries({ ...packed.errors, ...extras.errors }).map(([field, error]) => ({ field, error: error! }));
     if (errs.length) { issues.push({ row, sheet: "packaging", ref, fields: errs }); continue; }
     const w = packagingWarnings(packed.spec);
     if (w.length) warnings.push({ row, ref, warnings: w });
-    if (existing && norm(packed.spec) === norm(existing.packaging_spec) && norm(extras.storage) === norm(existing.storage_condition) && norm(extras.maxStack) === norm(existing.max_stack_layers)) continue;
     const logistics = packagingFields(packed.spec, extras.storage, extras.maxStack);
-    packFor.set(target, logistics);
+    // Comparaison case par case (l'ordre des cles du JSON enregistre en base peut differer).
+    const details: ImportDetail[] = [];
     if (existing) {
-      updates.set(existing.id, { ...(updates.get(existing.id) ?? {}), ...logistics });
-      // Detail : chaque case du conditionnement modifiee, puis les capacites conteneur recalculees.
       const oldV: Record<string, string> = { ...packagingValues(existing.packaging_spec), storage: show(existing.storage_condition), maxStack: show(existing.max_stack_layers) };
       const newV: Record<string, string> = { ...packagingValues(packed.spec), storage: show(extras.storage), maxStack: show(extras.maxStack) };
-      const details: ImportDetail[] = Object.keys(newV).filter((k) => norm(oldV[k]) !== norm(newV[k])).map((k) => ({ field: k, from: oldV[k], to: newV[k] }));
+      for (const k of Object.keys(newV)) if (norm(oldV[k]) !== norm(newV[k])) details.push({ field: k, from: oldV[k], to: newV[k] });
       for (const k of CAPACITY_KEYS) {
         const before = (existing as unknown as Record<string, unknown>)[k];
         if (norm(before) !== norm(logistics[k])) details.push({ field: k, from: show(before), to: show(logistics[k]) });
       }
+      if (!details.length) continue;
+    }
+    packFor.set(target, logistics);
+    if (existing) {
+      updates.set(existing.id, { ...(updates.get(existing.id) ?? {}), ...logistics });
       const change = changes.find((c) => c.kind === "update" && c.id === existing.id);
       if (change) { change.fields.push("packaging_spec"); change.details.push(...details); }
       else { changes.push({ row, ref: label(existing.sku, existing.product_name), kind: "update", fields: ["packaging_spec"], details, id: existing.id }); if (unchanged > 0) unchanged--; }

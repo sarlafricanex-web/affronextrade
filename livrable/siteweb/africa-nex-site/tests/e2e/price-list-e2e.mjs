@@ -178,8 +178,9 @@ try {
   await go(`/fr/catalog/${pB.id}`, `return !!document.getElementById("pe-price");`);
   report("Editeur Starter : prix HT, incoterm, lieu, validite", await run(`return !!document.getElementById("pe-basis") && !!document.getElementById("pe-place") && !!document.getElementById("pe-valid") && !document.getElementById("pe-cost");`));
   const SETV = `const setV = (el, v) => { const p = el.tagName === "SELECT" ? HTMLSelectElement.prototype : el.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(p, "value").set.call(el, v); el.dispatchEvent(new Event("input", { bubbles: true })); el.dispatchEvent(new Event("change", { bubbles: true })); };`;
-  await run(`${SETV} ${Object.entries(PACK).map(([k, v]) => `setV(document.getElementById(${JSON.stringify(k === "maxStack" ? "pe-stack" : `pe-${k}`)}), ${JSON.stringify(String(v))});`).join(" ")} setV(document.getElementById("pe-pk2Type"), "carton"); setV(document.getElementById("pe-pk4Type"), "pallet_euro"); document.querySelector("input[name=storage][value=ambient]").click(); return true;`);
-  report("Editeur : meme avertissement que l'import", await waitFor(`return document.querySelector("[data-pack-warnings]")?.innerText.includes("Niveau 4 : le poids total est inférieur au poids de son contenu");`, 10));
+  // Saisie reappliquee tant que la page ne reagit pas (avant l'hydratation, les evenements sont perdus).
+  const FILL = `${SETV} ${Object.entries(PACK).map(([k, v]) => `setV(document.getElementById(${JSON.stringify(k === "maxStack" ? "pe-stack" : `pe-${k}`)}), ${JSON.stringify(String(v))});`).join(" ")} setV(document.getElementById("pe-pk2Type"), "carton"); setV(document.getElementById("pe-pk4Type"), "pallet_euro"); document.querySelector("input[name=storage][value=ambient]").click();`;
+  report("Editeur : meme avertissement que l'import", await waitFor(`if (!document.querySelector("[data-pack-warnings]")) { ${FILL} } return document.querySelector("[data-pack-warnings]")?.innerText.includes("Niveau 4 : le poids total est inférieur au poids de son contenu");`, 30));
   report("Editeur : capacites palette et au sol affichees", await run(`return !!document.querySelector("[data-mode='pallet'][data-container='20']") && document.querySelector("[data-mode='floor'][data-container='20']").innerText.replace(/\\s/g, "").includes("13200");`));
   await run(`[...document.querySelectorAll("button[type=submit]")].find((b) => b.value === "draft").click(); return true;`);
   await waitFor(`return location.pathname === "/fr/catalog";`);
@@ -219,6 +220,20 @@ try {
   report("Public : couts illisibles, reference lisible", Boolean(costErr) && !skuErr, costErr?.code);
   const { data: rivalPrices } = await rival.client.rpc("product_prices", { p_company: starter.companyId });
   report("Concurrent : aucun prix ni cout de l'autre fournisseur", (rivalPrices ?? []).length === 0);
+
+  // Feuille Conditionnement laissee vide (ancien modele) : la fiche existante n'est jamais effacee.
+  await loginAs(starter);
+  const again = await download(starter);
+  const pk2 = again.wb.getWorksheet("Conditionnement");
+  const k2 = keysOf(pk2);
+  const rowA = rowOf(pk2, pA.id);
+  for (const [key, col] of k2) if (!["id", "sku", "productName"].includes(key)) pk2.getCell(rowA, col).value = null;
+  const BLANK_FILE = `${OUT}/liste-de-prix-conditionnement-vide.xlsx`;
+  writeFileSync(BLANK_FILE, Buffer.from(await again.wb.xlsx.writeBuffer()));
+  await go("/fr/catalog/import", `return !!document.querySelector("input[name=file]");`);
+  await attach(BLANK_FILE);
+  await run(`[...document.querySelectorAll("main button")].find((b) => /vérifier/i.test(b.textContent)).click(); return true;`);
+  report("Conditionnement vide dans le fichier : aucun effacement propose", await waitFor(`return ${count("importUpdates")} === 0 && ${count("importUnchanged")} >= 1 && ![...document.querySelectorAll("[data-change]")].some((x) => x.dataset.change.startsWith("AF-018"));`), await run(`return [${count("importUpdates")}, ${count("importUnchanged")}].join("/") + " " + [...document.querySelectorAll("[data-change]")].map((x) => x.innerText.replace(/\\s+/g, " ")).join(" | ");`));
 
   await go(`/ar/catalog/import`, `return !!document.querySelector("input[name=file]");`);
   report("Import en arabe (RTL)", await run(`return document.documentElement.dir === "rtl" && document.body.innerText.includes("استيراد قائمة أسعاري");`));
