@@ -7,12 +7,14 @@ import { Alert, Field, TextInput } from "@/components/auth/fields";
 import { PhoneField } from "@/components/phone/PhoneField";
 import { LEGAL_FORMS } from "@/lib/onboarding/reference";
 import { WilayaCommuneFields } from "@/components/onboarding/WilayaCommuneFields";
-import { SectorSelect } from "@/components/onboarding/SectorSelect";
+import { ActivityCodeField } from "@/components/onboarding/ActivityCodeField";
 
 export type IdentityDefaults = {
   companyName: string;
   legalForm: string;
   sector: string;
+  activityCode: string;
+  activityDescription: string;
   nif: string;
   nis: string;
   taxArticle: string;
@@ -28,7 +30,6 @@ const selectStyle = { background: "var(--field-a)", border: "1px solid var(--fie
 
 export function IdentityForm({ defaults, mode = "onboarding" }: { defaults: IdentityDefaults; mode?: "onboarding" | "edit" }) {
   const t = useTranslations("onboarding");
-  const ts = useTranslations("sectors");
   const locale = useLocale();
   const [state, action, pending] = useActionState<IdentityState, FormData>(saveIdentity, { errors: {} });
   const err = (field: IdentityField) =>
@@ -66,9 +67,14 @@ export function IdentityForm({ defaults, mode = "onboarding" }: { defaults: Iden
         {err("legalForm")}
       </fieldset>
 
-      <Field label={ts("label")} hint={ts("hint")} htmlFor="ob-sector">
-        <SectorSelect id="ob-sector" defaultValue={defaults.sector} style={selectStyle} described={described("sector")} />
-        {err("sector")}
+      {/* Le secteur n'est plus choisi a la main : il est impose par le code d'activite du registre. */}
+      <Field label={t("activityCodeLabel")} hint={t("activityCodeHint")} htmlFor="ob-activity">
+        <ActivityCodeField
+          defaultCode={defaults.activityCode}
+          defaultDescription={defaults.activityDescription}
+          error={err("activityCode") ?? err("sector")}
+          describedBy={described("activityCode")}
+        />
       </Field>
 
       <div className="grid sm:grid-cols-2 gap-6">

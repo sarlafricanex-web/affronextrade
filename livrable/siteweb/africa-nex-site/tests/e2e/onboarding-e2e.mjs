@@ -78,7 +78,7 @@ try {
     const fill = async (nif) => {
       set($("#ob-name"), "Huilerie Test Kabylie");
       $("input[name=legalForm][value=SARL]").click();
-      set($("#ob-sector"), "C10");
+      set($("#ob-activity"), "107301");
       set($("#ob-nif"), nif);
       set($("#ob-nis"), "001906012345678");
       set($("#ob-article"), "19016012345");

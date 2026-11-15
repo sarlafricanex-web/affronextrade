@@ -52,8 +52,40 @@ export type Database = {
           },
         ]
       }
+      cnrc_activities: {
+        Row: {
+          authority: string | null
+          cnrc_sector: number
+          code: string
+          isic_division: string | null
+          label_ar: string | null
+          label_fr: string
+          status: string
+        }
+        Insert: {
+          authority?: string | null
+          cnrc_sector: number
+          code: string
+          isic_division?: string | null
+          label_ar?: string | null
+          label_fr: string
+          status: string
+        }
+        Update: {
+          authority?: string | null
+          cnrc_sector?: number
+          code?: string
+          isic_division?: string | null
+          label_ar?: string | null
+          label_fr?: string
+          status?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
+          activity_code: string | null
+          activity_description: string | null
           brand_color: string | null
           brand_initials: string | null
           buyer_type: string | null
@@ -93,6 +125,8 @@ export type Database = {
           wilaya: string | null
         }
         Insert: {
+          activity_code?: string | null
+          activity_description?: string | null
           brand_color?: string | null
           brand_initials?: string | null
           buyer_type?: string | null
@@ -132,6 +166,8 @@ export type Database = {
           wilaya?: string | null
         }
         Update: {
+          activity_code?: string | null
+          activity_description?: string | null
           brand_color?: string | null
           brand_initials?: string | null
           buyer_type?: string | null
@@ -171,6 +207,13 @@ export type Database = {
           wilaya?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "companies_activity_code_fkey"
+            columns: ["activity_code"]
+            isOneToOne: false
+            referencedRelation: "cnrc_activities"
+            referencedColumns: ["code"]
+          },
           {
             foreignKeyName: "companies_owner_profile_id_fkey"
             columns: ["owner_profile_id"]

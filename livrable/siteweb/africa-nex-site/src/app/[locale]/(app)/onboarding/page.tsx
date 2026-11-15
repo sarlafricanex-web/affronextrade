@@ -200,6 +200,8 @@ export default async function OnboardingPage({
                   companyName: company?.company_name ?? "",
                   legalForm: company?.legal_form ?? "",
                   sector: company?.sector ?? "",
+                  activityCode: company?.activity_code ?? "",
+                  activityDescription: company?.activity_description ?? "",
                   nif: company?.private?.tax_id ?? "",
                   nis: company?.private?.nis ?? "",
                   taxArticle: company?.private?.tax_article ?? "",

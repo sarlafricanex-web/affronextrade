@@ -15,8 +15,9 @@ import {
 } from "@/lib/onboarding/reference";
 import { findCommune } from "@/lib/onboarding/communes";
 import { isSector } from "@/lib/sectors";
+import { CNRC_COLUMNS, cnrcRefusal, type CnrcActivity } from "@/lib/cnrc";
 
-export type IdentityField = "companyName" | "legalForm" | "sector" | "nif" | "nis" | "taxArticle" | "rc" | "wilaya" | "city" | "address" | "phone" | "whatsapp";
+export type IdentityField = "companyName" | "legalForm" | "sector" | "activityCode" | "nif" | "nis" | "taxArticle" | "rc" | "wilaya" | "city" | "address" | "phone" | "whatsapp";
 // Cles de traduction (espace "onboarding"), jamais de texte libre renvoye au navigateur.
 export type IdentityState = { errors: Partial<Record<IdentityField, string>>; formError?: string };
 
@@ -44,7 +45,9 @@ export async function saveIdentity(_prev: IdentityState, formData: FormData): Pr
   const v = {
     companyName: text(formData, "companyName"),
     legalForm: text(formData, "legalForm"),
-    sector: text(formData, "sector"),
+    sector: "",
+    activityCode: text(formData, "activityCode"),
+    activityDescription: text(formData, "activityDescription"),
     nif: normalizeNif(text(formData, "nif")),
     nis: normalizeNif(text(formData, "nis")),
     taxArticle: normalizeNif(text(formData, "taxArticle")),
@@ -59,7 +62,17 @@ export async function saveIdentity(_prev: IdentityState, formData: FormData): Pr
   const errors: IdentityState["errors"] = {};
   if (v.companyName.length < 2 || v.companyName.length > 255) errors.companyName = "errorCompanyName";
   if (!(LEGAL_FORMS as readonly string[]).includes(v.legalForm)) errors.legalForm = "errorChoose";
-  if (!isSector(v.sector)) errors.sector = "errorChoose";
+  // Activite d'export : code CNRC du registre. Il impose le secteur (la base le verifie aussi).
+  const { supabase: db } = user;
+  const { data: activity } = /^\d{6}$/.test(v.activityCode)
+    ? await db.from("cnrc_activities").select(CNRC_COLUMNS).eq("code", v.activityCode).maybeSingle()
+    : { data: null };
+  const refusal = cnrcRefusal(activity as CnrcActivity | null);
+  if (refusal) errors.activityCode = refusal;
+  else v.sector = activity!.isic_division!;
+  if (v.sector && !isSector(v.sector)) errors.activityCode = "errorActivityOutOfScope";
+  if (v.activityDescription.length > 500) errors.activityCode = "errorTooLong";
+  if (!v.activityDescription && activity) v.activityDescription = activity.label_fr.charAt(0).toUpperCase() + activity.label_fr.slice(1);
   if (!isValidNif(v.nif)) errors.nif = "errorNif";
   if (!isValidNis(v.nis)) errors.nis = "errorNis";
   if (!isValidTaxArticle(v.taxArticle)) errors.taxArticle = "errorTaxArticle";
@@ -75,7 +88,7 @@ export async function saveIdentity(_prev: IdentityState, formData: FormData): Pr
   if (Object.keys(errors).length) return { errors };
 
   const { supabase, userId } = user;
-  const fields = { company_name: v.companyName, legal_form: v.legalForm, sector: v.sector, wilaya: v.wilaya, city: v.city };
+  const fields = { company_name: v.companyName, legal_form: v.legalForm, sector: v.sector, activity_code: v.activityCode, activity_description: v.activityDescription, wilaya: v.wilaya, city: v.city };
 
   let companyId = await getMyCompanyId(supabase, userId);
   if (!companyId) {

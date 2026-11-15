@@ -54,6 +54,7 @@ try {
   const run = async (body) => { const r = await send("Runtime.evaluate", { expression: `(async () => { ${body} })()`, awaitPromise: true, returnByValue: true }); if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text); return r.result.value; };
   const loginAs = async (u) => { await send("Network.clearBrowserCookies"); if (u) for (const [name, value] of u.jar) await send("Network.setCookie", { name, value, url: BASE, path: "/" }); };
   const go = async (path) => { await send("Page.navigate", { url: BASE + path }); await sleep(1000); for (let i = 0; i < 60; i++) { const r = await send("Runtime.evaluate", { expression: "document.readyState === 'complete' && !!document.querySelector('h1')", returnByValue: true }); if (r.result?.value) break; await sleep(300); } await sleep(700); };
+  const waitFor = async (cond, tries = 40) => { for (let i = 0; i < tries; i++) { await sleep(400); try { if (await run(cond)) return true; } catch {} } return false; };
   await send("Page.enable"); await send("Runtime.enable"); await send("Network.enable");
   await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 1500, deviceScaleFactor: 1, mobile: false });
   const SET = `const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -91,10 +92,20 @@ try {
 
   await go("/fr/company?tab=identity"); for (let i = 0; i < 30 && !(await run(`return !!document.getElementById("ob-city");`)); i++) await sleep(300);
   report("Onglet identite pre-rempli", await run(`return document.getElementById("ob-city").value === "El Eulma" && document.getElementById("ob-rc").value === "19/00-7654321 B 20";`));
+  // Code d'activite : conserverie de fruits et legumes (107601) -> secteur impose C10.
+  await run(`${SET} setV(document.getElementById("ob-activity"), "107601"); return true;`);
+  await waitFor(`return !!document.querySelector("[data-activity-card='ok']");`, 20);
   await run(`${SET} setV(document.getElementById("ob-city"), "Setif"); save(); return true;`);
   for (let i = 0; i < 40; i++) { await sleep(500); if (await run(`return location.search.includes("saved=1");`)) break; }
   await sleep(1000);
   report("Identite modifiee : reste sur l'onglet identite", await run(`return location.search.includes("tab=identity") && document.body.innerText.includes("Modifications enregistrées.");`));
+  const { data: act } = await admin.from("companies").select("activity_code, activity_description, sector").eq("id", company.id).single();
+  report("Code d'activite enregistre, secteur impose C10, description proposee", act.activity_code === "107601" && act.sector === "C10" && (act.activity_description ?? "").length > 5, JSON.stringify(act));
+  const { error: forced } = await producer.client.from("companies").update({ sector: "C29" }).eq("id", company.id);
+  const { data: still } = await admin.from("companies").select("sector").eq("id", company.id).single();
+  report("Base : le secteur reste celui du code (C29 force ignore)", still.sector === "C10", forced?.message ?? still.sector);
+  const { error: refused } = await producer.client.from("companies").update({ activity_code: "604616" }).eq("id", company.id);
+  report("Base : code bloque refuse", Boolean(refused), refused?.code);
   const { data: c2 } = await admin.from("companies").select("city, verified, visibility").eq("id", company.id).single();
   report("Ville mise a jour, sans toucher au badge ni a la visibilite", c2.city === "Setif" && c2.verified === false && c2.visibility === "draft", JSON.stringify(c2));
   writeFileSync(`${OUT}/company-identity.png`, Buffer.from((await send("Page.captureScreenshot", { format: "png" })).data, "base64"));
@@ -111,13 +122,25 @@ try {
   // 69 wilayas, nouvelles wilayas avec leurs communes, 33 secteurs CITI groupes par section
   await go("/fr/company?tab=identity"); for (let i = 0; i < 30 && !(await run(`return !!document.getElementById("ob-city");`)); i++) await sleep(300);
   const ref = await run(`${SET}
-    const w = document.getElementById("ob-wilaya"), s = document.getElementById("ob-sector");
+    const w = document.getElementById("ob-wilaya");
     const nW = w.options.length - 1, last = w.options[w.options.length - 1].textContent;
     setV(w, "68"); await sleep(400);
     const c = document.getElementById("ob-city"), bs = [...c.options].slice(1).map((o) => o.value);
-    return { nW, last, nBS: bs.length, hasMcif: bs.includes("M'cif"), noMaadid: !bs.includes("Maadid"), nSectors: s.querySelectorAll("option[value]:not([value=''])").length, groups: s.querySelectorAll("optgroup").length, sector: s.value };`);
+    return { nW, last, nBS: bs.length, hasMcif: bs.includes("M'cif"), noMaadid: !bs.includes("Maadid") };`);
   report("69 wilayas, Bou Saada : 23 communes (M'Cif oui, Maadid non)", ref.nW === 69 && /69 El Abiodh Sidi Cheikh/.test(ref.last) && ref.nBS === 23 && ref.hasMcif && ref.noMaadid, JSON.stringify(ref));
-  report("Secteurs : 30 divisions CITI (sans hydrocarbures) en 4 sections, fiche en C10", ref.nSectors === 30 && ref.groups === 4 && ref.sector === "C10");
+
+  // Code d'activite CNRC : il impose le secteur ; codes bloques et non exportateurs refuses.
+  const card = () => run(`return document.querySelector("[data-activity-card]")?.dataset.activityCard + " | " + (document.querySelector("[data-activity-card]")?.innerText.replace(/\\s+/g, " ") ?? "");`);
+  await run(`${SET} setV(document.getElementById("ob-activity"), "604616"); return true;`);
+  report("Code bloque (604616) : refuse", await waitFor(`return document.querySelector("[data-activity-card='refused']")?.innerText.includes("bloqué");`, 20), await card());
+  await run(`${SET} setV(document.getElementById("ob-activity"), "618038"); return true;`);
+  report("Code de detail (618038) : non exportateur, refuse", await waitFor(`return document.querySelector("[data-activity-card='refused']")?.innerText.includes("Activité non exportatrice");`, 20), await card());
+  await run(`[...document.querySelectorAll("button[aria-controls=activity-search]")][0].click(); return true;`);
+  await run(`${SET} setV(document.querySelector("#activity-search input"), "huilerie"); return true;`);
+  report("Recherche 'huilerie' : 107301 propose", await waitFor(`return [...document.querySelectorAll("#activity-search [role=option]")].some((o) => o.innerText.includes("107301"));`, 20));
+  await run(`[...document.querySelectorAll("#activity-search [role=option]")].find((o) => o.innerText.includes("107301")).click(); return true;`);
+  report("107301 choisi : activite libre, secteur Industries alimentaires, description proposee", await waitFor(`const k = document.querySelector("[data-activity-card='ok']"); return !!k && k.innerText.includes("Industries alimentaires") && /libre/i.test(k.innerText) && document.getElementById("ob-activity-desc").value.length > 5;`, 20), await card());
+  report("Source CNRC / UpGrowth citee (CC BY 4.0)", await run(`return document.body.innerText.includes("CC BY 4.0") && document.body.innerText.includes("UpGrowth");`));
 
   // Serveur : NIS et article d'imposition au mauvais format refuses
   await go("/fr/company?tab=identity"); for (let i = 0; i < 30 && !(await run(`return !!document.getElementById("ob-city");`)); i++) await sleep(300);
