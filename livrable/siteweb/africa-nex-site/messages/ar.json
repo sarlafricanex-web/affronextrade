@@ -1004,11 +1004,7 @@
     "taxArticleHint": "11 رقما",
     "errorTaxArticle": "يجب أن يتكون رقم المادة الجبائية من 11 رقما بالضبط.",
     "activityCodeLabel": "رمز نشاط التصدير (السجل التجاري)",
-    "activityCodeHint": "6 أرقام كما هو مسجل في السجل (الرئيسي أو الثانوي) الذي تصدّر به. يحدد قطاعك.",
-    "activitySearch": "البحث عن رمزي",
-    "activitySearchPlaceholder": "كلمة من النشاط (زيت، تعليب، نسيج...) أو بداية الرمز",
-    "activityNoResult": "لم يُعثر على نشاط تصدير. جرّب كلمة أخرى.",
-    "activityRegulatedShort": "ترخيص مطلوب",
+    "activityCodeHint": "6 أرقام كما هي مسجلة في هذا السجل للنشاط الذي تصدّر به. يحدد قطاعك.",
     "activityRegulated": "نشاط منظم: يلزم ترخيص من {authority}.",
     "activityBlocked": "رمز محظور لدى المركز الوطني للسجل التجاري.",
     "activityFree": "نشاط حر (دون ترخيص مسبق).",
@@ -1018,7 +1014,11 @@
     "activitySource": "مدونة المركز الوطني للسجل التجاري 2026، تجميع UpGrowth (upgrowth.dz)، رخصة CC BY 4.0.",
     "errorActivityUnknown": "رمز نشاط غير معروف: 6 أرقام من مدونة السجل التجاري.",
     "errorActivityBlocked": "هذا الرمز محظور: اختر النشاط المسجل في سجلك.",
-    "errorActivityOutOfScope": "نشاط غير تصديري (خدمات، تجزئة، استيراد...): أدخل نشاط إنتاج أو حرفة أو جملة أو تصدير."
+    "errorActivityOutOfScope": "نشاط غير تصديري (خدمات، تجزئة، استيراد...): أدخل نشاط إنتاج أو حرفة أو جملة أو تصدير.",
+    "activityFound": "النشاط الموافق للرمز {code}",
+    "activityConfirm": "تأكيد هذا النشاط",
+    "activityConfirmed": "تم تأكيد النشاط",
+    "errorActivityConfirm": "أكّد النشاط المعروض لرمزك."
   },
   "catalog": {
     "eyebrow": "فضاء المنتج",

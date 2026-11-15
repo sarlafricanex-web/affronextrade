@@ -94,7 +94,9 @@ try {
   report("Onglet identite pre-rempli", await run(`return document.getElementById("ob-city").value === "El Eulma" && document.getElementById("ob-rc").value === "19/00-7654321 B 20";`));
   // Code d'activite : conserverie de fruits et legumes (107601) -> secteur impose C10.
   await run(`${SET} setV(document.getElementById("ob-activity"), "107601"); return true;`);
-  await waitFor(`return !!document.querySelector("[data-activity-card='ok']");`, 20);
+  await waitFor(`return !!document.querySelector("[data-activity-card='ok'] button");`, 20);
+  await run(`document.querySelector("[data-activity-card='ok'] button").click(); return true;`);
+  report("Activite validee : description proposee a partir de l'intitule", await waitFor(`return !!document.querySelector("[data-activity-card='confirmed']") && document.getElementById("ob-activity-desc")?.value.length > 5;`, 10));
   await run(`${SET} setV(document.getElementById("ob-city"), "Setif"); save(); return true;`);
   for (let i = 0; i < 40; i++) { await sleep(500); if (await run(`return location.search.includes("saved=1");`)) break; }
   await sleep(1000);
@@ -135,11 +137,14 @@ try {
   report("Code bloque (604616) : refuse", await waitFor(`return document.querySelector("[data-activity-card='refused']")?.innerText.includes("bloqué");`, 20), await card());
   await run(`${SET} setV(document.getElementById("ob-activity"), "618038"); return true;`);
   report("Code de detail (618038) : non exportateur, refuse", await waitFor(`return document.querySelector("[data-activity-card='refused']")?.innerText.includes("Activité non exportatrice");`, 20), await card());
-  await run(`[...document.querySelectorAll("button[aria-controls=activity-search]")][0].click(); return true;`);
-  await run(`${SET} setV(document.querySelector("#activity-search input"), "huilerie"); return true;`);
-  report("Recherche 'huilerie' : 107301 propose", await waitFor(`return [...document.querySelectorAll("#activity-search [role=option]")].some((o) => o.innerText.includes("107301"));`, 20));
-  await run(`[...document.querySelectorAll("#activity-search [role=option]")].find((o) => o.innerText.includes("107301")).click(); return true;`);
-  report("107301 choisi : activite libre, secteur Industries alimentaires, description proposee", await waitFor(`const k = document.querySelector("[data-activity-card='ok']"); return !!k && k.innerText.includes("Industries alimentaires") && /libre/i.test(k.innerText) && document.getElementById("ob-activity-desc").value.length > 5;`, 20), await card());
+  // Page rechargee : l'etape precedente a change la wilaya (commune videe, envoi bloque par le navigateur).
+  await go("/fr/company?tab=identity"); for (let i = 0; i < 30 && !(await run(`return !!document.getElementById("ob-city");`)); i++) await sleep(300);
+  await run(`${SET} setV(document.getElementById("ob-activity"), "107301"); return true;`);
+  report("107301 : activite affichee (huilerie), libre, secteur Industries alimentaires, a valider", await waitFor(`const k = document.querySelector("[data-activity-card='ok']"); return !!k && /huilerie/i.test(k.innerText) && k.innerText.includes("Industries alimentaires") && /libre/i.test(k.innerText) && !!k.querySelector("button");`, 20), await card());
+  // Sans validation, l'enregistrement est refuse.
+  await run(`${SET} save(); return true;`);
+  report("Activite non validee : enregistrement refuse", await waitFor(`return document.body.innerText.includes("Validez l’activité affichée pour votre code.");`, 30));
+  await go("/fr/company?tab=identity"); for (let i = 0; i < 30 && !(await run(`return !!document.getElementById("ob-city");`)); i++) await sleep(300);
   report("Source CNRC / UpGrowth citee (CC BY 4.0)", await run(`return document.body.innerText.includes("CC BY 4.0") && document.body.innerText.includes("UpGrowth");`));
 
   // Serveur : NIS et article d'imposition au mauvais format refuses

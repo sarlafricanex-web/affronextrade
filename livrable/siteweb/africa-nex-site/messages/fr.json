@@ -1004,11 +1004,7 @@
     "taxArticleHint": "11 chiffres",
     "errorTaxArticle": "Le numéro d'article d'imposition doit compter exactement 11 chiffres.",
     "activityCodeLabel": "Code d'activité d'export (registre du commerce)",
-    "activityCodeHint": "6 chiffres, tel qu'inscrit sur le registre (principal ou secondaire) avec lequel vous exportez. Il fixe votre secteur.",
-    "activitySearch": "Chercher mon code",
-    "activitySearchPlaceholder": "Mot de l'activité (huile, conserverie, textile...) ou début du code",
-    "activityNoResult": "Aucune activité d'export trouvée. Essayez un autre mot.",
-    "activityRegulatedShort": "agrément requis",
+    "activityCodeHint": "6 chiffres, tels qu’inscrits sur ce registre pour l’activité avec laquelle vous exportez. Il fixe votre secteur.",
     "activityRegulated": "Activité réglementée : agrément requis auprès de {authority}.",
     "activityBlocked": "Code bloqué au CNRC : non inscriptible.",
     "activityFree": "Activité libre (sans agrément préalable).",
@@ -1018,7 +1014,11 @@
     "activitySource": "Nomenclature CNRC 2026, compilation UpGrowth (upgrowth.dz), licence CC BY 4.0.",
     "errorActivityUnknown": "Code d'activité inconnu : 6 chiffres de la nomenclature CNRC.",
     "errorActivityBlocked": "Ce code est bloqué au CNRC : choisissez l'activité inscrite sur votre registre.",
-    "errorActivityOutOfScope": "Activité non exportatrice (services, détail, importation...) : indiquez une activité de production, d'artisanat, de gros ou d'exportation."
+    "errorActivityOutOfScope": "Activité non exportatrice (services, détail, importation...) : indiquez une activité de production, d'artisanat, de gros ou d'exportation.",
+    "activityFound": "Activité correspondant au code {code}",
+    "activityConfirm": "Valider cette activité",
+    "activityConfirmed": "Activité validée",
+    "errorActivityConfirm": "Validez l’activité affichée pour votre code."
   },
   "catalog": {
     "eyebrow": "Espace producteur",

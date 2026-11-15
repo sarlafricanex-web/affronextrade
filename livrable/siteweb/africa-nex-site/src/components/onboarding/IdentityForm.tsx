@@ -67,16 +67,6 @@ export function IdentityForm({ defaults, mode = "onboarding" }: { defaults: Iden
         {err("legalForm")}
       </fieldset>
 
-      {/* Le secteur n'est plus choisi a la main : il est impose par le code d'activite du registre. */}
-      <Field label={t("activityCodeLabel")} hint={t("activityCodeHint")} htmlFor="ob-activity">
-        <ActivityCodeField
-          defaultCode={defaults.activityCode}
-          defaultDescription={defaults.activityDescription}
-          error={err("activityCode") ?? err("sector")}
-          describedBy={described("activityCode")}
-        />
-      </Field>
-
       <div className="grid sm:grid-cols-2 gap-6">
         <Field label={t("nif")} hint={t("nifHint")} htmlFor="ob-nif">
           <TextInput id="ob-nif" name="nif" required inputMode="numeric" maxLength={24} dir="ltr" defaultValue={defaults.nif} placeholder="00000000000000000000" {...described("nif")} />
@@ -95,6 +85,17 @@ export function IdentityForm({ defaults, mode = "onboarding" }: { defaults: Iden
           {err("rc")}
         </Field>
       </div>
+
+      {/* Juste apres le registre : le code d'activite, l'activite CNRC affichee, puis validee.
+          Le secteur n'est plus choisi a la main : il est impose par ce code. */}
+      <Field label={t("activityCodeLabel")} hint={t("activityCodeHint")} htmlFor="ob-activity">
+        <ActivityCodeField
+          defaultCode={defaults.activityCode}
+          defaultDescription={defaults.activityDescription}
+          error={err("activityCode") ?? err("sector")}
+          describedBy={described("activityCode")}
+        />
+      </Field>
 
       <div className="grid sm:grid-cols-2 gap-6">
         <WilayaCommuneFields

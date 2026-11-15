@@ -1004,11 +1004,7 @@
     "taxArticleHint": "11 digits",
     "errorTaxArticle": "The tax article number must have exactly 11 digits.",
     "activityCodeLabel": "Export activity code (trade register)",
-    "activityCodeHint": "6 digits, as shown on the register (main or secondary) you export with. It sets your sector.",
-    "activitySearch": "Find my code",
-    "activitySearchPlaceholder": "Activity word (oil, cannery, textile...) or start of the code",
-    "activityNoResult": "No export activity found. Try another word.",
-    "activityRegulatedShort": "licence required",
+    "activityCodeHint": "6 digits, as shown on this register for the activity you export with. It sets your sector.",
     "activityRegulated": "Regulated activity: licence required from {authority}.",
     "activityBlocked": "Code blocked by the CNRC: cannot be registered.",
     "activityFree": "Unrestricted activity (no prior licence).",
@@ -1018,7 +1014,11 @@
     "activitySource": "CNRC 2026 nomenclature, compiled by UpGrowth (upgrowth.dz), CC BY 4.0 licence.",
     "errorActivityUnknown": "Unknown activity code: 6 digits from the CNRC nomenclature.",
     "errorActivityBlocked": "This code is blocked by the CNRC: choose the activity on your register.",
-    "errorActivityOutOfScope": "Non-export activity (services, retail, import...): enter a production, craft, wholesale or export activity."
+    "errorActivityOutOfScope": "Non-export activity (services, retail, import...): enter a production, craft, wholesale or export activity.",
+    "activityFound": "Activity matching code {code}",
+    "activityConfirm": "Confirm this activity",
+    "activityConfirmed": "Activity confirmed",
+    "errorActivityConfirm": "Confirm the activity shown for your code."
   },
   "catalog": {
     "eyebrow": "Producer space",

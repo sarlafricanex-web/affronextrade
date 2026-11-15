@@ -69,6 +69,7 @@ export async function saveIdentity(_prev: IdentityState, formData: FormData): Pr
     : { data: null };
   const refusal = cnrcRefusal(activity as CnrcActivity | null);
   if (refusal) errors.activityCode = refusal;
+  else if (text(formData, "activityConfirmed") !== "1") errors.activityCode = "errorActivityConfirm";
   else v.sector = activity!.isic_division!;
   if (v.sector && !isSector(v.sector)) errors.activityCode = "errorActivityOutOfScope";
   if (v.activityDescription.length > 500) errors.activityCode = "errorTooLong";

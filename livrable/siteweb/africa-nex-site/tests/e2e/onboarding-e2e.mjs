@@ -78,7 +78,10 @@ try {
     const fill = async (nif) => {
       set($("#ob-name"), "Huilerie Test Kabylie");
       $("input[name=legalForm][value=SARL]").click();
+      // Code d'activite du registre : l'activite CNRC s'affiche, le producteur la valide.
       set($("#ob-activity"), "107301");
+      for (let i = 0; i < 40 && !$("[data-activity-card='ok'] button"); i++) await sleep(150);
+      $("[data-activity-card='ok'] button")?.click();
       set($("#ob-nif"), nif);
       set($("#ob-nis"), "001906012345678");
       set($("#ob-article"), "19016012345");
@@ -103,7 +106,7 @@ try {
   await shoot("onboarding-step2");
 
   const { data: company } = await admin.from("companies").select("id, company_name, kind, legal_form, sector, wilaya, city, visibility, verified, claim_status, owner_profile_id, slug").eq("owner_profile_id", producer.id).maybeSingle();
-  report("Entreprise creee : brouillon, sans badge, au bon proprietaire", company && company.kind === "producer" && company.visibility === "draft" && company.verified === false && company.legal_form === "SARL" && company.wilaya === "06", JSON.stringify(company));
+  report("Entreprise creee : brouillon, sans badge, au bon proprietaire", company && company.kind === "producer" && company.visibility === "draft" && company.verified === false && company.legal_form === "SARL" && company.wilaya === "06" && company.sector === "C10", JSON.stringify(company));
   const { data: priv } = await admin.from("company_private").select("tax_id, rc_number, address, contact_phone, contact_whatsapp").eq("company_id", company?.id).maybeSingle();
   report("Partie privee : NIF, RC, adresse et numeros internationaux", priv?.tax_id === NIF && priv?.contact_phone === "+21334351280" && priv?.contact_whatsapp === "+213551234567", JSON.stringify(priv));
   const { data: prof } = await admin.from("profiles").select("phone, whatsapp").eq("id", producer.id).single();
