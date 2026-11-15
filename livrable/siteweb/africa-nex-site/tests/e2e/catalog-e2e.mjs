@@ -93,11 +93,12 @@ try {
     setV(document.getElementById("pe-unit"), "l");
     setV(document.getElementById("pe-moq"), "2000");
     setV(document.getElementById("pe-pack"), "Bidons de 5 l, 4 par carton");
-    setV(document.getElementById("pe-upc"), "20");
-    setV(document.getElementById("pe-cl"), "abc");
-    setV(document.getElementById("pe-cw"), "26");
-    setV(document.getElementById("pe-ch"), "32");
-    setV(document.getElementById("pe-cwt"), "18,5");
+    setV(document.getElementById("pe-pk1Qty"), "1");
+    setV(document.getElementById("pe-pk2Qty"), "20");
+    setV(document.getElementById("pe-pk2Length"), "abc");
+    setV(document.getElementById("pe-pk2Width"), "260");
+    setV(document.getElementById("pe-pk2Height"), "320");
+    setV(document.getElementById("pe-pk2Weight"), "18,5");
     setV(document.getElementById("pe-stack"), "5");
     document.querySelector("button[name=status][value=draft]").click(); return true;`);
   const kept = await waitFor(`return document.body.innerText.includes("Nombre positif attendu.");`);
@@ -106,8 +107,10 @@ try {
   await shot("catalog-errors");
 
   // Correction + photo + publication
-  await run(`${SET} setV(document.getElementById("pe-hs"), "150920"); setV(document.getElementById("pe-cl"), "38"); return true;`);
-  report("Estimation en direct : 13 500 L en 20 pieds, 27 900 L en 40 pieds", await waitFor(`return document.querySelector("[data-container='20']")?.innerText.includes("13" + String.fromCharCode(8239) + "500") || document.querySelector("[data-container='20']")?.innerText.replace(/\\s/g, "").includes("13500");`), await run(`return [...document.querySelectorAll("[data-container]")].map((e) => e.innerText.replace(/\\s+/g, " ")).join(" | ");`));
+  // Carton 380 x 260 x 320 mm : au sol, avec le jeu de chargement (porte, parois, plafond).
+  await run(`${SET} setV(document.getElementById("pe-hs"), "150920"); setV(document.getElementById("pe-pk2Length"), "380"); return true;`);
+  report("Equivalent en cm affiche sous les mm", await waitFor(`return document.querySelector("[data-pack-level='2']").innerText.includes("= 38 cm");`, 10));
+  report("Estimation en direct au sol : 13 200 L en 20 pieds, 27 000 L en 40 pieds, taux de remplissage", await waitFor(`const t = (s) => document.querySelector("[data-container='" + s + "'][data-mode='floor']")?.innerText.replace(/\\s/g, ""); return t("20")?.includes("13200") && t("40")?.includes("27000") && /%duvolume/.test(t("20"));`), await run(`return [...document.querySelectorAll("[data-container]")].map((e) => e.innerText.replace(/\\s+/g, " ")).join(" | ");`));
   const { root } = await send("DOM.getDocument");
   const { nodeId } = await send("DOM.querySelector", { nodeId: root.nodeId, selector: "input[type=file][name=photo]" });
   await send("DOM.setFileInputFiles", { nodeId, files: [PNG.replace(/\//g, "\\")] });
@@ -118,7 +121,7 @@ try {
   report("Enregistre : retour au catalogue avec message", await waitFor(`return location.pathname === "/fr/catalog" && document.body.innerText.includes("Produit enregistré.");`));
   await sleep(1000);
   const { data: p1 } = await admin.from("products").select("*").eq("company_id", companyId).single();
-  report("Produit en base : SH, prix, MOQ, logistique, publie", p1?.hs_code === "1509.20" && Number(p1.unit_price_ht) === 9.2 && Number(p1.min_order_quantity) === 2000 && p1.container_capacity_20ft === 13500 && p1.container_capacity_40ft === 27900 && Number(p1.units_per_carton) === 20 && p1.storage_condition === "ambient" && p1.packaging?.startsWith("Bidons") && p1.status === "published", JSON.stringify({ hs: p1?.hs_code, price: p1?.unit_price_ht, status: p1?.status, c20: p1?.container_capacity_20ft, c40: p1?.container_capacity_40ft }));
+  report("Produit en base : SH, prix, MOQ, logistique, publie", p1?.hs_code === "1509.20" && Number(p1.unit_price_ht) === 9.2 && Number(p1.min_order_quantity) === 2000 && p1.container_capacity_20ft === 13200 && p1.container_capacity_40ft === 27000 && p1.container_floor_20ft === 13200 && p1.packaging_spec?.levels?.[1]?.length_mm === 380 && Number(p1.carton_length_cm) === 38 && Number(p1.units_per_carton) === 20 && p1.storage_condition === "ambient" && p1.packaging?.startsWith("Bidons") && p1.status === "published", JSON.stringify({ hs: p1?.hs_code, price: p1?.unit_price_ht, status: p1?.status, c20: p1?.container_capacity_20ft, c40: p1?.container_capacity_40ft }));
   report("Une photo enregistree dans le stockage", Array.isArray(p1?.images) && p1.images.length === 1 && p1.images[0].path.startsWith(`${companyId}/`));
   await sleep(800); const row = await run(`return document.querySelector("tbody tr")?.innerText ?? "";`);
   report("Ligne du tableau : nom, SH, prix, MOQ, statut", row.includes("Huile d'olive extra vierge") && row.includes("1509.20") && /9,20/.test(row) && row.includes("FOB") && /publié/i.test(row), row.replace(/\s+/g, " "));
@@ -127,7 +130,7 @@ try {
 
   // Modification : prix + retrait de la photo
   await go(`/fr/catalog/${p1.id}`);
-  report("Editeur pre-rempli", await run(`return document.querySelector("h1")?.textContent === "Huile d'olive extra vierge" && document.getElementById("pe-price").value === "9.2" && document.getElementById("pe-cl").value === "38" && document.getElementById("pe-cwt").value === "18.5";`));
+  report("Editeur pre-rempli", await run(`return document.querySelector("h1")?.textContent === "Huile d'olive extra vierge" && document.getElementById("pe-price").value === "9.2" && document.getElementById("pe-pk2Length").value === "380" && document.getElementById("pe-pk2Weight").value === "18.5";`));
   await shot("catalog-edit");
   // Sans photo, la publication est bloquee a l'ecran puis refusee par le serveur ; le brouillon passe.
   await run(`${SET} setV(document.getElementById("pe-price"), "8,75"); document.querySelector("input[name=removePhoto]").click(); return true;`);

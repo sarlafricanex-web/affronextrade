@@ -16,7 +16,7 @@ const FIRST_ROW = 5;
 const EXTRA_ROWS = 200; // lignes vides pour de nouvelles references
 
 type Col = { key: string; fr: string; en: string; width: number; editable: boolean; list?: string; kind?: "date" | "number" | "formula" };
-type Labels = Record<"packType" | "packLabel" | "packWedging" | "packProtection", Record<string, string>>;
+type Labels = Record<"packType" | "packLabel" | "packWedging" | "packProtection" | "storage", Record<string, string>>;
 
 export function priceColumns(tier: string | null | undefined): Col[] {
   const head: Col[] = [
@@ -69,6 +69,8 @@ function packColumns(): Col[] {
     { key: "pkLabel", fr: "Étiquette", en: "Label", width: 18, editable: true, list: "packLabel" },
     { key: "pkWedging", fr: "Calage", en: "Wedging", width: 10, editable: true, list: "packWedging" },
     { key: "pkProtection", fr: "Protection niv. 3 et 4", en: "Protection level 3-4", width: 20, editable: true, list: "packProtection" },
+    { key: "storage", fr: "Conservation", en: "Storage", width: 18, editable: true, list: "storage" },
+    { key: "maxStack", fr: "Gerbage max. (couches)", en: "Max. stacking (layers)", width: 12, editable: true, kind: "number" },
     { key: "pkNotes", fr: "Précisions", en: "Precisions", width: 30, editable: true },
   );
   return cols;
@@ -88,6 +90,7 @@ export type ExportProduct = {
   id: string; sku: string | null; product_name: string; unit: string | null; unit_price_ht: number | null; product_cost: number | null; packaging_cost: number | null;
   currency: string | null; price_basis: string | null; price_place: string | null; price_valid_until: string | null; stock_quantity: number | null;
   min_order_quantity: number | null; lead_time_days: number | null; origin_country: string | null; cross_refs: string[] | null; packaging_spec: unknown;
+  storage_condition: string | null; max_stack_layers: number | null;
 };
 
 export async function buildPriceListWorkbook({ products, tier, companyName, labels, generatedOn }: { products: ExportProduct[]; tier: string; companyName: string; labels: Labels; generatedOn: string }) {
@@ -106,6 +109,7 @@ export async function buildPriceListWorkbook({ products, tier, companyName, labe
     packLabel: PACK_LABELS.map((c) => labels.packLabel[c]),
     packWedging: PACK_WEDGING.map((c) => labels.packWedging[c]),
     packProtection: PACK_PROTECTIONS.map((c) => labels.packProtection[c]),
+    storage: Object.values(labels.storage),
   };
   Object.entries(listValues).forEach(([name, values], i) => {
     const col = lists.getColumn(i + 1);
@@ -231,6 +235,8 @@ export async function buildPriceListWorkbook({ products, tier, companyName, labe
         if (c.key === "id") v = p.id;
         else if (c.key === "sku") v = p.sku ?? "";
         else if (c.key === "productName") v = p.product_name;
+        else if (c.key === "storage") v = p.storage_condition ? (labels.storage[p.storage_condition] ?? null) : null;
+        else if (c.key === "maxStack") v = p.max_stack_layers;
         else {
           const raw = pv![c.key as PackField];
           v = raw === "" ? null : c.kind === "number" ? Number(raw) : decode(c.key as PackField, raw);
@@ -288,7 +294,7 @@ export async function readPriceListWorkbook(buffer: ArrayBuffer, labels: Labels)
     }
     return out;
   };
-  const maps = { packType: reverse(labels.packType), packLabel: reverse(labels.packLabel), packWedging: reverse(labels.packWedging), packProtection: reverse(labels.packProtection) };
+  const maps = { packType: reverse(labels.packType), packLabel: reverse(labels.packLabel), packWedging: reverse(labels.packWedging), packProtection: reverse(labels.packProtection), storage: reverse(labels.storage) };
   const readSheet = (name: string) => {
     const ws = wb.getWorksheet(name);
     if (!ws) return null;
@@ -301,7 +307,7 @@ export async function readPriceListWorkbook(buffer: ArrayBuffer, labels: Labels)
       const values: Record<string, string> = {};
       keys.forEach((key, col) => { values[key] = cellText(r.getCell(col).value); });
       if (values.priceValidUntil) values.priceValidUntil = normalizeDate(values.priceValidUntil);
-      for (const [k, m] of [["pkLabel", maps.packLabel], ["pkWedging", maps.packWedging], ["pkProtection", maps.packProtection]] as const) {
+      for (const [k, m] of [["pkLabel", maps.packLabel], ["pkWedging", maps.packWedging], ["pkProtection", maps.packProtection], ["storage", maps.storage]] as const) {
         if (values[k]) values[k] = m.get(values[k].toLowerCase()) ?? values[k];
       }
       for (const n of PACK_LEVELS) { const k = `pk${n}Type`; if (values[k]) values[k] = maps.packType.get(values[k].toLowerCase()) ?? values[k]; }

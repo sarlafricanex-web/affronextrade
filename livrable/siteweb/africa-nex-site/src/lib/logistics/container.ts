@@ -36,27 +36,37 @@ export type ContainerEstimate = {
   units: number;
   limitedBy: "volume" | "weight" | "pallets";
   reefer: boolean;
+  mode: LoadMode;
+  // Part du volume interieur occupee par les cartons : le reste est du vide (jeu, chutes de rangement).
+  fillRate: number;
 };
 
-/** null si les donnees sont incompletes ou si le carton ne rentre pas. */
-export function estimateContainer(input: LogisticsInput, size: "20" | "40"): ContainerEstimate | null {
-  const { unitsPerCarton, lengthCm, widthCm, heightCm, grossWeightKg, maxStackLayers, storage, palletized, cartonsPerPallet } = input;
+// "pallet" : palettes Europe sur une couche ; "floor" : cartons charges directement au sol, sans palette.
+export type LoadMode = "pallet" | "floor";
+
+// Jeu de chargement au sol : fermeture de la porte et calage (longueur), parois (largeur), plafond (hauteur).
+const CLEARANCE = { lengthCm: 10, widthCm: 4, heightCm: 5 };
+
+/** null si les donnees sont incompletes, si le carton ne rentre pas ou si le mode palette n'est pas renseigne. */
+export function estimateContainer(input: LogisticsInput, size: "20" | "40", mode: LoadMode = input.palletized ? "pallet" : "floor"): ContainerEstimate | null {
+  const { unitsPerCarton, lengthCm, widthCm, heightCm, grossWeightKg, maxStackLayers, storage, cartonsPerPallet } = input;
   if (!unitsPerCarton || !lengthCm || !widthCm || !heightCm || !grossWeightKg) return null;
   const reefer = storage !== null && storage !== "ambient";
   const box = (reefer ? REEFER : DRY)[size];
 
   let byVolume: number;
   let limitedBy: ContainerEstimate["limitedBy"];
-  if (palletized) {
+  if (mode === "pallet") {
     if (!cartonsPerPallet) return null;
     // Une couche de palettes Europe (120 x 80), sans gerbage de palettes.
     byVolume = box.euroPallets * cartonsPerPallet;
     limitedBy = "pallets";
   } else {
-    const layers = Math.min(Math.floor(box.heightCm / heightCm), maxStackLayers ?? Infinity);
+    const L = box.lengthCm - CLEARANCE.lengthCm, W = box.widthCm - CLEARANCE.widthCm, H = box.heightCm - CLEARANCE.heightCm;
+    const layers = Math.min(Math.floor(H / heightCm), maxStackLayers ?? Infinity);
     const floor = Math.max(
-      Math.floor(box.lengthCm / lengthCm) * Math.floor(box.widthCm / widthCm),
-      Math.floor(box.lengthCm / widthCm) * Math.floor(box.widthCm / lengthCm),
+      Math.floor(L / lengthCm) * Math.floor(W / widthCm),
+      Math.floor(L / widthCm) * Math.floor(W / lengthCm),
     );
     byVolume = floor * layers;
     limitedBy = "volume";
@@ -65,5 +75,6 @@ export function estimateContainer(input: LogisticsInput, size: "20" | "40"): Con
   if (byWeight < byVolume) limitedBy = "weight";
   const cartons = Math.min(byVolume, byWeight);
   if (cartons <= 0) return null;
-  return { cartons, units: Math.floor(cartons * unitsPerCarton), limitedBy, reefer };
+  const fillRate = Math.min(1, (cartons * lengthCm * widthCm * heightCm) / (box.lengthCm * box.widthCm * box.heightCm));
+  return { cartons, units: Math.floor(cartons * unitsPerCarton), limitedBy, reefer, mode, fillRate };
 }

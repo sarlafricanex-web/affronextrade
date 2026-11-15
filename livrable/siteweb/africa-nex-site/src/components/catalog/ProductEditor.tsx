@@ -6,11 +6,12 @@ import { saveProduct, type CatalogField, type CatalogState } from "@/app/[locale
 import { Alert } from "@/components/auth/fields";
 import { Link } from "@/i18n/navigation";
 import { CURRENCIES, UNITS } from "@/lib/onboarding/reference";
-import { PACK_LABELS, PACK_LEVELS, PACK_PROTECTIONS, PACK_TYPES, PACK_WEDGING, STARTER_BASES, isDetailedTier, type PackField } from "@/lib/catalog/price-list";
+import { PACK_LABELS, PACK_LEVELS, PACK_PROTECTIONS, PACK_TYPES, PACK_WEDGING, STARTER_BASES, isDetailedTier, readPackagingInput, type PackField } from "@/lib/catalog/price-list";
 import { CountrySelect } from "@/components/country/CountrySelect";
 import type { CountryCode } from "libphonenumber-js";
 import { prepareUpload } from "@/lib/client/prepare-upload";
-import { STORAGE_CONDITIONS, estimateContainer, type LogisticsInput, type StorageCondition } from "@/lib/logistics/container";
+import { STORAGE_CONDITIONS, estimateContainer, type LogisticsInput } from "@/lib/logistics/container";
+import { logisticsFromSpec, packagingWarnings, readLogisticsExtras, type PackWarning } from "@/lib/catalog/packaging-logic";
 
 // Editeur de produit d'apres la maquette Stitch 07 : six blocs numerotes et un panneau
 // "Pret a publier ?" mis a jour pendant la saisie.
@@ -53,29 +54,14 @@ export type EditorProduct = {
   stockUpdatedAt: string;
 } & Record<PackField, string>;
 
-const toNum = (s: string) => {
-  const n = Number(s.replace(/\s/g, "").replace(",", "."));
-  return s.trim() !== "" && Number.isFinite(n) && n > 0 ? n : null;
-};
 
-function readLogistics(form: HTMLFormElement | null, product: EditorProduct): { input: LogisticsInput; unit: string } {
+// Logistique deduite des 4 niveaux (meme calcul que le serveur et l'import Excel) + controles de coherence.
+function readLogistics(form: HTMLFormElement | null, product: EditorProduct): { input: LogisticsInput; unit: string; warnings: PackWarning[] } {
   const fd = form ? new FormData(form) : null;
-  const get = (k: keyof EditorProduct) => (fd ? String(fd.get(k) ?? "") : String(product[k] ?? "")).trim();
-  const storage = get("storage");
-  return {
-    unit: get("unit"),
-    input: {
-      unitsPerCarton: toNum(get("unitsPerCarton")),
-      lengthCm: toNum(get("cartonLength")),
-      widthCm: toNum(get("cartonWidth")),
-      heightCm: toNum(get("cartonHeight")),
-      grossWeightKg: toNum(get("cartonWeight")),
-      maxStackLayers: toNum(get("maxStack")),
-      storage: (STORAGE_CONDITIONS as readonly string[]).includes(storage) ? (storage as StorageCondition) : null,
-      palletized: get("palletized") === "on",
-      cartonsPerPallet: toNum(get("cartonsPerPallet")),
-    },
-  };
+  const get = (k: string) => (fd ? String(fd.get(k) ?? "") : String((product as unknown as Record<string, string>)[k] ?? "")).trim();
+  const { spec } = readPackagingInput((k) => get(k));
+  const extras = readLogisticsExtras((k) => get(k));
+  return { unit: get("unit"), input: logisticsFromSpec(spec, extras.storage, extras.maxStack), warnings: packagingWarnings(spec) };
 }
 
 const HAIR = "#d8cebb";
@@ -98,14 +84,6 @@ function Block({ title, aside, children }: { title: string; aside?: string; chil
   );
 }
 
-function Suffixed({ suffix, children }: { suffix: string; children: ReactNode }) {
-  return (
-    <div className="flex" dir="ltr" style={{ border: `1px solid ${HAIR}` }}>
-      {children}
-      <span className="flex items-center px-3 text-xs font-bold" style={{ background: "white", borderInlineStart: `1px solid ${HAIR}` }}>{suffix}</span>
-    </div>
-  );
-}
 
 function Label({ htmlFor, children }: { htmlFor?: string; children: ReactNode }) {
   return <label htmlFor={htmlFor} className={labelCls} style={labelStyle}>{children}</label>;
@@ -127,7 +105,7 @@ function readChecks(form: HTMLFormElement | null, product: EditorProduct, hasNew
     unit: get("unit").length > 0,
     moq: Number(get("moq").replace(/\s/g, "").replace(",", ".")) > 0,
     packaging: get("packaging").length > 0,
-    capacity: ["unitsPerCarton", "cartonLength", "cartonWidth", "cartonHeight", "cartonWeight"].every((k) => Number(get(k).replace(",", ".")) > 0),
+    capacity: Boolean(estimateContainer(readLogistics(form, product).input, "20")),
     photo: product.images.length - removed > 0 || hasNewPhoto,
   };
 }
@@ -157,18 +135,21 @@ export function ProductEditor({ product: initial, tier }: { product: EditorProdu
     state.errors[field] ? <span className="mt-1 block text-xs font-semibold" style={{ color: "#dc2626" }}>{msg(state.errors[field]!)}</span> : null;
   const [logi, setLogi] = useState<{ value: ReturnType<typeof readLogistics>; attempt?: number } | null>(null);
   const logistics = logi && logi.attempt === state.attempt ? logi.value : readLogistics(null, product);
-  const est20 = estimateContainer(logistics.input, "20");
-  const est40 = estimateContainer(logistics.input, "40");
+  const est20 = estimateContainer(logistics.input, "20", "floor");
+  const est40 = estimateContainer(logistics.input, "40", "floor");
   const unitShort = logistics.unit ? c(`unitShort_${logistics.unit}`) : "";
   // Pro / Enterprise : prix FCA = cout produit + cout emballage, affiche pendant la saisie.
   const [costs, setCosts] = useState<{ value: [string, string]; attempt?: number } | null>(null);
   const [pc, pk] = costs && costs.attempt === state.attempt ? costs.value : [product.productCost, product.packagingCost];
   const amount = (s: string) => Number(s.replace(/\s/g, "").replace(",", ".")) || 0;
   const fca = amount(pc) + amount(pk);
+  const [live, setLive] = useState<{ value: Record<string, string>; attempt?: number } | null>(null);
+  const liveValue = (k: string) => String((live && live.attempt === state.attempt ? live.value[k] : (product as unknown as Record<string, string>)[k]) ?? "").replace(",", ".");
   const refresh = (form: HTMLFormElement, hasNewPhoto = Boolean(preview)) => {
     setChecks({ value: readChecks(form, product, hasNewPhoto), attempt: state.attempt });
     setLogi({ value: readLogistics(form, product), attempt: state.attempt });
     const fd = new FormData(form);
+    setLive({ value: Object.fromEntries([...fd.entries()].map(([k, v]) => [k, String(v)])), attempt: state.attempt });
     setCosts({ value: [String(fd.get("productCost") ?? ""), String(fd.get("packagingCost") ?? "")], attempt: state.attempt });
   };
 
@@ -335,6 +316,10 @@ export function ProductEditor({ product: initial, tier }: { product: EditorProdu
                       ) : (
                         <input id={`pe-${name}`} name={name} dir="ltr" inputMode={mode || undefined} defaultValue={product[name]} className={`${inputCls} text-end`} style={fieldStyle} />
                       )}
+                      {/* Dimensions en mm : equivalent en cm affiche pour eviter les confusions d'unite. */}
+                      {["Length", "Width", "Height"].includes(part) && Number(liveValue(name)) > 0 && (
+                        <span className="mt-1 block text-[11px]" style={{ color: "var(--muted)" }} dir="ltr">= {(Number(liveValue(name)) / 10).toLocaleString(locale)} cm</span>
+                      )}
                       {err(name)}
                     </div>
                   );
@@ -359,16 +344,8 @@ export function ProductEditor({ product: initial, tier }: { product: EditorProdu
               {err("pkNotes")}
             </div>
           </div>
-          {/* Fiche du carton d'expedition : la capacite par conteneur en est calculee, jamais saisie. */}
+          {/* Conservation et gerbage : avec les 4 niveaux, ils donnent la capacite par conteneur (jamais saisie). */}
           <div className="flex flex-col gap-5 pt-4" style={{ borderTop: `1px solid ${HAIR}` }}>
-            <p className="text-[11px] font-bold uppercase" style={labelStyle}>{c("cartonTitle")}</p>
-            <div className="sm:max-w-xs">
-              <Label htmlFor="pe-upc">{c("unitsPerCarton")}</Label>
-              <Suffixed suffix={unitShort || "?"}>
-                <input id="pe-upc" name="unitsPerCarton" dir="ltr" inputMode="decimal" placeholder="20" defaultValue={product.unitsPerCarton} className={`${inputCls} text-end`} style={{ background: FIELD, border: 0, outline: "none" }} />
-              </Suffixed>
-              {err("unitsPerCarton")}
-            </div>
             {/* Les 4 conditions visibles d'un coup d'oeil (une liste deroulante cachait les choix). */}
             <fieldset>
               <legend className={labelCls} style={labelStyle}>{c("storage")}</legend>
@@ -385,44 +362,24 @@ export function ProductEditor({ product: initial, tier }: { product: EditorProdu
               </div>
               {err("storage")}
             </fieldset>
-            <div>
-              <p className="mb-2 text-[11px] font-bold uppercase" style={labelStyle}>{c("cartonDims")}</p>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                {([
-                  ["cartonLength", "pe-cl", "cm", "38"],
-                  ["cartonWidth", "pe-cw", "cm", "26"],
-                  ["cartonHeight", "pe-ch", "cm", "32"],
-                  ["cartonWeight", "pe-cwt", "kg", "18,5"],
-                ] as const).map(([name, id, suffix, ph]) => (
-                  <div key={name}>
-                    <label htmlFor={id} className="mb-1 block text-xs" style={{ color: "var(--muted)" }}>{c(`dim_${name}`)}</label>
-                    <Suffixed suffix={suffix}>
-                      <input id={id} name={name} dir="ltr" inputMode="decimal" placeholder={ph} defaultValue={product[name]} className={`${inputCls} text-end`} style={{ background: FIELD, border: 0, outline: "none" }} />
-                    </Suffixed>
-                    {err(name)}
-                  </div>
+            <div className="sm:max-w-xs">
+              <Label htmlFor="pe-stack">{c("maxStack")}</Label>
+              <input id="pe-stack" name="maxStack" dir="ltr" inputMode="numeric" placeholder="5" defaultValue={product.maxStack} className={`${inputCls} text-end`} style={fieldStyle} />
+              <span className="mt-1 block text-xs" style={{ color: "var(--muted)" }}>{c("maxStackHelp")}</span>
+              {err("maxStack")}
+            </div>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>
+              {logistics.input.unitsPerCarton
+                ? c("logisticsFromLevels", { units: logistics.input.unitsPerCarton.toLocaleString(locale), pallet: logistics.input.cartonsPerPallet ?? "-" })
+                : c("logisticsNeedLevels")}
+            </p>
+            {logistics.warnings.length > 0 && (
+              <ul className="flex flex-col gap-1 p-3 text-sm" style={{ background: "#fff7ed", border: "1px solid #f97316", color: "#9a3412" }} data-pack-warnings={logistics.warnings.length}>
+                {logistics.warnings.map((w, i) => (
+                  <li key={i}>⚠ {c(w.code, { level: w.level ?? 0, value: w.value ?? 0 })}</li>
                 ))}
-              </div>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="pe-stack">{c("maxStack")}</Label>
-                <input id="pe-stack" name="maxStack" dir="ltr" inputMode="numeric" placeholder="5" defaultValue={product.maxStack} className={`${inputCls} text-end`} style={fieldStyle} />
-                <span className="mt-1 block text-xs" style={{ color: "var(--muted)" }}>{c("maxStackHelp")}</span>
-                {err("maxStack")}
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm font-semibold">
-                  <input type="checkbox" name="palletized" defaultChecked={product.palletized === "on"} className="h-4 w-4" style={{ accentColor: "var(--ink)" }} />
-                  {c("palletized")}
-                </label>
-                <div className="mt-2" hidden={!logistics.input.palletized}>
-                  <label htmlFor="pe-cpp" className="mb-1 block text-xs" style={{ color: "var(--muted)" }}>{c("cartonsPerPallet")}</label>
-                  <input id="pe-cpp" name="cartonsPerPallet" dir="ltr" inputMode="numeric" placeholder="40" defaultValue={product.cartonsPerPallet} className={`${inputCls} text-end`} style={fieldStyle} />
-                </div>
-                {err("cartonsPerPallet")}
-              </div>
-            </div>
+              </ul>
+            )}
 
             <div className="p-4" style={{ background: "#fff2e2", border: `1px solid ${HAIR}` }} aria-live="polite">
               <p className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
@@ -430,22 +387,33 @@ export function ProductEditor({ product: initial, tier }: { product: EditorProdu
                 <span className="text-[11px]" style={{ color: "var(--muted)" }}>{c(est20?.reefer || est40?.reefer ? "estimateReefer" : "estimateDry")}</span>
               </p>
               {est20 || est40 ? (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {([["20", est20], ["40", est40]] as const).map(([size, e]) => (
-                    <div key={size} className="p-3" style={{ background: "white", border: `1px solid ${HAIR}` }} data-container={size}>
-                      <p className="text-xs font-bold uppercase" style={labelStyle}>{c(`container_${size}`)}</p>
-                      {e ? (
-                        <>
-                          <p className="mt-1 font-extrabold" style={{ fontSize: "1.4rem", fontFeatureSettings: '"tnum" 1' }}>
-                            {e.units.toLocaleString(locale)} {unitShort}
-                          </p>
-                          <p className="text-xs" style={{ color: "var(--muted)" }}>
-                            {c("estimateCartons", { count: e.cartons })} · {c(`limitedBy_${e.limitedBy}`)}
-                          </p>
-                        </>
-                      ) : (
-                        <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>-</p>
-                      )}
+                <div className="flex flex-col gap-3">
+                  {/* Deux modes : palettes (si une palette est decrite) et cartons au sol, avec le taux de remplissage. */}
+                  {(logistics.input.palletized ? (["pallet", "floor"] as const) : (["floor"] as const)).map((mode) => (
+                    <div key={mode} data-load-mode={mode}>
+                      <p className="mb-1 text-[11px] font-bold uppercase" style={labelStyle}>{c(`loadMode_${mode}`)}</p>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {(["20", "40"] as const).map((size) => {
+                          const e = estimateContainer(logistics.input, size, mode);
+                          return (
+                            <div key={size} className="p-3" style={{ background: "white", border: `1px solid ${HAIR}` }} data-container={size} data-mode={mode}>
+                              <p className="text-xs font-bold uppercase" style={labelStyle}>{c(`container_${size}`)}</p>
+                              {e ? (
+                                <>
+                                  <p className="mt-1 font-extrabold" style={{ fontSize: "1.4rem", fontFeatureSettings: '"tnum" 1' }}>
+                                    {e.units.toLocaleString(locale)} {unitShort}
+                                  </p>
+                                  <p className="text-xs" style={{ color: "var(--muted)" }}>
+                                    {c("estimateCartons", { count: e.cartons })} · {c(`limitedBy_${e.limitedBy}`)} · {c("fillRate", { rate: Math.round(e.fillRate * 100) })}
+                                  </p>
+                                </>
+                              ) : (
+                                <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>-</p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   ))}
                 </div>

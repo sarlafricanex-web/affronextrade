@@ -107,12 +107,13 @@ try {
   set(prices, sk, free + 1, "price", 1);
   const pkk = keysOf(pack);
   const pr = rowOf(pack, pA.id);
-  set(pack, pkk, pr, "pk1Qty", 1);
-  set(pack, pkk, pr, "pk2Qty", 10);
+  // Carton de 20 unites, 380 x 260 x 320 mm, 18,5 kg ; palette de 800 unites (40 cartons).
+  // Poids palette volontairement incoherent (44,96 kg < 40 x 18,5 kg) : avertissement attendu.
+  const PACK = { pk1Qty: 1, pk2Qty: 20, pk2Length: 380, pk2Width: 260, pk2Height: 320, pk2Weight: 18.5, pk4Qty: 800, pk4Weight: 44.96, maxStack: 5 };
+  for (const [k, v] of Object.entries(PACK)) set(pack, pkk, pr, k, v);
   set(pack, pkk, pr, "pk2Type", "Carton / Cardboard box");
-  set(pack, pkk, pr, "pk4Qty", 160);
   set(pack, pkk, pr, "pk4Type", "Palette Europe 80x120 / Euro pallet 80x120");
-  set(pack, pkk, pr, "pk4Weight", 44.96);
+  set(pack, pkk, pr, "storage", "ambient");
   set(pack, pkk, pr, "pkLabel", "Étiquette client / Customer label");
   set(pack, pkk, pr, "pkProtection", "Banderolage");
   const FILE = `${OUT}/liste-de-prix-modifiee.xlsx`;
@@ -144,6 +145,7 @@ try {
   await attach(FILE);
   await run(`[...document.querySelectorAll("main button")].find((b) => /vérifier/i.test(b.textContent)).click(); return true;`);
   report("Apercu : 1 mis a jour, 1 nouveau, 2 lignes en erreur", await waitFor(`return ${count("importUpdates")} === 1 && ${count("importCreates")} === 1 && ${count("importIssues")} === 2;`), await run(`return [${count("importUpdates")}, ${count("importCreates")}, ${count("importUnchanged")}, ${count("importIssues")}].join("/");`));
+  report("Avertissement : palette plus legere que son contenu (import possible)", await run(`return document.querySelector("[data-import-warnings]")?.innerText.includes("Niveau 4 : le poids total est inférieur au poids de son contenu");`));
   report("Erreurs : prix invalide (ligne B) et produit inconnu (concurrent)", await run(`const t = document.body.innerText; return t.includes("Ligne ${rB}") && /prix/i.test(t) && t.includes("Produit introuvable dans votre catalogue");`));
   const { data: before } = await admin.from("products").select("unit_price_ht").eq("id", pA.id).single();
   report("Apercu : rien n'est encore enregistre", Number(before.unit_price_ht) === 2);
@@ -154,7 +156,8 @@ try {
   const { data: a } = await admin.from("products").select("*").eq("id", pA.id).single();
   report("En base : A 5,50 FOB Port d'Alger, AF-018, validite, stock 1200 date, delai 30, refs croisees", Number(a.unit_price_ht) === 5.5 && a.price_basis === "FOB" && a.price_place === "Port d'Alger" && a.sku === "AF-018" && a.price_valid_until === day(30) && Number(a.stock_quantity) === 1200 && Boolean(a.stock_updated_at) && a.lead_time_days === 30 && a.cross_refs.join("|") === "1444 TV|P520A", JSON.stringify({ p: a.unit_price_ht, b: a.price_basis, v: a.price_valid_until, s: a.stock_quantity }));
   const spec = a.packaging_spec;
-  report("Conditionnement : carton x10, palette Europe 160 / 44,96 kg, etiquette client, banderolage", spec?.levels?.[1]?.type === "carton" && spec.levels[1].qty === 10 && spec.levels[3].type === "pallet_euro" && spec.levels[3].qty === 160 && spec.levels[3].weight_kg === 44.96 && spec.label === "customer" && spec.protection === "stretch", JSON.stringify(spec));
+  report("Conditionnement : carton x20, palette Europe 800 / 44,96 kg, etiquette client, banderolage", spec?.levels?.[1]?.type === "carton" && spec.levels[1].qty === 20 && spec.levels[3].type === "pallet_euro" && spec.levels[3].qty === 800 && spec.levels[3].weight_kg === 44.96 && spec.label === "customer" && spec.protection === "stretch", JSON.stringify(spec));
+  report("Logistique deduite a l'import : 20 par carton, 40 cartons par palette, capacites palette et sol", Number(a.units_per_carton) === 20 && a.palletized && a.cartons_per_pallet === 40 && a.container_capacity_20ft > 0 && a.container_floor_20ft === 13200 && a.container_floor_40ft === 27000, JSON.stringify({ u: a.units_per_carton, p: a.cartons_per_pallet, c20: a.container_capacity_20ft, f20: a.container_floor_20ft, f40: a.container_floor_40ft }));
   const { data: b } = await admin.from("products").select("unit_price_ht").eq("id", pB.id).single();
   report("Ligne en erreur non appliquee (B inchange)", Number(b.unit_price_ht) === 2.4);
   const { data: created } = await admin.from("products").select("status, unit_price_ht, currency, price_valid_until, company_id").eq("sku", "AF-099").eq("company_id", starter.companyId).maybeSingle();
@@ -170,9 +173,19 @@ try {
   report("Filtre 'prix a mettre a jour' : B seul (A et AF-099 ont un prix valide)", await waitFor(`${STALE} const t = document.querySelector("main table").innerText; return !t.includes("AF-018") && !t.includes("AF-099") && t.includes("Filtre a air B");`, 20), await run(`return document.querySelector("main table").innerText.replace(/\\s+/g, " ").slice(0, 400);`));
   await shot("price-list-catalog");
 
-  // Editeur Starter : publication sans date de validite refusee
+  // Editeur Starter : meme conditionnement saisi a la main sur B -> meme logistique qu'a l'import pour A.
   await go(`/fr/catalog/${pB.id}`, `return !!document.getElementById("pe-price");`);
   report("Editeur Starter : prix HT, incoterm, lieu, validite", await run(`return !!document.getElementById("pe-basis") && !!document.getElementById("pe-place") && !!document.getElementById("pe-valid") && !document.getElementById("pe-cost");`));
+  const SETV = `const setV = (el, v) => { const p = el.tagName === "SELECT" ? HTMLSelectElement.prototype : el.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(p, "value").set.call(el, v); el.dispatchEvent(new Event("input", { bubbles: true })); el.dispatchEvent(new Event("change", { bubbles: true })); };`;
+  await run(`${SETV} ${Object.entries(PACK).map(([k, v]) => `setV(document.getElementById(${JSON.stringify(k === "maxStack" ? "pe-stack" : `pe-${k}`)}), ${JSON.stringify(String(v))});`).join(" ")} setV(document.getElementById("pe-pk2Type"), "carton"); setV(document.getElementById("pe-pk4Type"), "pallet_euro"); document.querySelector("input[name=storage][value=ambient]").click(); return true;`);
+  report("Editeur : meme avertissement que l'import", await waitFor(`return document.querySelector("[data-pack-warnings]")?.innerText.includes("Niveau 4 : le poids total est inférieur au poids de son contenu");`, 10));
+  report("Editeur : capacites palette et au sol affichees", await run(`return !!document.querySelector("[data-mode='pallet'][data-container='20']") && document.querySelector("[data-mode='floor'][data-container='20']").innerText.replace(/\\s/g, "").includes("13200");`));
+  await run(`[...document.querySelectorAll("button[type=submit]")].find((b) => b.value === "draft").click(); return true;`);
+  await waitFor(`return location.pathname === "/fr/catalog";`);
+  const cols = "units_per_carton, carton_length_cm, carton_width_cm, carton_height_cm, carton_gross_weight_kg, max_stack_layers, storage_condition, palletized, cartons_per_pallet, container_capacity_20ft, container_capacity_40ft, container_floor_20ft, container_floor_40ft";
+  const { data: viaExcel } = await admin.from("products").select(cols).eq("id", pA.id).single();
+  const { data: viaEditor } = await admin.from("products").select(cols).eq("id", pB.id).single();
+  report("Meme resultat logistique par l'editeur et par Excel", JSON.stringify(viaExcel) === JSON.stringify(viaEditor), `${JSON.stringify(viaExcel)} / ${JSON.stringify(viaEditor)}`);
 
   // Forfait Pro : modele detaille et prix FCA calcule
   const p = await download(pro);

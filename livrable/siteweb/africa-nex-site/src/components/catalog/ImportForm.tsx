@@ -81,6 +81,20 @@ export function ImportForm() {
             </div>
           )}
 
+          {s.warnings.length > 0 && (
+            <div style={{ background: "white", border: "1px solid #f97316" }} data-import-warnings={s.warnings.length}>
+              <h2 className="px-4 py-3 text-xs font-bold uppercase" style={{ ...caps, background: "#fff7ed", color: "#9a3412" }}>{t("importWarningsTitle")}</h2>
+              <ul className="text-sm">
+                {s.warnings.map((w, n) => (
+                  <li key={n} className="px-4 py-2" style={{ borderTop: `1px solid ${HAIR}` }}>
+                    <strong>{t("importRow", { row: w.row, sheet: t("importSheet_packaging") })}</strong>
+                    <span dir="ltr"> ({w.ref})</span> : {w.warnings.map((x) => t(x.code, { level: x.level ?? 0, value: x.value ?? 0 })).join(" ; ")}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {s.changes.length > 0 && (
             <div style={{ background: "white", border: `1px solid ${HAIR}` }}>
               <h2 className="px-4 py-3 text-xs font-bold uppercase" style={{ ...caps, background: "#f5efe6" }}>{t("importChangesTitle")}</h2>

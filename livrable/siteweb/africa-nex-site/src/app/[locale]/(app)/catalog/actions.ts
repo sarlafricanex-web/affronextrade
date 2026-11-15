@@ -7,15 +7,15 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { resolveLocale } from "@/lib/auth/next-path";
 import { getCompanyTier, getMyCompanyId, getProduct, productImages, type ProductImage } from "@/lib/data/company";
 import { contentTypeOf, readImage } from "@/lib/images";
-import { UNITS, normalizeHsCode, parseAmount } from "@/lib/onboarding/reference";
+import { UNITS, normalizeHsCode } from "@/lib/onboarding/reference";
 import { PACK_FIELDS, PRICE_FIELDS, readPackagingInput, readPriceInput, type PackField, type PriceField } from "@/lib/catalog/price-list";
 import type { Database } from "@/lib/supabase/database.types";
-import { STORAGE_CONDITIONS, estimateContainer, type StorageCondition } from "@/lib/logistics/container";
+import { packagingFields, readLogisticsExtras } from "@/lib/catalog/packaging-logic";
 
 export type CatalogField =
   | "productName" | "hsCode" | "descriptionFr" | "descriptionEn" | "descriptionAr"
   | "unit" | "packaging" | "status" | "photo"
-  | "unitsPerCarton" | "cartonLength" | "cartonWidth" | "cartonHeight" | "cartonWeight" | "maxStack" | "storage" | "cartonsPerPallet"
+  | "maxStack" | "storage"
   | PriceField | PackField;
 // values : saisie renvoyee en cas d'erreur (React reinitialise le formulaire apres chaque envoi).
 export type CatalogState = {
@@ -27,27 +27,13 @@ export type CatalogState = {
 const TEXT_FIELDS = [
   "productName", "hsCode", "descriptionFr", "descriptionEn", "descriptionAr",
   "unit", "packaging", "status",
-  "unitsPerCarton", "cartonLength", "cartonWidth", "cartonHeight", "cartonWeight", "maxStack", "storage", "palletized", "cartonsPerPallet",
+  "maxStack", "storage",
   ...PRICE_FIELDS, ...PACK_FIELDS,
 ];
-
-// Nombre facultatif > 0 et <= max : null si vide, NaN si invalide.
-function optionalPositive(value: string, max: number) {
-  if (value === "") return null;
-  const n = parseAmount(value);
-  return n !== null && n > 0 && n <= max ? n : NaN;
-}
 
 const MAX_PHOTOS = 5;
 const PHOTO_MAX_BYTES = 4 * 1024 * 1024;
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
-
-// Entier facultatif >= 0 : null si vide, NaN si invalide.
-function optionalInt(value: string) {
-  const v = value.replace(/\s/g, "");
-  if (v === "") return null;
-  return /^\d{1,9}$/.test(v) ? Number(v) : NaN;
-}
 
 async function producerContext(formData: FormData) {
   const locale = resolveLocale(text(formData, "locale"));
@@ -77,16 +63,6 @@ export async function saveProduct(_prev: CatalogState, formData: FormData): Prom
     unit: text(formData, "unit"),
     packaging: text(formData, "packaging"),
     status: text(formData, "status"),
-    // Fiche logistique (facultative) : la capacite par conteneur en est deduite, jamais saisie.
-    unitsPerCarton: optionalPositive(text(formData, "unitsPerCarton"), 1_000_000),
-    cartonLength: optionalPositive(text(formData, "cartonLength"), 300),
-    cartonWidth: optionalPositive(text(formData, "cartonWidth"), 300),
-    cartonHeight: optionalPositive(text(formData, "cartonHeight"), 300),
-    cartonWeight: optionalPositive(text(formData, "cartonWeight"), 2000),
-    maxStack: optionalInt(text(formData, "maxStack")),
-    storage: text(formData, "storage"),
-    palletized: formData.get("palletized") === "on",
-    cartonsPerPallet: optionalInt(text(formData, "cartonsPerPallet")),
   };
 
   const errors: CatalogState["errors"] = {};
@@ -103,15 +79,11 @@ export async function saveProduct(_prev: CatalogState, formData: FormData): Prom
     today,
     v.status === "published",
   );
+  // Conditionnement en 4 niveaux + conservation et gerbage : la logistique et la capacite conteneur
+  // en sont deduites (meme calcul que l'import Excel).
   const packed = readPackagingInput((k) => text(formData, k));
-  Object.assign(errors, priced.errors, packed.errors);
-  for (const k of ["unitsPerCarton", "cartonLength", "cartonWidth", "cartonHeight", "cartonWeight"] as const) {
-    if (Number.isNaN(v[k])) errors[k] = "errorPositive";
-  }
-  if (Number.isNaN(v.maxStack) || (v.maxStack !== null && (v.maxStack < 1 || v.maxStack > 50))) errors.maxStack = "errorStack";
-  if (v.storage && !(STORAGE_CONDITIONS as readonly string[]).includes(v.storage)) errors.storage = "errorChoose";
-  if (Number.isNaN(v.cartonsPerPallet) || (v.cartonsPerPallet !== null && (v.cartonsPerPallet < 1 || v.cartonsPerPallet > 500))) errors.cartonsPerPallet = "errorPallet";
-  if (v.palletized && v.cartonsPerPallet === null) errors.cartonsPerPallet = "errorPallet";
+  const extras = readLogisticsExtras((k) => text(formData, k));
+  Object.assign(errors, priced.errors, packed.errors, extras.errors);
   if (!["draft", "published"].includes(v.status)) errors.status = "errorChoose";
 
   // Photos : retraits demandes (seulement parmi celles du produit), puis une nouvelle eventuelle.
@@ -140,42 +112,14 @@ export async function saveProduct(_prev: CatalogState, formData: FormData): Prom
   }
 
   // Capacite par conteneur recalculee ici (la valeur affichee dans le navigateur n'est qu'un apercu).
-  const num = (x: number | null) => (x === null || Number.isNaN(x) ? null : x);
-  const logistics = {
-    unitsPerCarton: num(v.unitsPerCarton),
-    lengthCm: num(v.cartonLength),
-    widthCm: num(v.cartonWidth),
-    heightCm: num(v.cartonHeight),
-    grossWeightKg: num(v.cartonWeight),
-    maxStackLayers: num(v.maxStack),
-    storage: (v.storage || null) as StorageCondition | null,
-    palletized: v.palletized,
-    cartonsPerPallet: num(v.cartonsPerPallet),
-  };
-  const est20 = estimateContainer(logistics, "20");
-  const est40 = estimateContainer(logistics, "40");
-  const hasCarton = logistics.lengthCm && logistics.widthCm && logistics.heightCm && logistics.grossWeightKg;
-
   const fields = {
-    units_per_carton: logistics.unitsPerCarton,
-    carton_length_cm: logistics.lengthCm,
-    carton_width_cm: logistics.widthCm,
-    carton_height_cm: logistics.heightCm,
-    carton_gross_weight_kg: logistics.grossWeightKg,
-    max_stack_layers: logistics.maxStackLayers,
-    storage_condition: logistics.storage,
-    palletized: logistics.palletized,
-    cartons_per_pallet: logistics.palletized ? logistics.cartonsPerPallet : null,
-    dimensions_cm: hasCarton ? { length: logistics.lengthCm, width: logistics.widthCm, height: logistics.heightCm, weight_kg: logistics.grossWeightKg } : null,
-    container_capacity_20ft: est20?.units ?? null,
-    container_capacity_40ft: est40?.units ?? null,
+    ...packagingFields(packed.spec, extras.storage, extras.maxStack),
     product_name: v.productName,
     hs_code: v.hsCode,
     description_fr: v.descriptionFr || null,
     description_en: v.descriptionEn || null,
     description_ar: v.descriptionAr || null,
     ...priced.fields,
-    packaging_spec: packed.spec,
     unit: v.unit,
     packaging: v.packaging || null,
     status: v.status,

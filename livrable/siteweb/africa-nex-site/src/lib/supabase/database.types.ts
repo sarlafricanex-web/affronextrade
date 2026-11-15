@@ -668,6 +668,8 @@ export type Database = {
           company_id: string
           container_capacity_20ft: number | null
           container_capacity_40ft: number | null
+          container_floor_20ft: number | null
+          container_floor_40ft: number | null
           created_at: string
           cross_refs: string[]
           currency: string | null
@@ -716,6 +718,8 @@ export type Database = {
           company_id: string
           container_capacity_20ft?: number | null
           container_capacity_40ft?: number | null
+          container_floor_20ft?: number | null
+          container_floor_40ft?: number | null
           created_at?: string
           cross_refs?: string[]
           currency?: string | null
@@ -764,6 +768,8 @@ export type Database = {
           company_id?: string
           container_capacity_20ft?: number | null
           container_capacity_40ft?: number | null
+          container_floor_20ft?: number | null
+          container_floor_40ft?: number | null
           created_at?: string
           cross_refs?: string[]
           currency?: string | null

@@ -9,14 +9,17 @@ import { UNITS } from "@/lib/onboarding/reference";
 import { PRICE_FIELDS, readPackagingInput, readPriceInput, todayIso, type PackField, type PriceField } from "@/lib/catalog/price-list";
 import { readPriceListWorkbook } from "@/lib/catalog/price-list-excel";
 import { packLabelMaps } from "@/lib/catalog/pack-labels";
+import { packagingFields, packagingWarnings, readLogisticsExtras, type PackWarning } from "@/lib/catalog/packaging-logic";
 import type { Database } from "@/lib/supabase/database.types";
 
 type Update = Database["public"]["Tables"]["products"]["Update"];
 export type ImportIssue = { row: number; sheet: "prices" | "packaging"; ref: string; fields: { field: string; error: string }[] };
 export type ImportChange = { row: number; ref: string; kind: "update" | "create"; fields: string[] };
+// Incoherences de conditionnement : signalees, sans bloquer l'import.
+export type ImportWarning = { row: number; ref: string; warnings: PackWarning[] };
 export type ImportState = {
   formError?: string;
-  summary?: { updates: number; creates: number; unchanged: number; issues: ImportIssue[]; changes: ImportChange[]; fileName: string };
+  summary?: { updates: number; creates: number; unchanged: number; issues: ImportIssue[]; warnings: ImportWarning[]; changes: ImportChange[]; fileName: string };
   attempt?: number;
 };
 
@@ -89,30 +92,36 @@ export async function importPriceList(_prev: ImportState, formData: FormData): P
   }
 
   // Conditionnement : par ID, ou par reference fournisseur pour une ligne creee dans le meme fichier.
-  const packFor = new Map<string, Update["packaging_spec"]>();
+  // Logistique et capacite conteneur deduites exactement comme dans l'editeur (packagingFields).
+  const packFor = new Map<string, ReturnType<typeof packagingFields>>();
+  const warnings: ImportWarning[] = [];
   for (const { row, values } of sheets.packaging?.rows ?? []) {
     const ref = values.sku || values.productName || `#${row}`;
     const existing = values.id ? byId.get(values.id) : undefined;
     const target = existing?.id ?? (values.sku ? `sku:${values.sku.toLowerCase()}` : null);
     if (!target || (values.id && !existing)) { issues.push({ row, sheet: "packaging", ref, fields: [{ field: "id", error: "importErrorUnknown" }] }); continue; }
     const packed = readPackagingInput((k: PackField) => values[k] ?? "");
-    const errs = Object.entries(packed.errors).map(([field, error]) => ({ field, error: error! }));
+    const extras = readLogisticsExtras((k) => values[k] ?? "");
+    const errs = Object.entries({ ...packed.errors, ...extras.errors }).map(([field, error]) => ({ field, error: error! }));
     if (errs.length) { issues.push({ row, sheet: "packaging", ref, fields: errs }); continue; }
-    if (existing && norm(packed.spec) === norm(existing.packaging_spec)) continue;
-    packFor.set(target, packed.spec);
+    const w = packagingWarnings(packed.spec);
+    if (w.length) warnings.push({ row, ref, warnings: w });
+    if (existing && norm(packed.spec) === norm(existing.packaging_spec) && norm(extras.storage) === norm(existing.storage_condition) && norm(extras.maxStack) === norm(existing.max_stack_layers)) continue;
+    const logistics = packagingFields(packed.spec, extras.storage, extras.maxStack);
+    packFor.set(target, logistics);
     if (existing) {
-      updates.set(existing.id, { ...(updates.get(existing.id) ?? {}), packaging_spec: packed.spec });
+      updates.set(existing.id, { ...(updates.get(existing.id) ?? {}), ...logistics });
       const change = changes.find((c) => c.kind === "update" && c.ref === (existing.sku || existing.product_name));
       if (change) change.fields.push("packaging_spec");
       else { changes.push({ row, ref, kind: "update", fields: ["packaging_spec"] }); if (unchanged > 0) unchanged--; }
     }
   }
   for (const c of creates) {
-    const spec = c.sku ? packFor.get(`sku:${c.sku.toLowerCase()}`) : undefined;
-    if (spec !== undefined) c.fields.packaging_spec = spec;
+    const logistics = c.sku ? packFor.get(`sku:${c.sku.toLowerCase()}`) : undefined;
+    if (logistics) Object.assign(c.fields, logistics);
   }
 
-  const summary = { updates: updates.size, creates: creates.length, unchanged, issues, changes: changes.slice(0, 200), fileName: file.name };
+  const summary = { updates: updates.size, creates: creates.length, unchanged, issues, warnings, changes: changes.slice(0, 200), fileName: file.name };
   if (text(formData, "intent") !== "apply") return { summary, attempt: Date.now() };
   if (!updates.size && !creates.length) return { summary, formError: "importNothing", attempt: Date.now() };
 

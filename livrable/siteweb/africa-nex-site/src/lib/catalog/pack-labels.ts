@@ -1,6 +1,7 @@
 import "server-only";
 import { getTranslations } from "next-intl/server";
 import { PACK_LABELS, PACK_PROTECTIONS, PACK_TYPES, PACK_WEDGING } from "@/lib/catalog/price-list";
+import { STORAGE_CONDITIONS } from "@/lib/logistics/container";
 
 // Libelles bilingues "francais / anglais" des listes de conditionnement du fichier Excel.
 // L'import reconnait le libelle complet, chacune des deux langues ou le code.
@@ -13,5 +14,6 @@ export async function packLabelMaps() {
     packLabel: map("packLabel", PACK_LABELS),
     packWedging: map("packWedging", PACK_WEDGING),
     packProtection: map("packProtection", PACK_PROTECTIONS),
+    storage: map("storageName", STORAGE_CONDITIONS),
   };
 }
