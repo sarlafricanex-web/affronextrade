@@ -1329,7 +1329,8 @@
     "importField_pk4Weight": "Level 4 weight",
     "importField_pk4Length": "Level 4 length",
     "importField_pk4Width": "Level 4 width",
-    "importField_pk4Height": "Level 4 height"
+    "importField_pk4Height": "Level 4 height",
+    "errorPhotoRequired": "Add at least one photo to publish this product."
   },
   "claim": {
     "eyebrow": "Profile claim procedure",

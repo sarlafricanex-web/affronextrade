@@ -129,8 +129,13 @@ try {
   await go(`/fr/catalog/${p1.id}`);
   report("Editeur pre-rempli", await run(`return document.querySelector("h1")?.textContent === "Huile d'olive extra vierge" && document.getElementById("pe-price").value === "9.2" && document.getElementById("pe-cl").value === "38" && document.getElementById("pe-cwt").value === "18.5";`));
   await shot("catalog-edit");
-  await run(`${SET} setV(document.getElementById("pe-price"), "8,75"); document.querySelector("input[name=removePhoto]").click(); [...document.querySelectorAll("button[type=submit]")].at(-1).click(); return true;`);
-  report("Modification enregistree", await waitFor(`return location.search.includes("saved=1");`));
+  // Sans photo, la publication est bloquee a l'ecran puis refusee par le serveur ; le brouillon passe.
+  await run(`${SET} setV(document.getElementById("pe-price"), "8,75"); document.querySelector("input[name=removePhoto]").click(); return true;`);
+  report("Sans photo : bouton Publier desactive", await waitFor(`return [...document.querySelectorAll("button[type=submit]")].at(-1).disabled;`, 10));
+  await run(`const b = [...document.querySelectorAll("button[type=submit]")].at(-1); b.disabled = false; b.click(); return true;`);
+  report("Sans photo : publication refusee par le serveur", await waitFor(`return document.body.innerText.includes("Ajoutez au moins une photo pour publier ce produit.");`));
+  await run(`document.querySelector("input[name=removePhoto]").checked || document.querySelector("input[name=removePhoto]").click(); [...document.querySelectorAll("button[type=submit]")].find((b) => b.value === "draft").click(); return true;`);
+  report("Modification enregistree en brouillon", await waitFor(`return location.search.includes("saved=1");`));
   await sleep(1000);
   const { data: p2 } = await admin.from("products").select("unit_price_ht, images").eq("id", p1.id).single();
   report("Prix modifie et photo retiree en base", Number(p2.unit_price_ht) === 8.75 && p2.images.length === 0, JSON.stringify(p2));

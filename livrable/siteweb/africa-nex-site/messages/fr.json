@@ -1329,7 +1329,8 @@
     "importField_pk4Weight": "Niveau 4 poids",
     "importField_pk4Length": "Niveau 4 longueur",
     "importField_pk4Width": "Niveau 4 largeur",
-    "importField_pk4Height": "Niveau 4 hauteur"
+    "importField_pk4Height": "Niveau 4 hauteur",
+    "errorPhotoRequired": "Ajoutez au moins une photo pour publier ce produit."
   },
   "claim": {
     "eyebrow": "Procédure de revendication de fiche",

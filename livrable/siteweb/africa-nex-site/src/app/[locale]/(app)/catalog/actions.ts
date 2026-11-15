@@ -121,6 +121,8 @@ export async function saveProduct(_prev: CatalogState, formData: FormData): Prom
   const photo = await readImage(formData.get("photo"), PHOTO_MAX_BYTES);
   if (photo && "error" in photo) errors.photo = photo.error === "size" ? "errorPhotoSize" : "errorPhotoType";
   else if (photo && images.length >= MAX_PHOTOS) errors.photo = "errorPhotoCount";
+  // Publication : au moins une photo (conservee ou nouvelle).
+  if (v.status === "published" && !errors.photo && images.length === 0 && !(photo && !("error" in photo))) errors.photo = "errorPhotoRequired";
   const values = Object.fromEntries(TEXT_FIELDS.map((k) => [k, text(formData, k)]));
   const fail = (s: Omit<CatalogState, "values" | "attempt">): CatalogState => ({ ...s, values, attempt: Date.now() });
   if (Object.keys(errors).length) return fail({ errors });

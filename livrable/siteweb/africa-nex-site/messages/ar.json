@@ -1329,7 +1329,8 @@
     "importField_pk4Weight": "المستوى 4 الوزن",
     "importField_pk4Length": "المستوى 4 الطول",
     "importField_pk4Width": "المستوى 4 العرض",
-    "importField_pk4Height": "المستوى 4 الارتفاع"
+    "importField_pk4Height": "المستوى 4 الارتفاع",
+    "errorPhotoRequired": "أضف صورة واحدة على الأقل لنشر هذا المنتج."
   },
   "claim": {
     "eyebrow": "إجراء المطالبة بملف",

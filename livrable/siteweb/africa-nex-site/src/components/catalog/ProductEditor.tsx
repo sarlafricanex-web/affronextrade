@@ -112,7 +112,8 @@ function Label({ htmlFor, children }: { htmlFor?: string; children: ReactNode })
 }
 
 type Checks = { name: boolean; descFr: boolean; hs: boolean; price: boolean; currency: boolean; unit: boolean; moq: boolean; packaging: boolean; capacity: boolean; photo: boolean };
-const REQUIRED: (keyof Checks)[] = ["name", "hs", "price", "currency", "unit", "moq"];
+// La photo est obligatoire pour publier (decision d'Adlene) : un acheteur ne voit jamais de fiche sans image.
+const REQUIRED: (keyof Checks)[] = ["name", "hs", "price", "currency", "unit", "moq", "photo"];
 
 function readChecks(form: HTMLFormElement | null, product: EditorProduct, hasNewPhoto: boolean): Checks {
   const get = (k: string) => (form ? String(new FormData(form).get(k) ?? "") : (product as unknown as Record<string, string>)[k] ?? "").trim();
