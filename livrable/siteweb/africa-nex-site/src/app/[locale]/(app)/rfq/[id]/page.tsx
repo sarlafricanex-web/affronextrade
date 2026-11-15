@@ -2,7 +2,8 @@ import { notFound, redirect } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { getMyRfq, rfqAttachments, stageOf } from "@/lib/data/rfq";
+import { getMyRfq, rfqAttachments, stageOf, type RfqLine } from "@/lib/data/rfq";
+import { RfqLinesTable } from "@/components/rfq/RfqLinesTable";
 import { destinationLabel, volumeLabel } from "@/lib/rfq-display";
 import { StatusBadge } from "@/components/rfq/RfqList";
 import { cancelRfq } from "../actions";
@@ -86,6 +87,9 @@ export default async function RfqDetailPage({
           })}
         </ol>
       )}
+
+      {/* Produits demandes (une ligne par produit) */}
+      <RfqLinesTable lines={(rfq.rfq_lines ?? []) as RfqLine[]} locale={locale} currency={rfq.currency} />
 
       {/* Cahier des charges */}
       <section style={{ background: "white", border: `1px solid ${HAIR}` }}>

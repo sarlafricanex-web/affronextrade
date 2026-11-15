@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
+import { RFQ_LINE_COLUMNS } from "@/lib/data/rfq";
 
 type Client = SupabaseClient<Database>;
 
@@ -23,8 +24,9 @@ export async function getAdminRfq(client: Client, id: string) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const { data: rfq, error } = await client
     .from("rfqs")
-    .select(`${RFQ_COLUMNS}, buyer_company_id, buyer:companies!rfqs_buyer_company_id_fkey(id, company_name, country, city, buyer_type, website), source:companies!rfqs_source_company_id_fkey(id, company_name, slug), product:products(id, product_name, hs_code)`)
+    .select(`${RFQ_COLUMNS}, buyer_company_id, buyer:companies!rfqs_buyer_company_id_fkey(id, company_name, country, city, buyer_type, website), source:companies!rfqs_source_company_id_fkey(id, company_name, slug), product:products(id, product_name, hs_code), rfq_lines(${RFQ_LINE_COLUMNS})`)
     .eq("id", id)
+    .order("position", { referencedTable: "rfq_lines" })
     .maybeSingle();
   if (error) throw error;
   if (!rfq) return null;

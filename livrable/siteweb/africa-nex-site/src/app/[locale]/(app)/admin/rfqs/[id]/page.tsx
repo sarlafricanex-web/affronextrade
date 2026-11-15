@@ -3,7 +3,8 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getAdminRfq, listDispatchableProducers } from "@/lib/data/admin-rfqs";
-import { rfqAttachments } from "@/lib/data/rfq";
+import { rfqAttachments, type RfqLine } from "@/lib/data/rfq";
+import { RfqLinesTable } from "@/components/rfq/RfqLinesTable";
 import { destinationLabel, volumeLabel } from "@/lib/rfq-display";
 import { countryName } from "@/lib/countries";
 import { WILAYAS } from "@/lib/onboarding/reference";
@@ -53,7 +54,11 @@ export default async function AdminRfqPage({
   const dispatchable = ["submitted", "qualified", "dispatched"].includes(rfq.status);
   const volume = volumeLabel(rfq, tr, tc, locale);
   // Brief prerempli SANS l'identite de l'acheteur : AFRICA NEX le relit avant l'envoi.
+  const lines = (rfq.rfq_lines ?? []) as RfqLine[];
+  const lineText = (l: RfqLine) =>
+    `${l.position}. ${l.description}${l.reference ? ` (${l.reference})` : ""}${l.quantity != null ? ` : ${Number(l.quantity).toLocaleString(locale)} ${l.unit ? tc(`unitShort_${l.unit}`) : ""}`.trimEnd() : ""}`;
   const specs = [
+    lines.length > 1 ? lines.map(lineText).join("\n") : null,
     rfq.quantity_mode === "containers" ? `${tr("specQuantity")} : ${volume}` : null,
     rfq.destination_port ? `${tr("port")} : ${rfq.destination_port}` : null,
     rfq.description,
@@ -252,6 +257,8 @@ export default async function AdminRfqPage({
               </div>
             )}
           </section>
+
+          <RfqLinesTable lines={lines} locale={locale} currency={rfq.currency} />
 
           {rfq.dispatches.length > 0 && (
             <section style={{ background: "white", border: `1px solid ${HAIR}` }}>

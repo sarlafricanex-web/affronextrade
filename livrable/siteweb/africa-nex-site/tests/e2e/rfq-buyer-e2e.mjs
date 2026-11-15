@@ -101,7 +101,12 @@ try {
   report("Produit pre-selectionne et designation pre-remplie", await run(`return document.getElementById("rfq-title").value === ${JSON.stringify(product.product_name)};`), product.product_name);
   await run(`${SET} setV(document.getElementById("rfq-qty"), "0"); setV(document.getElementById("rfq-unit"), "t"); ${submit} return true;`);
   report("Quantite nulle, pays et incoterm manquants : refuses par le serveur", await waitFor(`return document.body.innerText.includes("Indiquez une quantité supérieure à zéro.") && document.body.innerText.includes("Faites un choix.");`));
-  await run(`${SET} setV(document.getElementById("rfq-qty"), "20 000"); setV(document.getElementById("rfq-unit"), "t"); document.querySelector("input[name=incoterm][value=CIF]").click(); setV(document.getElementById("rfq-port"), "Abidjan"); setV(document.getElementById("rfq-price"), "650"); setV(document.getElementById("rfq-desc"), "Sacs de 50 kg, certificat d'origine."); return true;`);
+  report("Devise obligatoire, sans valeur par defaut", await run(`const s = document.getElementById("rfq-currency"); return s.required && s.value === "";`));
+  await run(`${SET} setV(document.getElementById("rfq-qty"), "20 000"); setV(document.getElementById("rfq-unit"), "t"); setV(document.getElementById("rfq-currency"), "USD"); document.querySelector("input[name=incoterm][value=CIF]").click(); setV(document.getElementById("rfq-port"), "Abidjan"); setV(document.getElementById("rfq-price"), "650"); setV(document.getElementById("rfq-desc"), "Sacs de 50 kg, certificat d'origine."); return true;`);
+  // Deuxieme produit dans la meme demande.
+  await run(`[...document.querySelectorAll("main button")].find((b) => /ajouter un produit/i.test(b.textContent)).click(); return true;`);
+  await waitFor(`return !!document.getElementById("rfq-title-2");`, 10);
+  await run(`${SET} setV(document.getElementById("rfq-title-2"), "Sucre roux en vrac"); setV(document.getElementById("rfq-ref-2"), "SR-50"); setV(document.getElementById("rfq-qty-2"), "500"); setV(document.getElementById("rfq-unit-2"), "t"); return true;`);
   await pickCountry("Ivoire");
   report("Pays choisi : Cote d'Ivoire", await run(`return document.querySelector("input[name=country]").value === "CI";`));
   await attach(PDF);
@@ -110,9 +115,13 @@ try {
   report("Envoi : detail de la demande avec message", await waitFor(`return /\\/fr\\/rfq\\/[0-9a-f-]{36}$/.test(location.pathname) && document.body.innerText.includes("Demande envoyée.");`));
   const rfq1Id = await run(`return location.pathname.split("/").pop();`);
   const { data: rfq1 } = await admin.from("rfqs").select("*").eq("id", rfq1Id).single();
-  report("En base : acheteur, entreprise, produit, producteur d'origine, CIF, CI", rfq1?.buyer_profile_id === buyer.id && rfq1.buyer_company_id && rfq1.product_id === product.id && rfq1.source_company_id === product.companies.id && rfq1.incoterm === "CIF" && rfq1.destination_country === "CI" && Number(rfq1.quantity) === 20000 && rfq1.unit === "t" && rfq1.status === "submitted", JSON.stringify({ q: rfq1?.quantity, c: rfq1?.destination_country, s: rfq1?.status }));
+  report("En base : acheteur, entreprise, produit, producteur d'origine, CIF, CI, USD", rfq1?.buyer_profile_id === buyer.id && rfq1.buyer_company_id && rfq1.product_id === product.id && rfq1.source_company_id === product.companies.id && rfq1.incoterm === "CIF" && rfq1.destination_country === "CI" && rfq1.currency === "USD" && rfq1.status === "submitted" && rfq1.title.endsWith("(+1)"), JSON.stringify({ c: rfq1?.destination_country, cur: rfq1?.currency, s: rfq1?.status, t: rfq1?.title }));
+  const { data: lines1 } = await admin.from("rfq_lines").select("position, description, reference, quantity, unit, product_id").eq("rfq_id", rfq1Id).order("position");
+  report("2 lignes : produit de la fiche (20 000 t) puis sucre roux SR-50 (500 t)", lines1?.length === 2 && lines1[0].product_id === product.id && Number(lines1[0].quantity) === 20000 && lines1[0].unit === "t" && lines1[1].description === "Sucre roux en vrac" && lines1[1].reference === "SR-50" && Number(lines1[1].quantity) === 500 && !lines1[1].product_id, JSON.stringify(lines1));
+  const { data: otherLines } = await otherBuyer.client.from("rfq_lines").select("id").eq("rfq_id", rfq1Id);
+  report("Autre acheteur : lignes invisibles", otherLines?.length === 0);
   report("Piece jointe rangee sous buyer/<demande>/", Array.isArray(rfq1?.attachments) && rfq1.attachments[0]?.path?.startsWith(`buyer/${rfq1Id}/`));
-  report("Detail : cahier des charges et jalons", await run(`const t = document.body.innerText.replace(/\\s/g, " "); return t.includes("20 000 t") && t.includes("Abidjan") && t.includes("CIF") && t.includes("Demande envoyée") && t.includes("Qualification AFRICA NEX");`));
+  report("Detail : produits demandes, cahier des charges et jalons", await run(`const t = document.body.innerText.replace(/\\s/g, " "); return t.includes("20 000 t") && t.includes("Sucre roux en vrac") && t.includes("SR-50") && /devise souhaitée : USD/i.test(t) && t.includes("Abidjan") && t.includes("CIF") && t.includes("Demande envoyée") && t.includes("Qualification AFRICA NEX");`));
   const fileStatus = await run(`const r = await fetch("/api/rfq-files/${rfq1Id}?i=0", { redirect: "manual" }); return r.status || r.type;`);
   report("Piece jointe : lien signe pour l'acheteur", fileStatus === 303 || fileStatus === "opaqueredirect", String(fileStatus));
   await shot("rfq-detail");
@@ -121,7 +130,7 @@ try {
   await go(`/fr/rfq/new?producer=ifri`, `return !!document.getElementById("rfq-title");`);
   await run(`${SET} setV(document.getElementById("rfq-title"), "Eau minérale 1,5 L, packs de 6"); [...document.querySelectorAll("button[role=radio]")].find((b) => b.textContent.includes("conteneurs")).click(); return true;`);
   await sleep(300);
-  await run(`${SET} setV(document.getElementById("rfq-count"), "2"); document.querySelector("input[name=containerSize][value='40']").click(); document.querySelector("input[name=incoterm][value=FOB]").click(); return true;`);
+  await run(`${SET} setV(document.getElementById("rfq-count"), "2"); setV(document.getElementById("rfq-currency"), "EUR"); document.querySelector("input[name=containerSize][value='40']").click(); document.querySelector("input[name=incoterm][value=FOB]").click(); return true;`);
   await pickCountry("Sénégal");
   await run(`${submit} return true;`);
   report("Demande en conteneurs envoyee", await waitFor(`return /\\/fr\\/rfq\\/[0-9a-f-]{36}$/.test(location.pathname) && document.body.innerText.includes("2 × 40 pieds");`));

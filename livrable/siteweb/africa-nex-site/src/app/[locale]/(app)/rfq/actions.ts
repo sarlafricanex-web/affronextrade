@@ -14,11 +14,19 @@ export type RfqField =
   | "title" | "quantity" | "unit" | "containerCount" | "containerSize" | "country" | "port"
   | "incoterm" | "targetPrice" | "currency" | "neededBy" | "description" | "file";
 export type RfqValues = Record<string, string>;
-// Cles de traduction (espace "rfq") ; values : saisie renvoyee en cas d'erreur.
-export type RfqState = { errors: Partial<Record<RfqField, string>>; formError?: string; values?: RfqValues; attempt?: number };
+// Cles de traduction (espace "rfq") ; values : saisie renvoyee en cas d'erreur (lignes en JSON).
+// lineErrors : erreurs par ligne (index -> champ -> cle).
+export type RfqState = {
+  errors: Partial<Record<RfqField, string>>;
+  lineErrors?: Record<number, Record<string, string>>;
+  formError?: string;
+  values?: RfqValues;
+  attempt?: number;
+};
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
-const FIELDS = ["title", "mode", "quantity", "unit", "containerCount", "containerSize", "reefer", "country", "port", "incoterm", "targetPrice", "currency", "neededBy", "description", "productId", "producer"];
+const FIELDS = ["mode", "containerCount", "containerSize", "reefer", "country", "port", "incoterm", "targetPrice", "currency", "neededBy", "description", "productId", "producer"];
+const MAX_LINES = 50;
 
 // Nouvelle demande de devis. Tout est revalide ici ; la RLS verifie en plus le role et l'entreprise.
 export async function createRfq(_prev: RfqState, formData: FormData): Promise<RfqState> {
@@ -28,22 +36,37 @@ export async function createRfq(_prev: RfqState, formData: FormData): Promise<Rf
   if (user.role !== "buyer") redirect(`/${locale}/dashboard`);
 
   const v: RfqValues = Object.fromEntries(FIELDS.map((k) => [k, text(formData, k)]));
+  const containers = v.mode === "containers";
+
+  // Lignes : designation obligatoire ; quantite et unite obligatoires sauf en mode conteneurs.
+  const all = (k: string) => formData.getAll(k).map((x) => String(x).trim());
+  const [descs, refs, qtys, units] = [all("lineDesc"), all("lineRef"), all("lineQty"), all("lineUnit")];
+  const raw = descs.map((desc, i) => ({ desc, ref: refs[i] ?? "", qty: qtys[i] ?? "", unit: units[i] ?? "" })).filter((l) => l.desc || l.ref || l.qty);
+  v.lines = JSON.stringify(raw);
   const fail = (s: Omit<RfqState, "values" | "attempt">): RfqState => ({ ...s, values: v, attempt: Date.now() });
   const errors: RfqState["errors"] = {};
+  const lineErrors: NonNullable<RfqState["lineErrors"]> = {};
+  if (!raw.length || raw.length > MAX_LINES) errors.title = raw.length ? "errorTooManyLines" : "errorTitle";
+  const lines = raw.map((l, i) => {
+    const e: Record<string, string> = {};
+    if (l.desc.length < 2 || l.desc.length > 300) e.description = "errorTitle";
+    if (l.ref.length > 60) e.reference = "errorTooLong";
+    const q = l.qty ? parseAmount(l.qty) : null;
+    if (l.qty && (q === null || q <= 0)) e.quantity = "errorQuantity";
+    if (!containers && !l.qty) e.quantity = "errorQuantity";
+    if ((!containers || l.qty) && !(UNITS as readonly string[]).includes(l.unit)) e.unit = "errorChoose";
+    if (Object.keys(e).length) lineErrors[i] = e;
+    return { description: l.desc, reference: l.ref || null, quantity: q, unit: l.unit || null };
+  });
 
-  if (v.title.length < 2 || v.title.length > 200) errors.title = "errorTitle";
-  const containers = v.mode === "containers";
-  let quantity: number | null = null;
   let containerCount: number | null = null;
   if (containers) {
     containerCount = /^\d{1,3}$/.test(v.containerCount) ? Number(v.containerCount) : NaN;
     if (!Number.isInteger(containerCount) || containerCount < 1 || containerCount > 100) errors.containerCount = "errorContainerCount";
     if (v.containerSize !== "20" && v.containerSize !== "40") errors.containerSize = "errorChoose";
-  } else {
-    quantity = parseAmount(v.quantity);
-    if (quantity === null || quantity <= 0) errors.quantity = "errorQuantity";
-    if (!(UNITS as readonly string[]).includes(v.unit)) errors.unit = "errorChoose";
   }
+  // Devise de l'offre : choisie par l'acheteur, obligatoire (aucune devise par defaut).
+  if (!(CURRENCIES as readonly string[]).includes(v.currency)) errors.currency = "errorChoose";
   const country = v.country.toUpperCase();
   if (!isCountryCode(country)) errors.country = "errorChoose";
   if (v.port.length > 120) errors.port = "errorTooLong";
@@ -52,7 +75,6 @@ export async function createRfq(_prev: RfqState, formData: FormData): Promise<Rf
   if (v.targetPrice) {
     targetPrice = parseAmount(v.targetPrice);
     if (targetPrice === null || targetPrice <= 0) errors.targetPrice = "errorPrice";
-    if (!(CURRENCIES as readonly string[]).includes(v.currency)) errors.currency = "errorChoose";
   }
   if (v.neededBy) {
     const today = new Date().toISOString().slice(0, 10);
@@ -61,7 +83,7 @@ export async function createRfq(_prev: RfqState, formData: FormData): Promise<Rf
   if (v.description.length > 5000) errors.description = "errorTooLong";
   const file = await readDocument(formData.get("file"), RFQ_MAX_FILE_BYTES);
   if (file && "error" in file) errors.file = file.error === "size" ? "errorFileSize" : "errorFileType";
-  if (Object.keys(errors).length) return fail({ errors });
+  if (Object.keys(errors).length || Object.keys(lineErrors).length) return fail({ errors, lineErrors });
 
   const { supabase, userId } = user;
   // Profil acheteur complet exige (entreprise, pays, contacts) : AFRICA NEX doit pouvoir qualifier.
@@ -79,11 +101,12 @@ export async function createRfq(_prev: RfqState, formData: FormData): Promise<Rf
       buyer_company_id: companyId,
       product_id: context?.productId ?? null,
       source_company_id: context?.companyId ?? null,
-      title: v.title,
+      // Titre : la 1re ligne, suivie du nombre d'autres produits ; quantite d'en-tete pour une seule ligne.
+      title: (lines.length > 1 ? `${lines[0].description} (+${lines.length - 1})` : lines[0].description).slice(0, 200),
       description: v.description || null,
       quantity_mode: containers ? "containers" : "units",
-      quantity,
-      unit: containers ? (context?.unit ?? null) : v.unit,
+      quantity: lines.length === 1 && !containers ? lines[0].quantity : null,
+      unit: containers ? (context?.unit ?? null) : lines.length === 1 ? lines[0].unit : null,
       container_size: containers ? v.containerSize : null,
       container_reefer: containers && v.reefer === "on",
       container_count: containerCount,
@@ -91,13 +114,23 @@ export async function createRfq(_prev: RfqState, formData: FormData): Promise<Rf
       destination_country: country,
       destination_port: v.port || null,
       target_unit_price: targetPrice,
-      currency: targetPrice !== null ? v.currency : null,
+      currency: v.currency,
       needed_by: v.neededBy || null,
     })
     .select("id")
     .single();
   if (error || !created) {
     console.error("RFQ insert failed:", error?.code, error?.message);
+    return fail({ errors: {}, formError: "errorGeneric" });
+  }
+
+  // Lignes de la demande (la 1re garde le produit choisi depuis une fiche).
+  const { error: linesError } = await supabase.from("rfq_lines").insert(
+    lines.map((l, i) => ({ rfq_id: created.id, position: i + 1, product_id: i === 0 ? (context?.productId ?? null) : null, ...l })),
+  );
+  if (linesError) {
+    console.error("RFQ lines insert failed:", linesError.code, linesError.message);
+    await supabase.from("rfqs").update({ status: "cancelled" }).eq("id", created.id);
     return fail({ errors: {}, formError: "errorGeneric" });
   }
 

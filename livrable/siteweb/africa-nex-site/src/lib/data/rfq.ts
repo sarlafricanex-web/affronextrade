@@ -34,13 +34,18 @@ export async function getMyRfq(client: Client, userId: string, id: string) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const { data, error } = await client
     .from("rfqs")
-    .select(`${RFQ_COLUMNS}, offers(id, status)`)
+    .select(`${RFQ_COLUMNS}, offers(id, status), rfq_lines(${RFQ_LINE_COLUMNS})`)
     .eq("buyer_profile_id", userId)
     .eq("id", id)
+    .order("position", { referencedTable: "rfq_lines" })
     .maybeSingle();
   if (error) throw error;
   return data;
 }
+
+// Lignes d'une demande (produits demandes), dans l'ordre de saisie.
+export const RFQ_LINE_COLUMNS = "id, position, product_id, reference, description, quantity, unit";
+export type RfqLine = { id: string; position: number; product_id: string | null; reference: string | null; description: string; quantity: number | null; unit: string | null };
 
 export type MyRfq = NonNullable<Awaited<ReturnType<typeof getMyRfq>>>;
 export type RfqAttachment = { path: string; name: string; size: number; type: string };

@@ -26,6 +26,20 @@ export type RfqFormContext = {
   logistics: LogisticsInput | null;
 };
 
+const MAX_LINES = 50;
+type Line = { key: number; desc: string; ref: string; qty: string; unit: string };
+let lineKey = 0;
+const newLine = (): Line => ({ key: ++lineKey, desc: "", ref: "", qty: "", unit: "" });
+function parseLines(raw: string | undefined): Line[] {
+  if (!raw) return [];
+  try {
+    const arr = JSON.parse(raw) as { desc: string; ref: string; qty: string; unit: string }[];
+    return arr.map((l) => ({ ...newLine(), ...l }));
+  } catch {
+    return [];
+  }
+}
+
 function Section({ n, title, tag, children }: { n: number; title: string; tag?: string; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-4 p-5" style={{ background: "white", border: `1px solid ${HAIR}` }}>
@@ -50,6 +64,13 @@ export function RfqForm({ context }: { context: RfqFormContext | null }) {
   const [file, setFile] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [preparing, setPreparing] = useState(false);
+  // Lignes de la demande : saisie renvoyee apres une erreur, sinon le produit choisi en 1re ligne.
+  const [lines, setLines] = useState<Line[]>(() => {
+    const back = parseLines(v.lines);
+    if (back.length) return back;
+    return [{ ...newLine(), desc: context?.productName ?? "", unit: context?.unit ?? "" }];
+  });
+  const update = (i: number, patch: Partial<Line>) => setLines((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l)));
   const err = (f: RfqField) => (state.errors[f] ? <span className="text-xs font-semibold" style={{ color: "#dc2626" }}>{t(state.errors[f]!)}</span> : null);
 
   // Estimation depuis la fiche carton du produit (si le producteur l'a remplie).
@@ -76,11 +97,60 @@ export function RfqForm({ context }: { context: RfqFormContext | null }) {
         </section>
       )}
 
-      <Section n={1} title={t("sectionProduct")}>
-        <Field label={t("title")} hint={t("titleHint")} htmlFor="rfq-title">
-          <TextInput id="rfq-title" name="title" required maxLength={200} defaultValue={v.title ?? context?.productName ?? ""} placeholder={t("titlePlaceholder")} />
-          {err("title")}
-        </Field>
+      {/* Produits demandes : une ligne par produit (50 au plus). La 1re ligne garde les champs
+          historiques (rfq-title, rfq-qty, rfq-unit) : liens "Demander un devis" et tests inchanges. */}
+      <Section n={1} title={t("sectionLines")} tag={t("linesCount", { count: lines.length })}>
+        <p className="text-xs" style={{ color: "var(--muted)" }}>{t("linesHelp")}</p>
+        <ol className="flex flex-col gap-3">
+          {lines.map((line, i) => {
+            const le = state.lineErrors?.[i] ?? {};
+            const lerr = (f: string) => (le[f] ? <span className="text-xs font-semibold" style={{ color: "#dc2626" }}>{t(le[f])}</span> : null);
+            const id = (base: string) => (i === 0 ? base : `${base}-${i + 1}`);
+            return (
+              <li key={line.key} className="flex flex-col gap-3 p-3" style={{ border: `1px solid ${HAIR}` }} data-line={i + 1}>
+                <div className="flex items-start gap-3">
+                <span className="mt-6 flex h-8 w-8 shrink-0 items-center justify-center text-xs font-bold" style={{ background: "var(--ink)", color: "white" }}>{i + 1}</span>
+                <label className="flex min-w-0 flex-1 flex-col gap-1" htmlFor={id("rfq-title")}>
+                  <span className="text-[11px] font-semibold uppercase" style={{ ...caps, color: "var(--muted)" }}>{t("lineDescription")}</span>
+                  <TextInput id={id("rfq-title")} name="lineDesc" required maxLength={300} value={line.desc} onChange={(e) => update(i, { desc: e.target.value })} placeholder={i === 0 ? t("titlePlaceholder") : ""} />
+                  {lerr("description")}
+                </label>
+                {lines.length > 1 && (
+                  <button type="button" onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))} className="mt-6 shrink-0 px-3 py-3 text-[11px] font-bold uppercase" style={{ ...caps, border: "1px solid #dc2626", color: "#dc2626", background: "white" }} aria-label={t("lineRemove", { n: i + 1 })}>
+                    {t("lineRemoveShort")}
+                  </button>
+                )}
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3 sm:ps-11">
+                <label className="flex flex-col gap-1" htmlFor={id("rfq-ref")}>
+                  <span className="text-[11px] font-semibold uppercase" style={{ ...caps, color: "var(--muted)" }}>{t("lineReference")}</span>
+                  <TextInput id={id("rfq-ref")} name="lineRef" maxLength={60} dir="ltr" value={line.ref} onChange={(e) => update(i, { ref: e.target.value })} placeholder={t("lineReferencePlaceholder")} />
+                  {lerr("reference")}
+                </label>
+                <label className="flex flex-col gap-1" htmlFor={id("rfq-qty")}>
+                  <span className="text-[11px] font-semibold uppercase" style={{ ...caps, color: "var(--muted)" }}>{t("quantity")}{mode === "containers" ? ` (${o("optional")})` : ""}</span>
+                  <TextInput id={id("rfq-qty")} name="lineQty" required={mode === "units"} inputMode="decimal" dir="ltr" value={line.qty} onChange={(e) => update(i, { qty: e.target.value })} placeholder="2000" />
+                  {lerr("quantity")}
+                </label>
+                <label className="flex flex-col gap-1" htmlFor={id("rfq-unit")}>
+                  <span className="text-[11px] font-semibold uppercase" style={{ ...caps, color: "var(--muted)" }}>{t("unit")}</span>
+                  <select id={id("rfq-unit")} name="lineUnit" required={mode === "units"} value={line.unit} onChange={(e) => update(i, { unit: e.target.value })} className="w-full px-3 py-3 text-sm" style={box}>
+                    <option value="">{o("choose")}</option>
+                    {UNITS.map((u) => <option key={u} value={u}>{o(`unit_${u}`)}</option>)}
+                  </select>
+                  {lerr("unit")}
+                </label>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+        {lines.length < MAX_LINES && (
+          <button type="button" onClick={() => setLines((ls) => [...ls, newLine()])} className="w-fit px-4 py-2.5 text-xs font-bold uppercase" style={{ ...caps, border: "1px dashed var(--ink)", background: "white" }}>
+            + {t("lineAdd")}
+          </button>
+        )}
+        {err("title")}
       </Section>
 
       <Section n={2} title={t("sectionQuantity")}>
@@ -92,19 +162,7 @@ export function RfqForm({ context }: { context: RfqFormContext | null }) {
           ))}
         </div>
         {mode === "units" ? (
-          <div className="grid gap-4 sm:grid-cols-[1fr_200px]">
-            <Field label={t("quantity")} htmlFor="rfq-qty">
-              <TextInput id="rfq-qty" name="quantity" required inputMode="decimal" dir="ltr" defaultValue={v.quantity ?? ""} placeholder="2000" />
-              {err("quantity")}
-            </Field>
-            <Field label={t("unit")} htmlFor="rfq-unit">
-              <select id="rfq-unit" name="unit" required defaultValue={v.unit ?? context?.unit ?? ""} className="w-full px-4 py-3 text-sm" style={box}>
-                <option value="" disabled>{o("choose")}</option>
-                {UNITS.map((u) => <option key={u} value={u}>{o(`unit_${u}`)}</option>)}
-              </select>
-              {err("unit")}
-            </Field>
-          </div>
+          <p className="text-xs" style={{ color: "var(--muted)" }}>{t("unitsPerLine")}</p>
         ) : (
           <>
             <div className="grid gap-4 sm:grid-cols-[140px_1fr]">
@@ -172,17 +230,19 @@ export function RfqForm({ context }: { context: RfqFormContext | null }) {
         <p className="text-xs" style={{ color: "var(--muted)" }}>{t("incotermHelp")}</p>
       </Section>
 
-      <Section n={5} title={t("sectionPrice")} tag={o("optional")}>
-        <div className="grid gap-4 sm:grid-cols-[1fr_160px]">
-          <Field label={t("targetPrice")} htmlFor="rfq-price">
-            <TextInput id="rfq-price" name="targetPrice" inputMode="decimal" dir="ltr" defaultValue={v.targetPrice ?? ""} placeholder="8,50" />
-            {err("targetPrice")}
-          </Field>
-          <Field label={t("currency")} htmlFor="rfq-currency">
-            <select id="rfq-currency" name="currency" defaultValue={v.currency ?? "USD"} className="w-full px-4 py-3 text-sm" style={box}>
+      {/* Devise de l'offre : choix obligatoire de l'acheteur, aucune devise par defaut. */}
+      <Section n={5} title={t("sectionCurrency")}>
+        <div className="grid gap-4 sm:grid-cols-[200px_1fr]">
+          <Field label={t("currency")} hint={t("currencyHint")} htmlFor="rfq-currency">
+            <select id="rfq-currency" name="currency" required defaultValue={v.currency ?? ""} className="w-full px-4 py-3 text-sm" style={box}>
+              <option value="" disabled>{o("choose")}</option>
               {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
             {err("currency")}
+          </Field>
+          <Field label={t("targetPrice")} hint={o("optional")} htmlFor="rfq-price">
+            <TextInput id="rfq-price" name="targetPrice" inputMode="decimal" dir="ltr" defaultValue={v.targetPrice ?? ""} placeholder="8,50" />
+            {err("targetPrice")}
           </Field>
         </div>
         <p className="text-xs" style={{ color: "var(--muted)" }}>{t("targetPriceHelp")}</p>

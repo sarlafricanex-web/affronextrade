@@ -495,6 +495,35 @@ export type Database = {
           },
         ]
       }
+      fx_rates: {
+        Row: {
+          currency: string
+          dzd_per_unit: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          currency: string
+          dzd_per_unit: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          currency?: string
+          dzd_per_unit?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fx_rates_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           attachments: Json
@@ -1252,6 +1281,64 @@ export type Database = {
           },
         ]
       }
+      rfq_lines: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          position: number
+          product_id: string | null
+          quantity: number | null
+          reference: string | null
+          rfq_id: string
+          unit: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          position: number
+          product_id?: string | null
+          quantity?: number | null
+          reference?: string | null
+          rfq_id: string
+          unit?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          position?: number
+          product_id?: string | null
+          quantity?: number | null
+          reference?: string | null
+          rfq_id?: string
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_lines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "cdct_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_lines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_lines_rfq_id_fkey"
+            columns: ["rfq_id"]
+            isOneToOne: false
+            referencedRelation: "rfqs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rfqs: {
         Row: {
           attachments: Json
@@ -1435,6 +1522,56 @@ export type Database = {
           whatsapp?: string | null
         }
         Relationships: []
+      }
+      supplier_settings: {
+        Row: {
+          company_id: string
+          export_mode: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          company_id: string
+          export_mode: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          company_id?: string
+          export_mode?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "cdct_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "producer_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
