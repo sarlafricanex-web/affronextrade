@@ -1350,7 +1350,11 @@
     "importField_storage": "الحفظ",
     "importField_maxStack": "التكديس",
     "importField_container_capacity_20ft": "سعة 20 قدم",
-    "importField_container_capacity_40ft": "سعة 40 قدم"
+    "importField_container_capacity_40ft": "سعة 40 قدم",
+    "importField_container_floor_20ft": "على الأرضية 20 قدم",
+    "importField_container_floor_40ft": "على الأرضية 40 قدم",
+    "importField_storage_condition": "الحفظ",
+    "importField_max_stack_layers": "التكديس"
   },
   "claim": {
     "eyebrow": "إجراء المطالبة بملف",

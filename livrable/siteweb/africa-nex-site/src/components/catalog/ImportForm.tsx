@@ -26,6 +26,15 @@ export function ImportForm() {
   const s = state.summary;
   const label = (field: string) => (t.has(`importField_${field}`) ? t(`importField_${field}`) : field);
   const o = useTranslations("onboarding");
+  // Valeur affichee dans le detail : codes traduits (emballage, conservation...), nombres et dates au format local.
+  const value = (field: string, v: string) => {
+    if (!v) return "–";
+    const coded: [RegExp, string][] = [[/^pk\dType$/, "packType_"], [/^pkLabel$/, "packLabel_"], [/^pkWedging$/, "packWedging_"], [/^pkProtection$/, "packProtection_"], [/^(storage|storage_condition)$/, "storageName_"]];
+    for (const [re, prefix] of coded) if (re.test(field) && t.has(`${prefix}${v}`)) return t(`${prefix}${v}`);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return new Date(`${v}T12:00:00`).toLocaleDateString(locale, { dateStyle: "medium" });
+    if (/^-?\d+(\.\d+)?$/.test(v)) return Number(v).toLocaleString(locale);
+    return v;
+  };
   const message = (key: string) => (t.has(key) ? t(key) : o.has(key) ? o(key) : key);
 
   return (
@@ -100,10 +109,23 @@ export function ImportForm() {
               <h2 className="px-4 py-3 text-xs font-bold uppercase" style={{ ...caps, background: "#f5efe6" }}>{t("importChangesTitle")}</h2>
               <ul className="text-sm">
                 {s.changes.map((c, n) => (
-                  <li key={n} className="flex flex-wrap gap-2 px-4 py-2" style={{ borderTop: `1px solid ${HAIR}` }}>
-                    <span className="px-2 text-[10px] font-bold uppercase" style={{ ...caps, background: c.kind === "create" ? "#ecfdf5" : "#f5efe6", border: `1px solid ${HAIR}` }}>{t(c.kind === "create" ? "importKindCreate" : "importKindUpdate")}</span>
-                    <strong dir="ltr">{c.ref}</strong>
-                    <span style={{ color: "var(--muted)" }}>{c.fields.map((f) => label(f)).join(", ")}</span>
+                  <li key={n} className="flex flex-col gap-1 px-4 py-3" style={{ borderTop: `1px solid ${HAIR}` }} data-change={c.ref}>
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="px-2 text-[10px] font-bold uppercase" style={{ ...caps, background: c.kind === "create" ? "#ecfdf5" : "#f5efe6", border: `1px solid ${HAIR}` }}>{t(c.kind === "create" ? "importKindCreate" : "importKindUpdate")}</span>
+                      <strong>{c.ref}</strong>
+                    </span>
+                    {c.details.length > 0 && (
+                      <ul className="grid gap-x-6 gap-y-0.5 text-xs sm:grid-cols-2" style={{ paddingInlineStart: "0.5rem" }}>
+                        {c.details.map((d, i) => (
+                          <li key={i} data-detail={d.field}>
+                            <span style={{ color: "var(--muted)" }}>{label(d.field)} : </span>
+                            <span style={{ textDecoration: d.from ? "line-through" : undefined, color: "var(--muted)" }}>{value(d.field, d.from)}</span>
+                            <span aria-hidden="true"> → </span>
+                            <strong>{value(d.field, d.to)}</strong>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </li>
                 ))}
               </ul>

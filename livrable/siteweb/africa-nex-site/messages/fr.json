@@ -1350,7 +1350,11 @@
     "importField_storage": "Conservation",
     "importField_maxStack": "Gerbage",
     "importField_container_capacity_20ft": "Capacité 20 pieds",
-    "importField_container_capacity_40ft": "Capacité 40 pieds"
+    "importField_container_capacity_40ft": "Capacité 40 pieds",
+    "importField_container_floor_20ft": "Au sol 20 pieds",
+    "importField_container_floor_40ft": "Au sol 40 pieds",
+    "importField_storage_condition": "Conservation",
+    "importField_max_stack_layers": "Gerbage"
   },
   "claim": {
     "eyebrow": "Procédure de revendication de fiche",

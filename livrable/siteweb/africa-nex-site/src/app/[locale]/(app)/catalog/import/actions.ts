@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { resolveLocale } from "@/lib/auth/next-path";
 import { getCompanyTier, getMyCompanyId, listProducts } from "@/lib/data/company";
 import { UNITS } from "@/lib/onboarding/reference";
-import { PRICE_FIELDS, readPackagingInput, readPriceInput, todayIso, type PackField, type PriceField } from "@/lib/catalog/price-list";
+import { PRICE_FIELDS, packagingValues, readPackagingInput, readPriceInput, todayIso, type PackField, type PriceField } from "@/lib/catalog/price-list";
 import { readPriceListWorkbook } from "@/lib/catalog/price-list-excel";
 import { packLabelMaps } from "@/lib/catalog/pack-labels";
 import { packagingFields, packagingWarnings, readLogisticsExtras, type PackWarning } from "@/lib/catalog/packaging-logic";
@@ -14,7 +14,9 @@ import type { Database } from "@/lib/supabase/database.types";
 
 type Update = Database["public"]["Tables"]["products"]["Update"];
 export type ImportIssue = { row: number; sheet: "prices" | "packaging"; ref: string; fields: { field: string; error: string }[] };
-export type ImportChange = { row: number; ref: string; kind: "update" | "create"; fields: string[] };
+// Detail d'une modification : valeur actuelle -> nouvelle valeur (champ = cle de traduction importField_*).
+export type ImportDetail = { field: string; from: string; to: string };
+export type ImportChange = { row: number; ref: string; kind: "update" | "create"; fields: string[]; details: ImportDetail[]; id?: string };
 // Incoherences de conditionnement : signalees, sans bloquer l'import.
 export type ImportWarning = { row: number; ref: string; warnings: PackWarning[] };
 export type ImportState = {
@@ -26,6 +28,12 @@ export type ImportState = {
 const MAX_BYTES = 5 * 1024 * 1024;
 const MAX_ROWS = 3000;
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
+
+// Valeur lisible pour le detail des changements.
+const show = (v: unknown) => (v === null || v === undefined ? "" : Array.isArray(v) ? v.join(", ") : String(v));
+// Reference affichee : reference fournisseur et designation.
+const label = (sku: string | null | undefined, name: string) => (sku ? `${sku} · ${name}` : name);
+const CAPACITY_KEYS = ["container_capacity_20ft", "container_capacity_40ft", "container_floor_20ft", "container_floor_40ft"] as const;
 
 // Valeurs comparables pour savoir si une ligne change vraiment quelque chose.
 const norm = (v: unknown) => (v === null || v === undefined || v === "" ? "" : Array.isArray(v) ? v.join("|") : typeof v === "object" ? JSON.stringify(v) : typeof v === "number" || /^-?\d+(\.\d+)?$/.test(String(v)) ? String(Number(v)) : String(v));
@@ -82,12 +90,16 @@ export async function importPriceList(_prev: ImportState, formData: FormData): P
 
     const fields: Update = { ...priced.fields, unit, ...(name ? { product_name: name } : {}) };
     if (existing) {
-      const changed = Object.entries(fields).filter(([k, v]) => k !== "stock_updated_at" && norm(v) !== norm((existing as unknown as Record<string, unknown>)[k])).map(([k]) => k);
-      if (changed.length) { updates.set(existing.id, fields); changes.push({ row, ref, kind: "update", fields: changed }); }
-      else unchanged++;
+      const before = existing as unknown as Record<string, unknown>;
+      const changed = Object.entries(fields).filter(([k, v]) => k !== "stock_updated_at" && norm(v) !== norm(before[k])).map(([k]) => k);
+      if (changed.length) {
+        updates.set(existing.id, fields);
+        const details = changed.map((k) => ({ field: k, from: show(before[k]), to: show((fields as Record<string, unknown>)[k]) }));
+        changes.push({ row, ref: label(priced.fields.sku ?? existing.sku, name || existing.product_name), kind: "update", fields: changed, details, id: existing.id });
+      } else unchanged++;
     } else {
       creates.push({ row, sku: priced.fields.sku, fields: { ...fields, product_name: name } });
-      changes.push({ row, ref, kind: "create", fields: [] });
+      changes.push({ row, ref: label(priced.fields.sku, name), kind: "create", fields: [], details: [] });
     }
   }
 
@@ -111,9 +123,17 @@ export async function importPriceList(_prev: ImportState, formData: FormData): P
     packFor.set(target, logistics);
     if (existing) {
       updates.set(existing.id, { ...(updates.get(existing.id) ?? {}), ...logistics });
-      const change = changes.find((c) => c.kind === "update" && c.ref === (existing.sku || existing.product_name));
-      if (change) change.fields.push("packaging_spec");
-      else { changes.push({ row, ref, kind: "update", fields: ["packaging_spec"] }); if (unchanged > 0) unchanged--; }
+      // Detail : chaque case du conditionnement modifiee, puis les capacites conteneur recalculees.
+      const oldV: Record<string, string> = { ...packagingValues(existing.packaging_spec), storage: show(existing.storage_condition), maxStack: show(existing.max_stack_layers) };
+      const newV: Record<string, string> = { ...packagingValues(packed.spec), storage: show(extras.storage), maxStack: show(extras.maxStack) };
+      const details: ImportDetail[] = Object.keys(newV).filter((k) => norm(oldV[k]) !== norm(newV[k])).map((k) => ({ field: k, from: oldV[k], to: newV[k] }));
+      for (const k of CAPACITY_KEYS) {
+        const before = (existing as unknown as Record<string, unknown>)[k];
+        if (norm(before) !== norm(logistics[k])) details.push({ field: k, from: show(before), to: show(logistics[k]) });
+      }
+      const change = changes.find((c) => c.kind === "update" && c.id === existing.id);
+      if (change) { change.fields.push("packaging_spec"); change.details.push(...details); }
+      else { changes.push({ row, ref: label(existing.sku, existing.product_name), kind: "update", fields: ["packaging_spec"], details, id: existing.id }); if (unchanged > 0) unchanged--; }
     }
   }
   for (const c of creates) {

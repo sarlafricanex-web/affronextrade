@@ -1350,7 +1350,11 @@
     "importField_storage": "Storage",
     "importField_maxStack": "Stacking",
     "importField_container_capacity_20ft": "20 ft capacity",
-    "importField_container_capacity_40ft": "40 ft capacity"
+    "importField_container_capacity_40ft": "40 ft capacity",
+    "importField_container_floor_20ft": "Floor 20 ft",
+    "importField_container_floor_40ft": "Floor 40 ft",
+    "importField_storage_condition": "Storage",
+    "importField_max_stack_layers": "Stacking"
   },
   "claim": {
     "eyebrow": "Profile claim procedure",
