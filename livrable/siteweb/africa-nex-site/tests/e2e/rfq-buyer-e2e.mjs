@@ -102,7 +102,7 @@ try {
   await run(`${SET} setV(document.getElementById("rfq-qty"), "0"); setV(document.getElementById("rfq-unit"), "t"); ${submit} return true;`);
   report("Quantite nulle, pays et incoterm manquants : refuses par le serveur", await waitFor(`return document.body.innerText.includes("Indiquez une quantité supérieure à zéro.") && document.body.innerText.includes("Faites un choix.");`));
   report("Devise obligatoire, sans valeur par defaut", await run(`const s = document.getElementById("rfq-currency"); return s.required && s.value === "";`));
-  await run(`${SET} setV(document.getElementById("rfq-qty"), "20 000"); setV(document.getElementById("rfq-unit"), "t"); setV(document.getElementById("rfq-currency"), "USD"); document.querySelector("input[name=incoterm][value=CIF]").click(); setV(document.getElementById("rfq-port"), "Abidjan"); setV(document.getElementById("rfq-price"), "650"); setV(document.getElementById("rfq-desc"), "Sacs de 50 kg, certificat d'origine."); return true;`);
+  await run(`${SET} setV(document.getElementById("rfq-qty"), "20 000"); setV(document.getElementById("rfq-unit"), "t"); setV(document.getElementById("rfq-currency"), "USD"); document.querySelector("input[name=incoterm][value=CIF]").click(); setV(document.getElementById("rfq-port"), "Abidjan"); setV(document.getElementById("rfq-desc"), "Sacs de 50 kg, certificat d'origine."); return true;`);
   // Deuxieme produit dans la meme demande.
   await run(`[...document.querySelectorAll("main button")].find((b) => /ajouter un produit/i.test(b.textContent)).click(); return true;`);
   await waitFor(`return !!document.getElementById("rfq-title-2");`, 10);

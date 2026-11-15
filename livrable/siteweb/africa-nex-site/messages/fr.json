@@ -1800,11 +1800,12 @@
     "lineRemoveShort": "Retirer",
     "lineAdd": "Ajouter un produit",
     "unitsPerLine": "Indiquez la quantité et l'unité de chaque produit ci-dessus.",
-    "sectionCurrency": "Devise et prix cible",
+    "sectionCurrency": "Devise souhaitée",
     "currencyHint": "Obligatoire",
     "errorTooManyLines": "50 produits au plus par demande.",
     "linesTitle": "{count, plural, one {Produit demandé} other {# produits demandés}}",
-    "wishedCurrency": "Devise souhaitée : {currency}"
+    "wishedCurrency": "Devise souhaitée : {currency}",
+    "currencyHelp": "L’offre vous sera présentée dans la devise du fournisseur ou dans celle-ci ; vous pourrez demander un changement de devise avant d’accepter."
   },
   "requests": {
     "eyebrow": "Espace producteur",

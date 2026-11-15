@@ -1800,11 +1800,12 @@
     "lineRemoveShort": "Remove",
     "lineAdd": "Add a product",
     "unitsPerLine": "Enter the quantity and unit of each product above.",
-    "sectionCurrency": "Currency and target price",
+    "sectionCurrency": "Preferred currency",
     "currencyHint": "Required",
     "errorTooManyLines": "50 products at most per request.",
     "linesTitle": "{count, plural, one {Requested product} other {# requested products}}",
-    "wishedCurrency": "Preferred currency: {currency}"
+    "wishedCurrency": "Preferred currency: {currency}",
+    "currencyHelp": "The offer will be presented in the supplier’s currency or in this one; you can ask for a currency change before accepting."
   },
   "requests": {
     "eyebrow": "Producer space",

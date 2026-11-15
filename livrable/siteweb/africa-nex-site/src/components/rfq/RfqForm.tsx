@@ -232,7 +232,7 @@ export function RfqForm({ context }: { context: RfqFormContext | null }) {
 
       {/* Devise de l'offre : choix obligatoire de l'acheteur, aucune devise par defaut. */}
       <Section n={5} title={t("sectionCurrency")}>
-        <div className="grid gap-4 sm:grid-cols-[200px_1fr]">
+        <div className="sm:max-w-xs">
           <Field label={t("currency")} hint={t("currencyHint")} htmlFor="rfq-currency">
             <select id="rfq-currency" name="currency" required defaultValue={v.currency ?? ""} className="w-full px-4 py-3 text-sm" style={box}>
               <option value="" disabled>{o("choose")}</option>
@@ -240,12 +240,8 @@ export function RfqForm({ context }: { context: RfqFormContext | null }) {
             </select>
             {err("currency")}
           </Field>
-          <Field label={t("targetPrice")} hint={o("optional")} htmlFor="rfq-price">
-            <TextInput id="rfq-price" name="targetPrice" inputMode="decimal" dir="ltr" defaultValue={v.targetPrice ?? ""} placeholder="8,50" />
-            {err("targetPrice")}
-          </Field>
         </div>
-        <p className="text-xs" style={{ color: "var(--muted)" }}>{t("targetPriceHelp")}</p>
+        <p className="text-xs" style={{ color: "var(--muted)" }}>{t("currencyHelp")}</p>
       </Section>
 
       <Section n={6} title={t("sectionSchedule")}>

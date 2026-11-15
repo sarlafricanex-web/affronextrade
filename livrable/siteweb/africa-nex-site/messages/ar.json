@@ -1800,11 +1800,12 @@
     "lineRemoveShort": "إزالة",
     "lineAdd": "إضافة منتج",
     "unitsPerLine": "أدخل الكمية والوحدة لكل منتج أعلاه.",
-    "sectionCurrency": "العملة والسعر المستهدف",
+    "sectionCurrency": "العملة المرغوبة",
     "currencyHint": "إلزامي",
     "errorTooManyLines": "50 منتجاً كحد أقصى لكل طلب.",
     "linesTitle": "المنتجات المطلوبة ({count})",
-    "wishedCurrency": "العملة المرغوبة: {currency}"
+    "wishedCurrency": "العملة المرغوبة: {currency}",
+    "currencyHelp": "سيُقدَّم العرض بعملة المورد أو بهذه العملة؛ يمكنك طلب تغيير العملة قبل القبول."
   },
   "requests": {
     "eyebrow": "فضاء المنتج",
