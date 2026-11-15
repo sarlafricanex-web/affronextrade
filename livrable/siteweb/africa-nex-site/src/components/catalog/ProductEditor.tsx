@@ -5,7 +5,10 @@ import { useLocale, useTranslations } from "next-intl";
 import { saveProduct, type CatalogField, type CatalogState } from "@/app/[locale]/(app)/catalog/actions";
 import { Alert } from "@/components/auth/fields";
 import { Link } from "@/i18n/navigation";
-import { CURRENCIES, PRICE_BASES, UNITS } from "@/lib/onboarding/reference";
+import { CURRENCIES, UNITS } from "@/lib/onboarding/reference";
+import { PACK_LABELS, PACK_LEVELS, PACK_PROTECTIONS, PACK_TYPES, PACK_WEDGING, STARTER_BASES, isDetailedTier, type PackField } from "@/lib/catalog/price-list";
+import { CountrySelect } from "@/components/country/CountrySelect";
+import type { CountryCode } from "libphonenumber-js";
 import { prepareUpload } from "@/lib/client/prepare-upload";
 import { STORAGE_CONDITIONS, estimateContainer, type LogisticsInput, type StorageCondition } from "@/lib/logistics/container";
 
@@ -38,7 +41,17 @@ export type EditorProduct = {
   storage: string;
   palletized: string;
   cartonsPerPallet: string;
-};
+  // Liste de prix : reference, construction du prix selon le forfait, validite, delai, origine.
+  sku: string;
+  crossRefs: string;
+  productCost: string;
+  packagingCost: string;
+  pricePlace: string;
+  priceValidUntil: string;
+  leadDays: string;
+  originCountry: string;
+  stockUpdatedAt: string;
+} & Record<PackField, string>;
 
 const toNum = (s: string) => {
   const n = Number(s.replace(/\s/g, "").replace(",", "."));
@@ -108,7 +121,7 @@ function readChecks(form: HTMLFormElement | null, product: EditorProduct, hasNew
     name: get("productName").length >= 2,
     descFr: get("descriptionFr").length > 0,
     hs: /^\d{4}([.\s]?\d{2}){1,3}$/.test(get("hsCode")),
-    price: Number(get("price").replace(",", ".")) > 0,
+    price: Number(get("price").replace(",", ".")) > 0 || Number(get("productCost").replace(",", ".")) > 0,
     currency: get("currency").length > 0,
     unit: get("unit").length > 0,
     moq: Number(get("moq").replace(/\s/g, "").replace(",", ".")) > 0,
@@ -118,7 +131,8 @@ function readChecks(form: HTMLFormElement | null, product: EditorProduct, hasNew
   };
 }
 
-export function ProductEditor({ product: initial }: { product: EditorProduct }) {
+export function ProductEditor({ product: initial, tier }: { product: EditorProduct; tier: string }) {
+  const detailed = isDetailedTier(tier);
   const t = useTranslations("onboarding");
   const c = useTranslations("catalog");
   const locale = useLocale();
@@ -145,9 +159,16 @@ export function ProductEditor({ product: initial }: { product: EditorProduct }) 
   const est20 = estimateContainer(logistics.input, "20");
   const est40 = estimateContainer(logistics.input, "40");
   const unitShort = logistics.unit ? c(`unitShort_${logistics.unit}`) : "";
+  // Pro / Enterprise : prix FCA = cout produit + cout emballage, affiche pendant la saisie.
+  const [costs, setCosts] = useState<{ value: [string, string]; attempt?: number } | null>(null);
+  const [pc, pk] = costs && costs.attempt === state.attempt ? costs.value : [product.productCost, product.packagingCost];
+  const amount = (s: string) => Number(s.replace(/\s/g, "").replace(",", ".")) || 0;
+  const fca = amount(pc) + amount(pk);
   const refresh = (form: HTMLFormElement, hasNewPhoto = Boolean(preview)) => {
     setChecks({ value: readChecks(form, product, hasNewPhoto), attempt: state.attempt });
     setLogi({ value: readLogistics(form, product), attempt: state.attempt });
+    const fd = new FormData(form);
+    setCosts({ value: [String(fd.get("productCost") ?? ""), String(fd.get("packagingCost") ?? "")], attempt: state.attempt });
   };
 
   return (
@@ -203,13 +224,61 @@ export function ProductEditor({ product: initial }: { product: EditorProduct }) 
           </div>
         </Block>
 
-        <Block title={c("block3")} aside={c("block3Aside")}>
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <Block title={c("block3")} aside={c(detailed ? "block3AsideDetailed" : "block3AsideStarter")}>
+          <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <Label htmlFor="pe-price">{t("price")}</Label>
-              <input id="pe-price" name="price" required dir="ltr" inputMode="decimal" placeholder="9,20" defaultValue={product.price} className={`${inputCls} text-end`} style={fieldStyle} />
-              {err("price")}
+              <Label htmlFor="pe-sku">{c("skuLabel")}</Label>
+              <input id="pe-sku" name="sku" maxLength={60} dir="ltr" placeholder="AF-018" defaultValue={product.sku} className={inputCls} style={fieldStyle} />
+              <span className="mt-1 block text-xs" style={{ color: "var(--muted)" }}>{c("skuHelp")}</span>
+              {err("sku")}
             </div>
+            <div>
+              <Label htmlFor="pe-cross">{c("crossRefsLabel")}</Label>
+              <input id="pe-cross" name="crossRefs" dir="ltr" placeholder="1444 TV, P520A" defaultValue={product.crossRefs} className={inputCls} style={fieldStyle} />
+              <span className="mt-1 block text-xs" style={{ color: "var(--muted)" }}>{c("crossRefsHelp")}</span>
+              {err("crossRefs")}
+            </div>
+          </div>
+          {detailed ? (
+            <div className="grid gap-5 sm:grid-cols-3">
+              <div>
+                <Label htmlFor="pe-cost">{c("productCostLabel")}</Label>
+                <input id="pe-cost" name="productCost" required dir="ltr" inputMode="decimal" placeholder="1,60" defaultValue={product.productCost} className={`${inputCls} text-end`} style={fieldStyle} />
+                {err("productCost")}
+              </div>
+              <div>
+                <Label htmlFor="pe-packcost">{c("packagingCostLabel")}</Label>
+                <input id="pe-packcost" name="packagingCost" dir="ltr" inputMode="decimal" placeholder="0,40" defaultValue={product.packagingCost} className={`${inputCls} text-end`} style={fieldStyle} />
+                {err("packagingCost")}
+              </div>
+              <div className="flex flex-col justify-end p-3" style={{ background: "#ecfdf5", border: "1px solid #a7f3d0" }} aria-live="polite" data-fca="">
+                <span className="text-[11px] font-bold uppercase" style={{ ...labelStyle, color: "#065f46" }}>{c("fcaLabel")}</span>
+                <strong dir="ltr" style={{ fontSize: "1.3rem" }}>{fca > 0 ? fca.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}</strong>
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-5 sm:grid-cols-3">
+              <div>
+                <Label htmlFor="pe-price">{t("price")}</Label>
+                <input id="pe-price" name="price" required dir="ltr" inputMode="decimal" placeholder="9,20" defaultValue={product.price} className={`${inputCls} text-end`} style={fieldStyle} />
+                {err("price")}
+              </div>
+              <div>
+                <Label htmlFor="pe-basis">{t("priceBasis")}</Label>
+                <select id="pe-basis" name="priceBasis" required defaultValue={product.priceBasis || "FOB"} className={inputCls} style={fieldStyle}>
+                  {STARTER_BASES.map((b) => <option key={b} value={b}>{t.has(`basis_${b}`) ? t(`basis_${b}`) : b}</option>)}
+                </select>
+                {err("priceBasis")}
+              </div>
+              <div>
+                <Label htmlFor="pe-place">{c("pricePlaceLabel")}</Label>
+                <input id="pe-place" name="pricePlace" maxLength={120} placeholder={c("pricePlacePlaceholder")} defaultValue={product.pricePlace} className={inputCls} style={fieldStyle} />
+                {err("pricePlace")}
+              </div>
+            </div>
+          )}
+          <p className="text-xs" style={{ color: "var(--muted)" }}>{c(detailed ? "priceRuleDetailed" : "priceRuleStarter")}</p>
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
             <div>
               <Label htmlFor="pe-currency">{t("currency")}</Label>
               <select id="pe-currency" name="currency" required defaultValue={product.currency || "USD"} className={inputCls} style={fieldStyle}>
@@ -230,12 +299,12 @@ export function ProductEditor({ product: initial }: { product: EditorProduct }) 
               <input id="pe-moq" name="moq" required dir="ltr" inputMode="decimal" placeholder="2000" defaultValue={product.moq} className={`${inputCls} text-end`} style={fieldStyle} />
               {err("moq")}
             </div>
-          </div>
-          <div className="sm:max-w-xs">
-            <Label htmlFor="pe-basis">{t("priceBasis")}</Label>
-            <select id="pe-basis" name="priceBasis" required defaultValue={product.priceBasis || "FOB"} className={inputCls} style={fieldStyle}>
-              {PRICE_BASES.map((b) => <option key={b} value={b}>{t(`basis_${b}`)}</option>)}
-            </select>
+            <div>
+              <Label htmlFor="pe-valid">{c("priceValidUntilLabel")}</Label>
+              <input id="pe-valid" name="priceValidUntil" type="date" dir="ltr" defaultValue={product.priceValidUntil} className={inputCls} style={fieldStyle} />
+              <span className="mt-1 block text-xs" style={{ color: "var(--muted)" }}>{c("priceValidUntilHelp")}</span>
+              {err("priceValidUntil")}
+            </div>
           </div>
           <p className="text-xs" style={{ color: "var(--muted)" }}>{c("priceConfidential")}</p>
         </Block>
@@ -245,6 +314,49 @@ export function ProductEditor({ product: initial }: { product: EditorProduct }) 
             <Label htmlFor="pe-pack">{c("packaging")}</Label>
             <input id="pe-pack" name="packaging" maxLength={200} placeholder={c("packagingPlaceholder")} defaultValue={product.packaging} className={inputCls} style={fieldStyle} />
             {err("packaging")}
+          </div>
+          {/* Conditionnement en 4 niveaux : meme fiche que la feuille "Conditionnement" du fichier Excel. */}
+          <div className="flex flex-col gap-4 pt-4" style={{ borderTop: `1px solid ${HAIR}` }}>
+            <p className="text-[11px] font-bold uppercase" style={labelStyle}>{c("packLevelsTitle")}</p>
+            {PACK_LEVELS.map((n) => (
+              <fieldset key={n} className="grid grid-cols-2 gap-3 p-3 md:grid-cols-6" style={{ border: `1px solid ${HAIR}` }} data-pack-level={n}>
+                <legend className="px-1 text-xs font-bold">{c(`packLevel_${n}`)}</legend>
+                {([["Qty", "pkQty", "numeric"], ["Type", "pkType", ""], ["Weight", "pkWeight", "decimal"], ["Length", "pkLength", "numeric"], ["Width", "pkWidth", "numeric"], ["Height", "pkHeight", "numeric"]] as const).map(([part, key, mode]) => {
+                  const name = `pk${n}${part}` as PackField;
+                  return (
+                    <div key={part}>
+                      <label htmlFor={`pe-${name}`} className="mb-1 block text-xs" style={{ color: "var(--muted)" }}>{c(key)}</label>
+                      {part === "Type" ? (
+                        <select id={`pe-${name}`} name={name} defaultValue={product[name]} className={inputCls} style={fieldStyle}>
+                          <option value="">-</option>
+                          {PACK_TYPES.map((p) => <option key={p} value={p}>{c(`packType_${p}`)}</option>)}
+                        </select>
+                      ) : (
+                        <input id={`pe-${name}`} name={name} dir="ltr" inputMode={mode || undefined} defaultValue={product[name]} className={`${inputCls} text-end`} style={fieldStyle} />
+                      )}
+                      {err(name)}
+                    </div>
+                  );
+                })}
+              </fieldset>
+            ))}
+            <div className="grid gap-3 sm:grid-cols-3">
+              {([["pkLabel", PACK_LABELS, "packLabel"], ["pkWedging", PACK_WEDGING, "packWedging"], ["pkProtection", PACK_PROTECTIONS, "packProtection"]] as const).map(([name, list, prefix]) => (
+                <div key={name}>
+                  <Label htmlFor={`pe-${name}`}>{c(`${prefix}Label`)}</Label>
+                  <select id={`pe-${name}`} name={name} defaultValue={product[name]} className={inputCls} style={fieldStyle}>
+                    <option value="">-</option>
+                    {list.map((o) => <option key={o} value={o}>{c(`${prefix}_${o}`)}</option>)}
+                  </select>
+                  {err(name)}
+                </div>
+              ))}
+            </div>
+            <div>
+              <Label htmlFor="pe-pkNotes">{c("packNotesLabel")}</Label>
+              <textarea id="pe-pkNotes" name="pkNotes" rows={2} maxLength={1000} defaultValue={product.pkNotes} className={`${inputCls} resize-y`} style={fieldStyle} />
+              {err("pkNotes")}
+            </div>
           </div>
           {/* Fiche du carton d'expedition : la capacite par conteneur en est calculee, jamais saisie. */}
           <div className="flex flex-col gap-5 pt-4" style={{ borderTop: `1px solid ${HAIR}` }}>
@@ -345,11 +457,25 @@ export function ProductEditor({ product: initial }: { product: EditorProduct }) 
         </Block>
 
         <Block title={c("block5")} aside={c("block5Aside")}>
-          <div className="sm:max-w-sm">
-            <Label htmlFor="pe-stock">{c("stockLabel")}</Label>
-            <input id="pe-stock" name="stock" dir="ltr" inputMode="decimal" defaultValue={product.stock} className={inputCls} style={fieldStyle} />
-            <span className="mt-1 block text-xs" style={{ color: "var(--muted)" }}>{c("stockHelp")}</span>
-            {err("stock")}
+          <div className="grid gap-5 sm:grid-cols-3">
+            <div>
+              <Label htmlFor="pe-stock">{c("stockLabel")}</Label>
+              <input id="pe-stock" name="stock" dir="ltr" inputMode="decimal" defaultValue={product.stock} className={inputCls} style={fieldStyle} />
+              <span className="mt-1 block text-xs" style={{ color: "var(--muted)" }}>
+                {product.stockUpdatedAt ? c("stockUpdatedAt", { date: new Date(product.stockUpdatedAt).toLocaleDateString(locale, { dateStyle: "medium" }) }) : c("stockHelp")}
+              </span>
+              {err("stock")}
+            </div>
+            <div>
+              <Label htmlFor="pe-lead">{c("leadDaysLabel")}</Label>
+              <input id="pe-lead" name="leadDays" dir="ltr" inputMode="numeric" placeholder="30" defaultValue={product.leadDays} className={`${inputCls} text-end`} style={fieldStyle} />
+              {err("leadDays")}
+            </div>
+            <div>
+              <span id="pe-origin-label" className={labelCls} style={labelStyle}>{c("originLabel")}</span>
+              <CountrySelect id="pe-origin" name="originCountry" labelId="pe-origin-label" defaultValue={(product.originCountry || "DZ") as CountryCode} placeholder={t("choose")} fieldStyle={fieldStyle} />
+              {err("originCountry")}
+            </div>
           </div>
         </Block>
 

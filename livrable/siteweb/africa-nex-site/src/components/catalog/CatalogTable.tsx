@@ -18,7 +18,18 @@ export type CatalogRow = {
   packaging: string | null;
   stock: string | null;
   status: "published" | "draft";
+  sku: string | null;
+  // Validite du prix (liste de prix) et date de mise a jour du stock.
+  validity: { state: "none" | "expired" | "soon" | "ok"; days: number; date: string | null };
+  stockDate: string | null;
 };
+
+function ValidityBadge({ v }: { v: CatalogRow["validity"] }) {
+  const c = useTranslations("catalog");
+  const tone = v.state === "ok" ? { color: "#065f46" } : v.state === "soon" ? { color: "#c2410c" } : { color: "#dc2626", fontWeight: 700 };
+  const text = v.state === "none" ? c("validityNone") : v.state === "expired" ? c("validityExpired") : v.state === "soon" ? c("validitySoon", { days: v.days }) : c("validityUntil", { date: v.date ?? "" });
+  return <span className="block text-xs" style={tone} data-validity={v.state}>{text}</span>;
+}
 
 const HAIR = "#d8cebb";
 // Titres de colonnes sur deux lignes si besoin : le tableau tient dans la largeur sans defiler.
@@ -48,11 +59,12 @@ function StatusBadge({ status, label }: { status: "published" | "draft"; label: 
 export function CatalogTable({ rows }: { rows: CatalogRow[] }) {
   const c = useTranslations("catalog");
   const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<"all" | "published" | "draft">("all");
+  const [status, setStatus] = useState<"all" | "published" | "draft" | "stale">("all");
 
   const shown = useMemo(() => {
     const q = fold(query.trim());
-    return rows.filter((r) => (status === "all" || r.status === status) && (!q || fold(`${r.name} ${r.hsCode ?? ""} ${r.description ?? ""}`).includes(q)));
+    const keep = (r: CatalogRow) => (status === "all" ? true : status === "stale" ? r.validity.state !== "ok" : r.status === status);
+    return rows.filter((r) => keep(r) && (!q || fold(`${r.name} ${r.sku ?? ""} ${r.hsCode ?? ""} ${r.description ?? ""}`).includes(q)));
   }, [rows, query, status]);
 
   return (
@@ -69,6 +81,7 @@ export function CatalogTable({ rows }: { rows: CatalogRow[] }) {
             <option value="all">{c("filterAll")}</option>
             <option value="published">{c("status_published")}</option>
             <option value="draft">{c("status_draft")}</option>
+            <option value="stale">{c("filterStale")}</option>
           </select>
         </label>
       </div>
@@ -91,6 +104,7 @@ export function CatalogTable({ rows }: { rows: CatalogRow[] }) {
             </div>
             <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
               {[
+                [c("colSku"), r.sku],
                 [c("colHs"), r.hsCode],
                 [c("colPrice"), r.price ? `${r.price}${r.priceBasis ? ` ${r.priceBasis}` : ""}` : null],
                 [c("colMoq"), r.moq],
@@ -99,6 +113,8 @@ export function CatalogTable({ rows }: { rows: CatalogRow[] }) {
                 <div key={label}>
                   <dt className="text-[10px] font-bold uppercase" style={caps}>{label}</dt>
                   <dd className="font-semibold" style={{ color: value ? "var(--ink)" : "#f97316" }}>{value ?? c("missing")}</dd>
+                  {label === c("colPrice") && <ValidityBadge v={r.validity} />}
+                  {label === c("colStock") && r.stockDate && <span className="block text-xs" style={{ color: "var(--muted)" }}>{c("stockDateShort", { date: r.stockDate })}</span>}
                 </div>
               ))}
             </dl>
@@ -127,7 +143,7 @@ export function CatalogTable({ rows }: { rows: CatalogRow[] }) {
           <tbody>
             {shown.map((r, i) => (
               <tr key={r.id} className="align-top" style={{ borderBottom: `1px solid ${HAIR}` }}>
-                <td className="px-3 py-4 font-semibold" style={{ color: "var(--muted)", fontFeatureSettings: '"tnum" 1' }}>{String(i + 1).padStart(2, "0")}</td>
+                <td className="px-3 py-4 font-semibold whitespace-nowrap" dir="ltr" style={{ color: r.sku ? "var(--ink)" : "var(--muted)", fontFeatureSettings: '"tnum" 1' }}>{r.sku ?? String(i + 1).padStart(2, "0")}</td>
                 <td className="px-3 py-4" style={{ minWidth: 220 }}>
                   <div className="flex items-start gap-3">
                     {r.photo ? (
@@ -147,7 +163,8 @@ export function CatalogTable({ rows }: { rows: CatalogRow[] }) {
                   {r.price ? (
                     <>
                       <span className="block font-bold" style={{ fontFeatureSettings: '"tnum" 1' }}>{r.price}</span>
-                      {r.priceBasis && <span className="text-xs" style={{ color: "var(--muted)" }}>{r.priceBasis}</span>}
+                      {r.priceBasis && <span className="block text-xs" style={{ color: "var(--muted)" }}>{r.priceBasis}</span>}
+                      <ValidityBadge v={r.validity} />
                     </>
                   ) : <span style={{ color: "#f97316" }}>{c("missing")}</span>}
                 </td>
@@ -155,7 +172,10 @@ export function CatalogTable({ rows }: { rows: CatalogRow[] }) {
                   <span className="block whitespace-nowrap font-semibold" style={{ fontFeatureSettings: '"tnum" 1' }}>{r.moq ?? "-"}</span>
                   {r.packaging && <span className="text-xs" style={{ color: "var(--muted)" }}>{r.packaging}</span>}
                 </td>
-                <td className="px-3 py-4 text-end whitespace-nowrap" style={{ fontFeatureSettings: '"tnum" 1' }}>{r.stock ?? <span style={{ color: "var(--muted)" }}>-</span>}</td>
+                <td className="px-3 py-4 text-end whitespace-nowrap" style={{ fontFeatureSettings: '"tnum" 1' }}>
+                  {r.stock ?? <span style={{ color: "var(--muted)" }}>-</span>}
+                  {r.stockDate && <span className="block text-xs" style={{ color: "var(--muted)" }}>{c("stockDateShort", { date: r.stockDate })}</span>}
+                </td>
                 <td className="px-3 py-4">
                   <StatusBadge status={r.status} label={c(`status_${r.status}`)} />
                 </td>

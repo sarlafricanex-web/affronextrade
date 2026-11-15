@@ -1,6 +1,7 @@
 import "server-only";
 import { productImages, type Product } from "@/lib/data/company";
 import type { EditorProduct } from "@/components/catalog/ProductEditor";
+import { packagingValues } from "@/lib/catalog/price-list";
 
 const str = (v: unknown) => (v === null || v === undefined ? "" : String(v));
 
@@ -31,5 +32,15 @@ export function toEditorProduct(p: Product | null): EditorProduct {
     cartonsPerPallet: str(p?.cartons_per_pallet),
     status: p?.status ?? "draft",
     images: productImages(p),
+    sku: p?.sku ?? "",
+    crossRefs: (p?.cross_refs ?? []).join(", "),
+    productCost: str(p?.product_cost),
+    packagingCost: str(p?.packaging_cost),
+    pricePlace: p?.price_place ?? "",
+    priceValidUntil: p?.price_valid_until ?? "",
+    leadDays: str(p?.lead_time_days),
+    originCountry: p?.origin_country ?? "DZ",
+    stockUpdatedAt: p?.stock_updated_at ?? "",
+    ...packagingValues(p?.packaging_spec),
   };
 }

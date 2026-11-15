@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { countRecentViews, getMyCompanyId, listProducts, productImages } from "@/lib/data/company";
 import { CatalogTable, type CatalogRow } from "@/components/catalog/CatalogTable";
+import { priceStatus, todayIso } from "@/lib/catalog/price-list";
 
 export const instant = false;
 
@@ -30,7 +31,7 @@ export default async function CatalogPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ saved?: string; deleted?: string }>;
+  searchParams: Promise<{ saved?: string; deleted?: string; imported?: string }>;
 }) {
   const { locale } = await params;
   const user = await getCurrentUser();
@@ -39,7 +40,7 @@ export default async function CatalogPage({
   const companyId = await getMyCompanyId(user.supabase, user.userId);
   if (!companyId) redirect(`/${locale}/onboarding`);
 
-  const [c, format, products, { saved, deleted }, views] = await Promise.all([
+  const [c, format, products, { saved, deleted, imported }, views] = await Promise.all([
     getTranslations({ locale, namespace: "catalog" }),
     getFormatter({ locale }),
     listProducts(user.supabase, companyId),
@@ -51,6 +52,7 @@ export default async function CatalogPage({
   const withoutPhoto = products.filter((p) => productImages(p).length === 0).length;
   // Unites courtes dans le tableau (L, kg, t...) : les libelles complets le font deborder.
   const unit = (u: string | null) => (u ? c(`unitShort_${u}`) : "");
+  const today = todayIso();
 
   const rows: CatalogRow[] = products.map((p) => ({
     id: p.id,
@@ -64,13 +66,17 @@ export default async function CatalogPage({
     packaging: p.packaging,
     stock: p.stock_quantity != null ? `${format.number(Number(p.stock_quantity))} ${unit(p.unit)}` : null,
     status: p.status === "published" ? "published" : "draft",
+    sku: p.sku,
+    validity: { ...priceStatus(p.price_valid_until, today), date: p.price_valid_until ? format.dateTime(new Date(`${p.price_valid_until}T12:00:00`), { dateStyle: "medium" }) : null },
+    stockDate: p.stock_updated_at ? format.dateTime(new Date(p.stock_updated_at), { dateStyle: "medium" }) : null,
   }));
+  const stale = rows.filter((r) => r.validity.state !== "ok").length;
 
   return (
     <div className="flex flex-col gap-6">
-      {(saved || deleted) && (
+      {(saved || deleted || imported) && (
         <p role="status" className="p-4 font-semibold" style={{ background: "white", borderInlineStart: "4px solid #10b981" }}>
-          {saved ? c("savedNotice") : c("deletedNotice")}
+          {imported ? c("importedNotice", { count: Number(imported) || 0 }) : saved ? c("savedNotice") : c("deletedNotice")}
         </p>
       )}
 
@@ -84,16 +90,26 @@ export default async function CatalogPage({
           <h1 className="font-extrabold uppercase" style={{ fontSize: "clamp(1.6rem, 3vw, 2.25rem)", lineHeight: 1.1, letterSpacing: "-0.025em", borderInlineStart: "4px solid #10b981", paddingInlineStart: "0.75rem" }}>{c("pageTitle")}</h1>
           <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>{c("summary", { total: products.length, published })}</p>
         </div>
-        <Link href="/catalog/new" className="flex items-center justify-center gap-2 px-5 py-3 text-sm font-bold uppercase" style={{ ...caps, background: "var(--ink)", color: "white" }}>
-          <span aria-hidden="true" className="text-base leading-none">+</span>
-          {c("addProduct")}
-        </Link>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          {/* Liste de prix en Excel : modele selon le forfait, pre-rempli avec les references. */}
+          <a href={`/api/catalog/price-list?locale=${locale}`} className="flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold uppercase" style={{ ...caps, border: "1px solid var(--ink)", background: "white", color: "var(--ink)" }} data-download="price-list">
+            {c("downloadPriceList")}
+          </a>
+          <Link href="/catalog/import" className="flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold uppercase" style={{ ...caps, border: "1px solid var(--ink)", background: "white", color: "var(--ink)" }}>
+            {c("importPriceList")}
+          </Link>
+          <Link href="/catalog/new" className="flex items-center justify-center gap-2 px-5 py-3 text-sm font-bold uppercase" style={{ ...caps, background: "var(--ink)", color: "white" }}>
+            <span aria-hidden="true" className="text-base leading-none">+</span>
+            {c("addProduct")}
+          </Link>
+        </div>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <Tile label={c("tileProducts")} value={String(products.length).padStart(2, "0")} unit={c("tileProductsUnit")} hint={c("tileProductsHint", { published })} />
         <Tile label={c("tileDrafts")} value={drafts} hint={c("tileDraftsHint")} tone={drafts ? "warn" : "ink"} />
         <Tile label={c("tilePhotos")} value={withoutPhoto} hint={c("tilePhotosHint")} tone={withoutPhoto ? "warn" : "accent"} />
+        <Tile label={c("tileStale")} value={stale} hint={c("tileStaleHint")} tone={stale ? "warn" : "accent"} />
         <Tile label={c("tileViews")} value={views} hint={c("tileViewsHint")} tone="accent" />
       </div>
 

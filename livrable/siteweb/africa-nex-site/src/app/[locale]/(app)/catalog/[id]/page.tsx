@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { getMyCompanyId, getProduct } from "@/lib/data/company";
+import { getCompanyTier, getMyCompanyId, getProduct } from "@/lib/data/company";
 import { toEditorProduct } from "@/lib/catalog/editor";
 import { ProductEditor } from "@/components/catalog/ProductEditor";
 
@@ -19,7 +19,7 @@ export default async function ProductEditorPage({ params }: { params: Promise<{ 
   if (!companyId) redirect(`/${locale}/onboarding`);
 
   const isNew = id === "new";
-  const product = isNew ? null : await getProduct(user.supabase, companyId, id);
+  const [product, tier] = await Promise.all([isNew ? null : getProduct(user.supabase, companyId, id), getCompanyTier(user.supabase, companyId)]);
   if (!isNew && !product) notFound();
   const c = await getTranslations({ locale, namespace: "catalog" });
   const published = product?.status === "published";
@@ -47,7 +47,7 @@ export default async function ProductEditorPage({ params }: { params: Promise<{ 
         </div>
         <p className="text-sm" style={{ color: "var(--muted)" }}>{c("editorSubtitle")}</p>
       </header>
-      <ProductEditor product={toEditorProduct(product)} />
+      <ProductEditor product={toEditorProduct(product)} tier={tier} />
     </div>
   );
 }

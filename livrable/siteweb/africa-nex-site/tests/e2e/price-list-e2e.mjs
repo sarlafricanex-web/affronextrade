@@ -1,0 +1,218 @@
+// Test de bout en bout de la liste de prix fournisseur : modele Excel selon le forfait,
+// import avec apercu, erreurs ligne par ligne, conditionnement, cloisonnement.
+import { site, OUT, CHROME } from "./_guard.mjs";
+import { createRequire } from "node:module";
+import { randomBytes } from "node:crypto";
+import { spawn } from "node:child_process";
+import { writeFileSync, rmSync } from "node:fs";
+
+const require = createRequire(`${site}/package.json`);
+const { createClient } = require("@supabase/supabase-js");
+const { createServerClient } = require("@supabase/ssr");
+const ExcelJS = require("exceljs");
+
+const BASE = `http://localhost:${process.argv[2] ?? 3000}`;
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL, pub = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const admin = createClient(url, process.env.SUPABASE_SECRET_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+let failed = 0;
+const report = (label, ok, detail = "") => { if (!ok) failed++; console.log(`${ok ? "OK    " : "ECHEC "} ${label}${detail ? ` (${detail})` : ""}`); };
+const TAG = `ZZ${randomBytes(2).toString("hex")}`;
+const day = (n) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
+
+const users = [];
+async function makeUser(role, name) {
+  const email = `test-pricelist-${role}-${Date.now()}-${randomBytes(2).toString("hex")}@example.com`, password = randomBytes(12).toString("base64url");
+  const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: name, role, locale: "fr", phone: "+213551234567" } });
+  if (error) throw error;
+  users.push(data.user.id);
+  const jar = new Map();
+  const client = createServerClient(url, pub, { cookies: { getAll: () => [...jar].map(([n, v]) => ({ name: n, value: v })), setAll: (l) => l.forEach(({ name: n, value: v }) => (v ? jar.set(n, v) : jar.delete(n))) } });
+  await client.auth.signInWithPassword({ email, password });
+  return { id: data.user.id, jar, client, cookie: () => [...jar].map(([n, v]) => `${n}=${v}`).join("; ") };
+}
+async function makeProducer(name, tier) {
+  const u = await makeUser("producer", name);
+  await u.client.from("companies").insert({ company_name: `${name} ${TAG}`, kind: "producer", slug: `test-pl-${name}-${TAG}`.toLowerCase().replace(/\W+/g, "-"), owner_profile_id: u.id, sector: "C29", wilaya: "19", city: "Setif" });
+  const { data: co } = await admin.from("companies").select("id").eq("owner_profile_id", u.id).single();
+  if (tier !== "starter") await admin.from("companies").update({ subscription_tier: tier }).eq("id", co.id);
+  await admin.from("profiles").update({ onboarding_completed: true }).eq("id", u.id);
+  return { ...u, companyId: co.id };
+}
+const download = async (u) => {
+  const res = await fetch(`${BASE}/api/catalog/price-list?locale=fr`, { headers: { cookie: u.cookie() }, redirect: "manual" });
+  const wb = new ExcelJS.Workbook();
+  if (res.status === 200) await wb.xlsx.load(await res.arrayBuffer());
+  return { status: res.status, type: res.headers.get("content-type"), wb };
+};
+const keysOf = (ws) => { const m = new Map(); ws.getRow(2).eachCell((c, i) => m.set(String(c.value), i)); return m; };
+const rowOf = (ws, id) => { let found = null; ws.eachRow((r, n) => { if (n >= 5 && r.getCell(1).value === id) found = n; }); return found; };
+
+const chrome = spawn(CHROME, ["--headless=new", "--remote-debugging-port=9353", `--user-data-dir=${OUT}/profile-pricelist`, "--no-first-run", "--no-default-browser-check", "--disable-extensions", "about:blank"], { stdio: "ignore" });
+try {
+  const starter = await makeProducer("Filtres Setif", "starter");
+  const pro = await makeProducer("Filtres Pro", "pro");
+  const rival = await makeProducer("Filtres Rival", "starter");
+  const buyer = await makeUser("buyer", "Awa Buyer");
+  const base = { kind: undefined, hs_code: "8421.31", currency: "EUR", price_basis: "FCA", unit: "unit", min_order_quantity: 1000, status: "draft", source: "producer" };
+  delete base.kind;
+  const { data: pA, error: ea } = await starter.client.from("products").insert({ ...base, company_id: starter.companyId, product_name: `Filtre a air A ${TAG}`, unit_price_ht: 2 }).select("id").single();
+  if (ea) throw ea;
+  const { data: pB } = await starter.client.from("products").insert({ ...base, company_id: starter.companyId, product_name: `Filtre a air B ${TAG}`, unit_price_ht: 2.4 }).select("id").single();
+  const { data: pP } = await pro.client.from("products").insert({ ...base, company_id: pro.companyId, product_name: `Filtre Pro ${TAG}`, unit_price_ht: 3 }).select("id").single();
+  const { data: pR } = await rival.client.from("products").insert({ ...base, company_id: rival.companyId, product_name: `Filtre rival ${TAG}`, unit_price_ht: 9 }).select("id").single();
+
+  // Acces au modele
+  const anon = await fetch(`${BASE}/api/catalog/price-list`, { redirect: "manual" });
+  report("Visiteur : modele refuse", anon.status === 403 || anon.status === 307, String(anon.status));
+  const asBuyer = await download(buyer);
+  report("Acheteur : modele refuse", asBuyer.status === 403, String(asBuyer.status));
+
+  // Modele Starter
+  const s = await download(starter);
+  report("Starter : fichier Excel telecharge", s.status === 200 && /spreadsheetml/.test(s.type ?? ""), `${s.status}`);
+  const prices = s.wb.getWorksheet("Liste de prix");
+  const pack = s.wb.getWorksheet("Conditionnement");
+  report("Feuilles : consignes, liste de prix, conditionnement", Boolean(s.wb.getWorksheet("Consignes") && prices && pack));
+  const sk = keysOf(prices);
+  report("Modele Starter : prix HT + incoterm, sans couts", sk.has("price") && sk.has("priceBasis") && sk.has("pricePlace") && !sk.has("productCost"), [...sk.keys()].join(","));
+  report("Pre-rempli avec ses 2 produits, sans ceux du concurrent", Boolean(rowOf(prices, pA.id) && rowOf(prices, pB.id)) && !rowOf(prices, pR.id) && !rowOf(prices, pP.id));
+  report("Conditionnement : 4 pictogrammes", pack.getImages().length === 4, String(pack.getImages().length));
+  report("Listes deroulantes sur la devise", Boolean(prices.getCell(5, sk.get("currency")).dataValidation?.type === "list"));
+
+  // Modification du fichier comme un fournisseur
+  const rA = rowOf(prices, pA.id), rB = rowOf(prices, pB.id);
+  const set = (ws, keys, row, key, v) => { ws.getCell(row, keys.get(key)).value = v; };
+  set(prices, sk, rA, "sku", "AF-018");
+  set(prices, sk, rA, "price", 5.5);
+  set(prices, sk, rA, "priceBasis", "FOB");
+  set(prices, sk, rA, "pricePlace", "Port d'Alger");
+  set(prices, sk, rA, "priceValidUntil", new Date(`${day(30)}T00:00:00Z`));
+  set(prices, sk, rA, "stock", 1200);
+  set(prices, sk, rA, "leadDays", 30);
+  set(prices, sk, rA, "crossRefs", "1444 TV, P520A");
+  set(prices, sk, rB, "price", "abc");
+  let free = 5; while (prices.getCell(free, 1).value) free++;
+  set(prices, sk, free, "sku", "AF-099");
+  set(prices, sk, free, "productName", `Nouveau filtre ${TAG}`);
+  set(prices, sk, free, "unit", "unit");
+  set(prices, sk, free, "price", 3);
+  set(prices, sk, free, "currency", "USD");
+  set(prices, sk, free, "priceBasis", "FOB");
+  set(prices, sk, free, "priceValidUntil", "31/12/2027");
+  set(prices, sk, free, "moq", 100);
+  set(prices, sk, free + 1, "id", pR.id);
+  set(prices, sk, free + 1, "price", 1);
+  const pkk = keysOf(pack);
+  const pr = rowOf(pack, pA.id);
+  set(pack, pkk, pr, "pk1Qty", 1);
+  set(pack, pkk, pr, "pk2Qty", 10);
+  set(pack, pkk, pr, "pk2Type", "Carton / Cardboard box");
+  set(pack, pkk, pr, "pk4Qty", 160);
+  set(pack, pkk, pr, "pk4Type", "Palette Europe 80x120 / Euro pallet 80x120");
+  set(pack, pkk, pr, "pk4Weight", 44.96);
+  set(pack, pkk, pr, "pkLabel", "Étiquette client / Customer label");
+  set(pack, pkk, pr, "pkProtection", "Banderolage");
+  const FILE = `${OUT}/liste-de-prix-modifiee.xlsx`;
+  writeFileSync(FILE, Buffer.from(await s.wb.xlsx.writeBuffer()));
+
+  // Navigateur : import avec apercu
+  let target;
+  for (let i = 0; i < 50 && !target; i++) { await sleep(200); try { target = (await (await fetch("http://127.0.0.1:9353/json/list")).json()).find((t) => t.type === "page"); } catch {} }
+  const ws = new WebSocket(target.webSocketDebuggerUrl);
+  await new Promise((r) => ws.addEventListener("open", r, { once: true }));
+  let id = 0; const pending = new Map();
+  ws.addEventListener("message", (e) => { const m = JSON.parse(e.data); if (m.id && pending.has(m.id)) { const { resolve, reject } = pending.get(m.id); pending.delete(m.id); m.error ? reject(new Error(m.error.message)) : resolve(m.result); } });
+  const send = (method, params = {}) => new Promise((resolve, reject) => { const i = ++id; pending.set(i, { resolve, reject }); ws.send(JSON.stringify({ id: i, method, params })); });
+  const run = async (body) => { const r = await send("Runtime.evaluate", { expression: `(async () => { ${body} })()`, awaitPromise: true, returnByValue: true }); if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text); return r.result.value; };
+  const loginAs = async (u) => { await send("Network.clearBrowserCookies"); if (u) for (const [name, value] of u.jar) await send("Network.setCookie", { name, value, url: BASE, path: "/" }); };
+  const waitFor = async (cond, tries = 80) => { for (let i = 0; i < tries; i++) { await sleep(400); try { if (await run(cond)) return true; } catch {} } return false; };
+  const go = async (path, ready = "return document.readyState === 'complete' && !!document.querySelector('h1');") => { await send("Page.navigate", { url: BASE + path }); await sleep(800); await waitFor(ready); };
+  const shot = async (name) => writeFileSync(`${OUT}/${name}.png`, Buffer.from((await send("Page.captureScreenshot", { format: "png", captureBeyondViewport: true })).data, "base64"));
+  const attach = async (file) => { const { root } = await send("DOM.getDocument"); const { nodeId } = await send("DOM.querySelector", { nodeId: root.nodeId, selector: "input[name=file]" }); await send("DOM.setFileInputFiles", { nodeId, files: [file.replace(/\//g, "\\")] }); await sleep(500); };
+  const count = (k) => `Number(document.querySelector('[data-count="${k}"] p:last-child')?.textContent)`;
+  await send("Page.enable"); await send("Runtime.enable"); await send("Network.enable"); await send("DOM.enable");
+  await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 1300, deviceScaleFactor: 1, mobile: false });
+
+  await loginAs(starter);
+  await go("/fr/catalog", `return !!document.querySelector('[data-download="price-list"]');`);
+  report("Catalogue : boutons telecharger et importer", await run(`return !!document.querySelector('a[href$="/catalog/import"]');`));
+  await go("/fr/catalog/import", `return !!document.querySelector("input[name=file]");`);
+  report("Page d'import : modele Starter annonce", await run(`return document.body.innerText.includes("forfait Starter");`));
+  await attach(FILE);
+  await run(`[...document.querySelectorAll("main button")].find((b) => /vérifier/i.test(b.textContent)).click(); return true;`);
+  report("Apercu : 1 mis a jour, 1 nouveau, 2 lignes en erreur", await waitFor(`return ${count("importUpdates")} === 1 && ${count("importCreates")} === 1 && ${count("importIssues")} === 2;`), await run(`return [${count("importUpdates")}, ${count("importCreates")}, ${count("importUnchanged")}, ${count("importIssues")}].join("/");`));
+  report("Erreurs : prix invalide (ligne B) et produit inconnu (concurrent)", await run(`const t = document.body.innerText; return t.includes("Ligne ${rB}") && /prix/i.test(t) && t.includes("Produit introuvable dans votre catalogue");`));
+  const { data: before } = await admin.from("products").select("unit_price_ht").eq("id", pA.id).single();
+  report("Apercu : rien n'est encore enregistre", Number(before.unit_price_ht) === 2);
+  await shot("price-list-import");
+  await run(`[...document.querySelectorAll("main button")].find((b) => /enregistrer/i.test(b.textContent)).click(); return true;`);
+  report("Enregistrement : message, lignes en erreur rappelees", await waitFor(`return document.body.innerText.includes("Import enregistré, sauf les lignes en erreur");`));
+
+  const { data: a } = await admin.from("products").select("*").eq("id", pA.id).single();
+  report("En base : A 5,50 FOB Port d'Alger, AF-018, validite, stock 1200 date, delai 30, refs croisees", Number(a.unit_price_ht) === 5.5 && a.price_basis === "FOB" && a.price_place === "Port d'Alger" && a.sku === "AF-018" && a.price_valid_until === day(30) && Number(a.stock_quantity) === 1200 && Boolean(a.stock_updated_at) && a.lead_time_days === 30 && a.cross_refs.join("|") === "1444 TV|P520A", JSON.stringify({ p: a.unit_price_ht, b: a.price_basis, v: a.price_valid_until, s: a.stock_quantity }));
+  const spec = a.packaging_spec;
+  report("Conditionnement : carton x10, palette Europe 160 / 44,96 kg, etiquette client, banderolage", spec?.levels?.[1]?.type === "carton" && spec.levels[1].qty === 10 && spec.levels[3].type === "pallet_euro" && spec.levels[3].qty === 160 && spec.levels[3].weight_kg === 44.96 && spec.label === "customer" && spec.protection === "stretch", JSON.stringify(spec));
+  const { data: b } = await admin.from("products").select("unit_price_ht").eq("id", pB.id).single();
+  report("Ligne en erreur non appliquee (B inchange)", Number(b.unit_price_ht) === 2.4);
+  const { data: created } = await admin.from("products").select("status, unit_price_ht, currency, price_valid_until, company_id").eq("sku", "AF-099").eq("company_id", starter.companyId).maybeSingle();
+  report("Nouvelle reference creee en brouillon (date 31/12/2027 lue)", created?.status === "draft" && Number(created.unit_price_ht) === 3 && created.currency === "USD" && created.price_valid_until === "2027-12-31", JSON.stringify(created));
+  const { data: r } = await admin.from("products").select("unit_price_ht").eq("id", pR.id).single();
+  report("Produit du concurrent intact", Number(r.unit_price_ht) === 9);
+
+  // Catalogue : validite et filtre
+  await go("/fr/catalog", `return !!document.querySelector("main table");`);
+  report("Catalogue : reference AF-018 et validite affichees", await run(`const t = document.querySelector("main table").innerText; return t.includes("AF-018") && /valable jusqu'au/i.test(t) && /validité à préciser/i.test(t);`));
+  await run(`const s = [...document.querySelectorAll("main select")].find((x) => [...x.options].some((o) => o.value === "stale")); const set = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value").set; set.call(s, "stale"); s.dispatchEvent(new Event("change", { bubbles: true })); return true;`);
+  report("Filtre 'prix a mettre a jour' : B seul (A et AF-099 ont un prix valide)", await waitFor(`const t = document.querySelector("main table").innerText; return !t.includes("AF-018") && !t.includes("AF-099") && t.includes("Filtre a air B");`, 10), await run(`return document.querySelector("main table").innerText.replace(/\\s+/g, " ").slice(0, 400);`));
+  await shot("price-list-catalog");
+
+  // Editeur Starter : publication sans date de validite refusee
+  await go(`/fr/catalog/${pB.id}`, `return !!document.getElementById("pe-price");`);
+  report("Editeur Starter : prix HT, incoterm, lieu, validite", await run(`return !!document.getElementById("pe-basis") && !!document.getElementById("pe-place") && !!document.getElementById("pe-valid") && !document.getElementById("pe-cost");`));
+
+  // Forfait Pro : modele detaille et prix FCA calcule
+  const p = await download(pro);
+  const pw = p.wb.getWorksheet("Liste de prix");
+  const pk = keysOf(pw);
+  report("Modele Pro : cout produit + cout emballage = FCA, sans incoterm", pk.has("productCost") && pk.has("packagingCost") && pk.has("fca") && !pk.has("price") && !pk.has("priceBasis"), [...pk.keys()].join(","));
+  const prow = rowOf(pw, pP.id);
+  report("Formule FCA dans le fichier", Boolean(pw.getCell(prow, pk.get("fca")).value?.formula));
+  pw.getCell(prow, pk.get("productCost")).value = 1.6;
+  pw.getCell(prow, pk.get("packagingCost")).value = 0.4;
+  pw.getCell(prow, pk.get("priceValidUntil")).value = new Date(`${day(60)}T00:00:00Z`);
+  const PRO_FILE = `${OUT}/liste-de-prix-pro.xlsx`;
+  writeFileSync(PRO_FILE, Buffer.from(await p.wb.xlsx.writeBuffer()));
+  await loginAs(pro);
+  await go("/fr/catalog/import", `return !!document.querySelector("input[name=file]");`);
+  await attach(PRO_FILE);
+  await run(`[...document.querySelectorAll("main button")].find((b) => /vérifier/i.test(b.textContent)).click(); return true;`);
+  await waitFor(`return ${count("importUpdates")} === 1;`);
+  await run(`[...document.querySelectorAll("main button")].find((b) => /enregistrer/i.test(b.textContent)).click(); return true;`);
+  report("Pro : import sans erreur, retour au catalogue", await waitFor(`return location.pathname === "/fr/catalog" && location.search.includes("imported=1");`));
+  const { data: pp } = await admin.from("products").select("unit_price_ht, product_cost, packaging_cost, price_basis").eq("id", pP.id).single();
+  report("En base : FCA 2,00 = 1,60 + 0,40, base FCA", Number(pp.unit_price_ht) === 2 && Number(pp.product_cost) === 1.6 && Number(pp.packaging_cost) === 0.4 && pp.price_basis === "FCA", JSON.stringify(pp));
+  await go(`/fr/catalog/${pP.id}`, `return !!document.getElementById("pe-cost");`);
+  report("Editeur Pro : couts et total FCA affiche", await run(`return !document.getElementById("pe-price") && document.querySelector("[data-fca]").innerText.replace(/\\s/g, "").includes("2,00");`));
+
+  // Confidentialite des couts
+  const anonClient = createClient(url, pub, { auth: { persistSession: false } });
+  const { error: costErr } = await anonClient.from("products").select("product_cost").limit(1);
+  const { error: skuErr } = await anonClient.from("products").select("sku").limit(1);
+  report("Public : couts illisibles, reference lisible", Boolean(costErr) && !skuErr, costErr?.code);
+  const { data: rivalPrices } = await rival.client.rpc("product_prices", { p_company: starter.companyId });
+  report("Concurrent : aucun prix ni cout de l'autre fournisseur", (rivalPrices ?? []).length === 0);
+
+  await go(`/ar/catalog/import`, `return !!document.querySelector("input[name=file]");`);
+  report("Import en arabe (RTL)", await run(`return document.documentElement.dir === "rtl" && document.body.innerText.includes("استيراد قائمة أسعاري");`));
+  ws.close();
+} catch (e) {
+  report("Execution du test", false, e.message);
+} finally {
+  chrome.kill();
+  for (const uid of users) { await admin.from("companies").delete().eq("owner_profile_id", uid); await admin.auth.admin.deleteUser(uid); }
+  console.log("Nettoyage :", users.length, "comptes supprimes");
+  await sleep(300);
+  try { rmSync(`${OUT}/profile-pricelist`, { recursive: true, force: true }); } catch {}
+}
+console.log(failed ? `\n${failed} echec(s)` : "\nTout est bon");

@@ -44,12 +44,24 @@ export type MyCompany = NonNullable<Awaited<ReturnType<typeof getMyCompany>>>;
 
 // Le prix producteur n'est pas lisible dans la table (confidentiel) : chaque entreprise lit
 // les siens via la fonction product_prices(), reservee a ses membres et a l'admin.
-async function withPrices<T extends { id: string }>(client: Client, companyId: string, rows: T[]) {
-  if (!rows.length) return rows.map((r) => ({ ...r, unit_price_ht: null as number | null }));
+// Forfait de l'entreprise : decide du modele de liste de prix (Starter ou detaille).
+export async function getCompanyTier(client: Client, companyId: string) {
+  const { data } = await client.from("companies").select("subscription_tier").eq("id", companyId).maybeSingle();
+  return data?.subscription_tier ?? "starter";
+}
+
+// Meme regle pour la construction du prix (couts) et sa date de validite.
+type PrivatePrice = { unit_price_ht: number | null; product_cost: number | null; packaging_cost: number | null; price_valid_until: string | null };
+const NO_PRICE: PrivatePrice = { unit_price_ht: null, product_cost: null, packaging_cost: null, price_valid_until: null };
+const num = (x: unknown) => (x === null || x === undefined ? null : Number(x));
+async function withPrices<T extends { id: string }>(client: Client, companyId: string, rows: T[]): Promise<(T & PrivatePrice)[]> {
+  if (!rows.length) return [];
   const { data, error } = await client.rpc("product_prices", { p_company: companyId });
   if (error) throw error;
-  const prices = new Map((data ?? []).map((p) => [p.product_id, p.unit_price_ht === null ? null : Number(p.unit_price_ht)]));
-  return rows.map((r) => ({ ...r, unit_price_ht: prices.get(r.id) ?? null }));
+  const prices = new Map<string, PrivatePrice>(
+    (data ?? []).map((p) => [p.product_id, { unit_price_ht: num(p.unit_price_ht), product_cost: num(p.product_cost), packaging_cost: num(p.packaging_cost), price_valid_until: p.price_valid_until }]),
+  );
+  return rows.map((r) => ({ ...r, ...(prices.get(r.id) ?? NO_PRICE) }));
 }
 
 // Premier produit de l'entreprise (celui saisi a la premiere configuration), s'il existe.
@@ -66,7 +78,7 @@ export async function getFirstProduct(client: Client, companyId: string) {
 }
 
 const PRODUCT_COLUMNS =
-  "id, product_name, hs_code, description_fr, description_en, description_ar, currency, price_basis, unit, min_order_quantity, packaging, container_capacity_20ft, container_capacity_40ft, stock_quantity, images, status, updated_at, units_per_carton, carton_length_cm, carton_width_cm, carton_height_cm, carton_gross_weight_kg, max_stack_layers, storage_condition, palletized, cartons_per_pallet";
+  "id, product_name, hs_code, description_fr, description_en, description_ar, currency, price_basis, unit, min_order_quantity, packaging, container_capacity_20ft, container_capacity_40ft, stock_quantity, images, status, updated_at, units_per_carton, carton_length_cm, carton_width_cm, carton_height_cm, carton_gross_weight_kg, max_stack_layers, storage_condition, palletized, cartons_per_pallet, sku, cross_refs, price_place, stock_updated_at, lead_time_days, origin_country, packaging_spec";
 
 // Catalogue de l'entreprise (brouillons compris) : la RLS limite aux membres.
 export async function listProducts(client: Client, companyId: string) {

@@ -669,6 +669,7 @@ export type Database = {
           container_capacity_20ft: number | null
           container_capacity_40ft: number | null
           created_at: string
+          cross_refs: string[]
           currency: string | null
           description_ar: string | null
           description_en: string | null
@@ -678,18 +679,27 @@ export type Database = {
           id: string
           images: Json
           is_locked: boolean
+          lead_time_days: number | null
           max_stack_layers: number | null
           min_order_quantity: number | null
+          origin_country: string
           packaging: string | null
+          packaging_cost: number | null
+          packaging_spec: Json | null
           palletized: boolean
           price_basis: string | null
+          price_place: string | null
+          price_valid_until: string | null
+          product_cost: number | null
           product_name: string
+          sku: string | null
           slug: string | null
           sort_order: number
           source: string
           status: string
           stock_quantity: number | null
           stock_sync_frequency: string
+          stock_updated_at: string | null
           storage_condition: string | null
           unit: string | null
           unit_price_ht: number | null
@@ -707,6 +717,7 @@ export type Database = {
           container_capacity_20ft?: number | null
           container_capacity_40ft?: number | null
           created_at?: string
+          cross_refs?: string[]
           currency?: string | null
           description_ar?: string | null
           description_en?: string | null
@@ -716,18 +727,27 @@ export type Database = {
           id?: string
           images?: Json
           is_locked?: boolean
+          lead_time_days?: number | null
           max_stack_layers?: number | null
           min_order_quantity?: number | null
+          origin_country?: string
           packaging?: string | null
+          packaging_cost?: number | null
+          packaging_spec?: Json | null
           palletized?: boolean
           price_basis?: string | null
+          price_place?: string | null
+          price_valid_until?: string | null
+          product_cost?: number | null
           product_name: string
+          sku?: string | null
           slug?: string | null
           sort_order?: number
           source?: string
           status?: string
           stock_quantity?: number | null
           stock_sync_frequency?: string
+          stock_updated_at?: string | null
           storage_condition?: string | null
           unit?: string | null
           unit_price_ht?: number | null
@@ -745,6 +765,7 @@ export type Database = {
           container_capacity_20ft?: number | null
           container_capacity_40ft?: number | null
           created_at?: string
+          cross_refs?: string[]
           currency?: string | null
           description_ar?: string | null
           description_en?: string | null
@@ -754,18 +775,27 @@ export type Database = {
           id?: string
           images?: Json
           is_locked?: boolean
+          lead_time_days?: number | null
           max_stack_layers?: number | null
           min_order_quantity?: number | null
+          origin_country?: string
           packaging?: string | null
+          packaging_cost?: number | null
+          packaging_spec?: Json | null
           palletized?: boolean
           price_basis?: string | null
+          price_place?: string | null
+          price_valid_until?: string | null
+          product_cost?: number | null
           product_name?: string
+          sku?: string | null
           slug?: string | null
           sort_order?: number
           source?: string
           status?: string
           stock_quantity?: number | null
           stock_sync_frequency?: string
+          stock_updated_at?: string | null
           storage_condition?: string | null
           unit?: string | null
           unit_price_ht?: number | null
@@ -1508,6 +1538,9 @@ export type Database = {
       product_prices: {
         Args: { p_company: string }
         Returns: {
+          packaging_cost: number
+          price_valid_until: string
+          product_cost: number
           product_id: string
           unit_price_ht: number
         }[]

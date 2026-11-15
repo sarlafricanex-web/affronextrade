@@ -5,16 +5,18 @@ import { redirect } from "next/navigation";
 import { updateTag } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { resolveLocale } from "@/lib/auth/next-path";
-import { getMyCompanyId, getProduct, productImages, type ProductImage } from "@/lib/data/company";
+import { getCompanyTier, getMyCompanyId, getProduct, productImages, type ProductImage } from "@/lib/data/company";
 import { contentTypeOf, readImage } from "@/lib/images";
-import { CURRENCIES, PRICE_BASES, UNITS, normalizeHsCode, parseAmount } from "@/lib/onboarding/reference";
+import { UNITS, normalizeHsCode, parseAmount } from "@/lib/onboarding/reference";
+import { PACK_FIELDS, PRICE_FIELDS, readPackagingInput, readPriceInput, type PackField, type PriceField } from "@/lib/catalog/price-list";
 import type { Database } from "@/lib/supabase/database.types";
 import { STORAGE_CONDITIONS, estimateContainer, type StorageCondition } from "@/lib/logistics/container";
 
 export type CatalogField =
-  | "productName" | "hsCode" | "descriptionFr" | "descriptionEn" | "descriptionAr" | "price" | "currency" | "priceBasis"
-  | "unit" | "moq" | "packaging" | "stock" | "status" | "photo"
-  | "unitsPerCarton" | "cartonLength" | "cartonWidth" | "cartonHeight" | "cartonWeight" | "maxStack" | "storage" | "cartonsPerPallet";
+  | "productName" | "hsCode" | "descriptionFr" | "descriptionEn" | "descriptionAr"
+  | "unit" | "packaging" | "status" | "photo"
+  | "unitsPerCarton" | "cartonLength" | "cartonWidth" | "cartonHeight" | "cartonWeight" | "maxStack" | "storage" | "cartonsPerPallet"
+  | PriceField | PackField;
 // values : saisie renvoyee en cas d'erreur (React reinitialise le formulaire apres chaque envoi).
 export type CatalogState = {
   errors: Partial<Record<CatalogField, string>>;
@@ -23,10 +25,11 @@ export type CatalogState = {
   attempt?: number;
 };
 const TEXT_FIELDS = [
-  "productName", "hsCode", "descriptionFr", "descriptionEn", "descriptionAr", "price", "currency", "priceBasis",
-  "unit", "moq", "packaging", "stock", "status",
+  "productName", "hsCode", "descriptionFr", "descriptionEn", "descriptionAr",
+  "unit", "packaging", "status",
   "unitsPerCarton", "cartonLength", "cartonWidth", "cartonHeight", "cartonWeight", "maxStack", "storage", "palletized", "cartonsPerPallet",
-] as const;
+  ...PRICE_FIELDS, ...PACK_FIELDS,
+];
 
 // Nombre facultatif > 0 et <= max : null si vide, NaN si invalide.
 function optionalPositive(value: string, max: number) {
@@ -64,20 +67,15 @@ export async function saveProduct(_prev: CatalogState, formData: FormData): Prom
   const existing = productId ? await getProduct(supabase, companyId, productId) : null;
   if (productId && !existing) redirect(`/${locale}/catalog`);
 
-  const stockRaw = text(formData, "stock");
+  const tier = await getCompanyTier(supabase, companyId);
   const v = {
     productName: text(formData, "productName"),
     hsCode: normalizeHsCode(text(formData, "hsCode")),
     descriptionFr: text(formData, "descriptionFr"),
     descriptionEn: text(formData, "descriptionEn"),
     descriptionAr: text(formData, "descriptionAr"),
-    price: parseAmount(text(formData, "price")),
-    currency: text(formData, "currency"),
-    priceBasis: text(formData, "priceBasis"),
     unit: text(formData, "unit"),
-    moq: parseAmount(text(formData, "moq")),
     packaging: text(formData, "packaging"),
-    stock: stockRaw === "" ? null : parseAmount(stockRaw),
     status: text(formData, "status"),
     // Fiche logistique (facultative) : la capacite par conteneur en est deduite, jamais saisie.
     unitsPerCarton: optionalPositive(text(formData, "unitsPerCarton"), 1_000_000),
@@ -95,13 +93,18 @@ export async function saveProduct(_prev: CatalogState, formData: FormData): Prom
   if (v.productName.length < 2 || v.productName.length > 255) errors.productName = "errorProductName";
   if (!v.hsCode) errors.hsCode = "errorHsCode";
   for (const k of ["descriptionFr", "descriptionEn", "descriptionAr"] as const) if (v[k].length > 2000) errors[k] = "errorTooLong";
-  if (v.price === null || v.price <= 0) errors.price = "errorPrice";
-  if (!(CURRENCIES as readonly string[]).includes(v.currency)) errors.currency = "errorChoose";
-  if (!(PRICE_BASES as readonly string[]).includes(v.priceBasis)) errors.priceBasis = "errorChoose";
   if (!(UNITS as readonly string[]).includes(v.unit)) errors.unit = "errorChoose";
-  if (v.moq === null || v.moq <= 0) errors.moq = "errorMoq";
   if (v.packaging.length > 200) errors.packaging = "errorTooLong";
-  if (stockRaw !== "" && v.stock === null) errors.stock = "errorAmount";
+  // Liste de prix (selon le forfait) et conditionnement : regles communes avec l'import Excel.
+  const today = new Date().toISOString().slice(0, 10);
+  const priced = readPriceInput(
+    Object.fromEntries(PRICE_FIELDS.map((k) => [k, text(formData, k)])) as Record<PriceField, string>,
+    tier,
+    today,
+    v.status === "published",
+  );
+  const packed = readPackagingInput((k) => text(formData, k));
+  Object.assign(errors, priced.errors, packed.errors);
   for (const k of ["unitsPerCarton", "cartonLength", "cartonWidth", "cartonHeight", "cartonWeight"] as const) {
     if (Number.isNaN(v[k])) errors[k] = "errorPositive";
   }
@@ -169,13 +172,10 @@ export async function saveProduct(_prev: CatalogState, formData: FormData): Prom
     description_fr: v.descriptionFr || null,
     description_en: v.descriptionEn || null,
     description_ar: v.descriptionAr || null,
-    unit_price_ht: v.price,
-    currency: v.currency,
-    price_basis: v.priceBasis,
+    ...priced.fields,
+    packaging_spec: packed.spec,
     unit: v.unit,
-    min_order_quantity: v.moq,
     packaging: v.packaging || null,
-    stock_quantity: v.stock,
     status: v.status,
     images,
   } satisfies Database["public"]["Tables"]["products"]["Update"];
@@ -184,9 +184,11 @@ export async function saveProduct(_prev: CatalogState, formData: FormData): Prom
     ? await supabase.from("products").update(fields).eq("id", existing.id)
     : await supabase.from("products").insert({ ...fields, company_id: companyId, source: "producer" });
   if (error) {
-    console.error("Catalog save failed:", error.code, error.message);
     const added = images.filter((i) => !current.some((c) => c.path === i.path)).map((i) => i.path);
     if (added.length) await supabase.storage.from("product-images").remove(added);
+    // Reference fournisseur deja utilisee dans le catalogue.
+    if (error.code === "23505") return fail({ errors: { sku: "errorSkuTaken" } });
+    console.error("Catalog save failed:", error.code, error.message);
     return fail({ errors: {}, formError: "errorGeneric" });
   }
   const removable = [...toRemove].filter((p) => p.startsWith(`${companyId}/`));

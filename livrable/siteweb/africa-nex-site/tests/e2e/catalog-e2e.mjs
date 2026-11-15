@@ -89,6 +89,7 @@ try {
     setV(document.getElementById("pe-hs"), "12");
     setV(document.getElementById("pe-desc-Fr"), "Huile de premiere pression a froid, recolte 2026.");
     setV(document.getElementById("pe-price"), "9,20");
+    setV(document.getElementById("pe-valid"), "${new Date(Date.now() + 60 * 864e5).toISOString().slice(0, 10)}");
     setV(document.getElementById("pe-unit"), "l");
     setV(document.getElementById("pe-moq"), "2000");
     setV(document.getElementById("pe-pack"), "Bidons de 5 l, 4 par carton");
