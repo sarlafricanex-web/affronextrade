@@ -165,8 +165,9 @@ try {
   // Catalogue : validite et filtre
   await go("/fr/catalog", `return !!document.querySelector("main table");`);
   report("Catalogue : reference AF-018 et validite affichees", await run(`const t = document.querySelector("main table").innerText; return t.includes("AF-018") && /valable jusqu'au/i.test(t) && /validité à préciser/i.test(t);`));
-  await run(`const s = [...document.querySelectorAll("main select")].find((x) => [...x.options].some((o) => o.value === "stale")); const set = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value").set; set.call(s, "stale"); s.dispatchEvent(new Event("change", { bubbles: true })); return true;`);
-  report("Filtre 'prix a mettre a jour' : B seul (A et AF-099 ont un prix valide)", await waitFor(`const t = document.querySelector("main table").innerText; return !t.includes("AF-018") && !t.includes("AF-099") && t.includes("Filtre a air B");`, 10), await run(`return document.querySelector("main table").innerText.replace(/\\s+/g, " ").slice(0, 400);`));
+  // Le filtre est reapplique a chaque essai : avant l'hydratation de la page, le changement est perdu.
+  const STALE = `const s = [...document.querySelectorAll("main select")].find((x) => [...x.options].some((o) => o.value === "stale")); if (s.value !== "stale") { Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value").set.call(s, "stale"); s.dispatchEvent(new Event("change", { bubbles: true })); }`;
+  report("Filtre 'prix a mettre a jour' : B seul (A et AF-099 ont un prix valide)", await waitFor(`${STALE} const t = document.querySelector("main table").innerText; return !t.includes("AF-018") && !t.includes("AF-099") && t.includes("Filtre a air B");`, 20), await run(`return document.querySelector("main table").innerText.replace(/\\s+/g, " ").slice(0, 400);`));
   await shot("price-list-catalog");
 
   // Editeur Starter : publication sans date de validite refusee
