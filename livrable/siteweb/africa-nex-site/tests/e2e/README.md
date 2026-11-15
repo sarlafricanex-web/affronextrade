@@ -44,6 +44,7 @@ Chrome doit être installé. Autre emplacement : variable `CHROME_PATH`.
 | `rfq-producer` | Demandes reçues côté producteur : liste, compteur, devis (refus, envoi, mise à jour), déclin, verrouillage, cloisonnement |
 | `rfq-offer` | Comparatif des devis, saisie hors ligne, composition de l'offre (grille de commission, assurance, fret), garde-fou d'anonymat, publication, retrait |
 | `price-list` | Liste de prix fournisseur : modèle Excel selon le forfait (Starter ou Pro), import avec aperçu, erreurs ligne par ligne, conditionnement 4 niveaux, prix FCA calculé, confidentialité des coûts |
+| `admin-settings` | Réglages admin : taux de référence EUR et USD, mode d'affaire de chaque fournisseur (confidentiel) |
 | `admin-producers` | Console admin des producteurs |
 | `return`, `redirect` | Retour à la bonne page après inscription ou connexion |
 | `phone` | Téléphone international et pays |

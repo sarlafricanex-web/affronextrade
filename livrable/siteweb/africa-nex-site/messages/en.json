@@ -512,7 +512,8 @@
     "navRfqNew": "New request",
     "badgeLabel": "{count} to handle",
     "navAdminRfqs": "Quote requests",
-    "navRequests": "Requests received"
+    "navRequests": "Requests received",
+    "navSettings": "Settings"
   },
   "admin": {
     "eyebrow": "Contact form",
@@ -817,7 +818,27 @@
     "offerErrorQuote": "Quote not found for this request.",
     "offerErrorRfqClosed": "The request no longer accepts offers.",
     "offerErrorNotDraft": "This offer is published: withdraw it before editing.",
-    "rfqOpen": "Open"
+    "rfqOpen": "Open",
+    "settingsTitle": "Settings",
+    "settingsIntro": "Reference exchange rates and deal mode of each supplier. Visible to AFRICA NEX only.",
+    "settingsRatesTitle": "Reference rates",
+    "settingsRatesHelp": "Used to convert dinar prices into the buyer's currency (offers exported by AFRICA NEX). Each offer keeps the rate applied.",
+    "settingsRateLabel": "{currency} rate",
+    "settingsRateUpdated": "Updated on {date}",
+    "settingsRateNever": "Not set yet",
+    "settingsRatesSave": "Save rates",
+    "settingsErrorRate": "Invalid rate: between 1 and 100,000 DZD, 4 decimals max.",
+    "settingsErrorSave": "Could not be saved.",
+    "settingsSavedRates": "Reference rates saved.",
+    "settingsSavedModes": "Modes saved: {count} supplier(s) changed.",
+    "settingsModesTitle": "Supplier deal mode",
+    "settingsModesHelp": "The supplier exports itself (intermediation, grid commission) or AFRICA NEX exports for it (VAT-exempt purchase, negotiated margin). The supplier does not see this setting.",
+    "settingsModesUndefined": "{count} to set",
+    "settingsModeFor": "Deal mode of {name}",
+    "settingsMode_unset": "To set",
+    "settingsMode_self": "Supplier exports (intermediation)",
+    "settingsMode_africanex": "AFRICA NEX exports",
+    "settingsModesSave": "Save modes"
   },
   "phone": {
     "countryCode": "Country code: {code}. Change country",

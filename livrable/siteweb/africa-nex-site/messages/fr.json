@@ -512,7 +512,8 @@
     "navRfqNew": "Nouvelle demande",
     "badgeLabel": "{count} à traiter",
     "navAdminRfqs": "Demandes de devis",
-    "navRequests": "Demandes reçues"
+    "navRequests": "Demandes reçues",
+    "navSettings": "Réglages"
   },
   "admin": {
     "eyebrow": "Formulaire de contact",
@@ -817,7 +818,27 @@
     "offerErrorQuote": "Devis introuvable pour cette demande.",
     "offerErrorRfqClosed": "La demande n'accepte plus d'offre.",
     "offerErrorNotDraft": "Cette offre est publiée : retirez-la avant de la modifier.",
-    "rfqOpen": "Ouvrir la fiche"
+    "rfqOpen": "Ouvrir la fiche",
+    "settingsTitle": "Réglages",
+    "settingsIntro": "Taux de change de référence et mode d'affaire de chaque fournisseur. Visibles par AFRICA NEX seulement.",
+    "settingsRatesTitle": "Taux de référence",
+    "settingsRatesHelp": "Utilisés pour convertir les prix en dinars dans la devise de l'acheteur (offres exportées par AFRICA NEX). Chaque offre garde le taux appliqué.",
+    "settingsRateLabel": "Taux {currency}",
+    "settingsRateUpdated": "Mis à jour le {date}",
+    "settingsRateNever": "Pas encore saisi",
+    "settingsRatesSave": "Enregistrer les taux",
+    "settingsErrorRate": "Taux invalide : entre 1 et 100 000 DZD, 4 décimales au plus.",
+    "settingsErrorSave": "Enregistrement impossible.",
+    "settingsSavedRates": "Taux de référence enregistrés.",
+    "settingsSavedModes": "Modes enregistrés : {count} fournisseur(s) modifié(s).",
+    "settingsModesTitle": "Mode d'affaire des fournisseurs",
+    "settingsModesHelp": "Le fournisseur exporte lui-même (intermédiation, commission de la grille) ou AFRICA NEX exporte pour lui (achat en franchise de TVA, marge négociée). Le fournisseur ne voit pas ce réglage.",
+    "settingsModesUndefined": "{count} à définir",
+    "settingsModeFor": "Mode d'affaire de {name}",
+    "settingsMode_unset": "À définir",
+    "settingsMode_self": "Le fournisseur exporte (intermédiation)",
+    "settingsMode_africanex": "AFRICA NEX exporte",
+    "settingsModesSave": "Enregistrer les modes"
   },
   "phone": {
     "countryCode": "Indicatif du pays : {code}. Changer de pays",

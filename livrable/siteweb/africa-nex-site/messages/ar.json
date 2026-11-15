@@ -512,7 +512,8 @@
     "navRfqNew": "طلب جديد",
     "badgeLabel": "{count} للمعالجة",
     "navAdminRfqs": "طلبات عروض الأسعار",
-    "navRequests": "الطلبات الواردة"
+    "navRequests": "الطلبات الواردة",
+    "navSettings": "الإعدادات"
   },
   "admin": {
     "eyebrow": "استمارة الاتصال",
@@ -817,7 +818,27 @@
     "offerErrorQuote": "عرض السعر غير موجود لهذا الطلب.",
     "offerErrorRfqClosed": "لم يعد الطلب يقبل عروضاً.",
     "offerErrorNotDraft": "هذا العرض منشور: اسحبه قبل تعديله.",
-    "rfqOpen": "فتح الملف"
+    "rfqOpen": "فتح الملف",
+    "settingsTitle": "الإعدادات",
+    "settingsIntro": "أسعار الصرف المرجعية ونمط التعامل لكل مورد. مرئية لـ AFRICA NEX فقط.",
+    "settingsRatesTitle": "الأسعار المرجعية",
+    "settingsRatesHelp": "تُستعمل لتحويل الأسعار بالدينار إلى عملة المشتري (العروض التي تصدّرها AFRICA NEX). يحتفظ كل عرض بالسعر المطبق.",
+    "settingsRateLabel": "سعر {currency}",
+    "settingsRateUpdated": "تم التحديث في {date}",
+    "settingsRateNever": "لم يُدخل بعد",
+    "settingsRatesSave": "حفظ الأسعار",
+    "settingsErrorRate": "سعر غير صالح: بين 1 و100000 دج، 4 أرقام عشرية كحد أقصى.",
+    "settingsErrorSave": "تعذر الحفظ.",
+    "settingsSavedRates": "تم حفظ الأسعار المرجعية.",
+    "settingsSavedModes": "تم حفظ الأنماط: {count} مورد معدّل.",
+    "settingsModesTitle": "نمط التعامل مع الموردين",
+    "settingsModesHelp": "المورد يصدّر بنفسه (وساطة، عمولة السلم) أو تصدّر AFRICA NEX نيابة عنه (شراء معفى من الرسم، هامش متفاوض عليه). لا يرى المورد هذا الإعداد.",
+    "settingsModesUndefined": "{count} غير محدد",
+    "settingsModeFor": "نمط التعامل لـ {name}",
+    "settingsMode_unset": "غير محدد",
+    "settingsMode_self": "المورد يصدّر (وساطة)",
+    "settingsMode_africanex": "AFRICA NEX تصدّر",
+    "settingsModesSave": "حفظ الأنماط"
   },
   "phone": {
     "countryCode": "رمز البلد: {code}. تغيير البلد",
