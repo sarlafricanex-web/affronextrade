@@ -1,7 +1,7 @@
 import "server-only";
 import { productImages, type Product } from "@/lib/data/company";
 import type { EditorProduct } from "@/components/catalog/ProductEditor";
-import { packagingValues } from "@/lib/catalog/price-list";
+import { packagingValues, tierValues } from "@/lib/catalog/price-list";
 
 const str = (v: unknown) => (v === null || v === undefined ? "" : String(v));
 
@@ -42,5 +42,7 @@ export function toEditorProduct(p: Product | null): EditorProduct {
     originCountry: p?.origin_country ?? "DZ",
     stockUpdatedAt: p?.stock_updated_at ?? "",
     ...packagingValues(p?.packaging_spec),
+    priceDzd: str(p?.price_dzd_ht),
+    ...tierValues(p?.discount_tiers),
   };
 }

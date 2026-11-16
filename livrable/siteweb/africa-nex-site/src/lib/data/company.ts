@@ -50,16 +50,23 @@ export async function getCompanyTier(client: Client, companyId: string) {
   return data?.subscription_tier ?? "starter";
 }
 
+// Grille de remise par defaut du fournisseur (confidentielle : membres et admin).
+export async function getSupplierPricing(client: Client, companyId: string) {
+  const { data } = await client.from("supplier_pricing").select("discount_tiers, updated_at").eq("company_id", companyId).maybeSingle();
+  return { discount_tiers: (data?.discount_tiers ?? []) as unknown, updated_at: data?.updated_at ?? null };
+}
+
 // Meme regle pour la construction du prix (couts) et sa date de validite.
-type PrivatePrice = { unit_price_ht: number | null; product_cost: number | null; packaging_cost: number | null; price_valid_until: string | null };
-const NO_PRICE: PrivatePrice = { unit_price_ht: null, product_cost: null, packaging_cost: null, price_valid_until: null };
+// Prix en dinars et paliers de remise : confidentiels eux aussi.
+type PrivatePrice = { unit_price_ht: number | null; product_cost: number | null; packaging_cost: number | null; price_valid_until: string | null; price_dzd_ht: number | null; discount_tiers: unknown };
+const NO_PRICE: PrivatePrice = { unit_price_ht: null, product_cost: null, packaging_cost: null, price_valid_until: null, price_dzd_ht: null, discount_tiers: null };
 const num = (x: unknown) => (x === null || x === undefined ? null : Number(x));
 async function withPrices<T extends { id: string }>(client: Client, companyId: string, rows: T[]): Promise<(T & PrivatePrice)[]> {
   if (!rows.length) return [];
   const { data, error } = await client.rpc("product_prices", { p_company: companyId });
   if (error) throw error;
   const prices = new Map<string, PrivatePrice>(
-    (data ?? []).map((p) => [p.product_id, { unit_price_ht: num(p.unit_price_ht), product_cost: num(p.product_cost), packaging_cost: num(p.packaging_cost), price_valid_until: p.price_valid_until }]),
+    (data ?? []).map((p) => [p.product_id, { unit_price_ht: num(p.unit_price_ht), product_cost: num(p.product_cost), packaging_cost: num(p.packaging_cost), price_valid_until: p.price_valid_until, price_dzd_ht: num(p.price_dzd_ht), discount_tiers: p.discount_tiers }]),
   );
   return rows.map((r) => ({ ...r, ...(prices.get(r.id) ?? NO_PRICE) }));
 }

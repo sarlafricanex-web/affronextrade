@@ -1,7 +1,7 @@
 // Regles de la liste de prix fournisseur, communes a l'editeur de produit et a l'import Excel.
 // Forfait Starter : prix HT + incoterm (+ lieu), fret et assurance a la charge du fournisseur.
 // Forfaits Pro et Enterprise : cout produit + cout emballage = prix FCA (calcule en base).
-import { CURRENCIES, parseAmount } from "@/lib/onboarding/reference";
+import { parseAmount } from "@/lib/onboarding/reference";
 import { isCountryCode } from "@/lib/countries";
 
 export type Tier = "starter" | "pro" | "enterprise";
@@ -18,10 +18,22 @@ export const PACK_WEDGING = ["yes", "no"] as const;
 export type PackLevel = { qty: number | null; type: string | null; weight_kg: number | null; length_mm: number | null; width_mm: number | null; height_mm: number | null };
 export type PackagingSpec = { levels: PackLevel[]; label: string | null; wedging: string | null; protection: string | null; notes: string | null };
 
+// Deux prix par produit : prix en dinars HT (confidentiel, AFRICA NEX seule) et prix export dans
+// UNE devise (EUR ou USD). Un devis n'a jamais deux devises.
+export const EXPORT_CURRENCIES = ["EUR", "USD"] as const;
+
+// Marge de negociation : remise maximale par paliers (3 au plus), chaque palier atteint par une
+// quantite ou par un montant de commande. Confidentielle, jamais appliquee automatiquement.
+export const TIER_SLOTS = [1, 2, 3] as const;
+export const TIER_BASES = ["qty", "amount"] as const;
+export type DiscountTier = { basis: "qty" | "amount"; threshold: number; discount: number };
+export type TierField = `t${1 | 2 | 3}${"Basis" | "Threshold" | "Discount"}`;
+export const TIER_FIELDS: TierField[] = TIER_SLOTS.flatMap((n) => [`t${n}Basis`, `t${n}Threshold`, `t${n}Discount`] as TierField[]);
+
 export type PriceField =
   | "sku" | "crossRefs" | "price" | "productCost" | "packagingCost" | "currency" | "priceBasis" | "pricePlace"
-  | "priceValidUntil" | "stock" | "moq" | "leadDays" | "originCountry";
-export const PRICE_FIELDS: PriceField[] = ["sku", "crossRefs", "price", "productCost", "packagingCost", "currency", "priceBasis", "pricePlace", "priceValidUntil", "stock", "moq", "leadDays", "originCountry"];
+  | "priceValidUntil" | "stock" | "moq" | "leadDays" | "originCountry" | "priceDzd" | TierField;
+export const PRICE_FIELDS: PriceField[] = ["sku", "crossRefs", "price", "productCost", "packagingCost", "currency", "priceBasis", "pricePlace", "priceValidUntil", "stock", "moq", "leadDays", "originCountry", "priceDzd", ...TIER_FIELDS];
 export type PackField = `pk${1 | 2 | 3 | 4}${"Qty" | "Type" | "Weight" | "Length" | "Width" | "Height"}` | "pkLabel" | "pkWedging" | "pkProtection" | "pkNotes";
 
 const has = (list: readonly string[], v: string) => list.includes(v);
@@ -57,7 +69,12 @@ export function readPriceInput(v: Record<PriceField, string>, tier: string | nul
     if (price === null || price <= 0) errors.price = "errorPrice";
     if (!has(STARTER_BASES, v.priceBasis)) errors.priceBasis = "errorChoose";
   }
-  if (!has(CURRENCIES, v.currency)) errors.currency = "errorChoose";
+  // Prix export : EUR ou USD seulement ; prix en dinars HT obligatoire a cote.
+  if (!has(EXPORT_CURRENCIES, v.currency)) errors.currency = "errorExportCurrency";
+  const priceDzd = parseAmount(v.priceDzd);
+  if (priceDzd === null || priceDzd <= 0) errors.priceDzd = "errorPriceDzd";
+  const tiers = readDiscountTiers((k) => v[k] ?? "");
+  Object.assign(errors, tiers.errors);
   if (v.pricePlace.length > 120) errors.pricePlace = "errorTooLong";
   if (v.priceValidUntil) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(v.priceValidUntil) || v.priceValidUntil < today) errors.priceValidUntil = "errorValidUntil";
@@ -75,6 +92,9 @@ export function readPriceInput(v: Record<PriceField, string>, tier: string | nul
     sku: sku || null,
     cross_refs: crossRefs,
     currency: v.currency,
+    price_dzd_ht: priceDzd,
+    // null : le produit suit la grille de remise par defaut du fournisseur.
+    discount_tiers: tiers.tiers,
     price_place: v.pricePlace || null,
     price_valid_until: v.priceValidUntil || null,
     stock_quantity: stock !== null && !Number.isNaN(stock) ? stock : null,
@@ -87,6 +107,47 @@ export function readPriceInput(v: Record<PriceField, string>, tier: string | nul
       : { product_cost: null, packaging_cost: null, unit_price_ht: price, price_basis: v.priceBasis }),
   };
   return { errors, fields };
+}
+
+// Paliers de remise (facultatifs) : tout vide = null. Un palier commence = base, seuil et remise
+// obligatoires ; seuil > 0 ; remise de 0,1 a 50 %.
+export function readDiscountTiers(get: (k: TierField) => string): { errors: Partial<Record<TierField, string>>; tiers: DiscountTier[] | null } {
+  const errors: Partial<Record<TierField, string>> = {};
+  const tiers: DiscountTier[] = [];
+  for (const n of TIER_SLOTS) {
+    const basis = get(`t${n}Basis`).trim(), rawT = get(`t${n}Threshold`).trim(), rawD = get(`t${n}Discount`).trim();
+    if (!rawT && !rawD) continue;
+    if (!has(TIER_BASES, basis)) errors[`t${n}Basis`] = "errorChoose";
+    const threshold = parseAmount(rawT);
+    if (threshold === null || threshold <= 0) errors[`t${n}Threshold`] = "errorTierThreshold";
+    const discount = parseAmount(rawD.replace("%", ""));
+    if (discount === null || discount <= 0 || discount > 50) errors[`t${n}Discount`] = "errorTierDiscount";
+    if (!errors[`t${n}Basis`] && !errors[`t${n}Threshold`] && !errors[`t${n}Discount`]) tiers.push({ basis: basis as DiscountTier["basis"], threshold: threshold!, discount: discount! });
+  }
+  return { errors, tiers: tiers.length ? tiers : null };
+}
+
+// Valeurs de formulaire a partir de paliers enregistres.
+export function tierValues(tiers: unknown): Record<TierField, string> {
+  const list = Array.isArray(tiers) ? (tiers as DiscountTier[]) : [];
+  const out = {} as Record<TierField, string>;
+  for (const n of TIER_SLOTS) {
+    const t = list[n - 1];
+    out[`t${n}Basis`] = t?.basis ?? "";
+    out[`t${n}Threshold`] = t ? String(t.threshold) : "";
+    out[`t${n}Discount`] = t ? String(t.discount) : "";
+  }
+  return out;
+}
+
+// Palier atteint par une commande (quantite et montant) : la plus forte remise applicable.
+export function reachedTier(tiers: DiscountTier[] | null | undefined, quantity: number, amount: number): DiscountTier | null {
+  let best: DiscountTier | null = null;
+  for (const t of tiers ?? []) {
+    const ok = t.basis === "qty" ? quantity >= t.threshold : amount >= t.threshold;
+    if (ok && (!best || t.discount > best.discount)) best = t;
+  }
+  return best;
 }
 
 // Conditionnement : tout est facultatif ; un nombre saisi doit etre valide.

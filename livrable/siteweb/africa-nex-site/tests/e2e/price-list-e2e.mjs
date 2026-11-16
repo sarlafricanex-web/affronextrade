@@ -76,6 +76,13 @@ try {
   report("Feuilles : consignes, liste de prix, conditionnement", Boolean(s.wb.getWorksheet("Consignes") && prices && pack));
   const sk = keysOf(prices);
   report("Modele Starter : prix HT + incoterm, sans couts", sk.has("price") && sk.has("priceBasis") && sk.has("pricePlace") && !sk.has("productCost"), [...sk.keys()].join(","));
+  report("Modele : prix en dinars et 3 paliers de remise", sk.has("priceDzd") && ["t1Basis", "t1Threshold", "t1Discount", "t3Discount"].every((k) => sk.has(k)));
+  const curList = s.wb.getWorksheet("Listes");
+  // Liste des devises : la colonne vers laquelle pointe la validation de la cellule devise.
+  const curFormula = String(prices.getCell(5, sk.get("currency")).dataValidation?.formulae?.[0] ?? "");
+  const curCol = /!\$([A-Z]+)\$/.exec(curFormula)?.[1];
+  const curVals = []; if (curCol) curList?.getColumn(curCol).eachCell((c) => { if (c.value !== null && c.value !== "") curVals.push(String(c.value)); });
+  report("Devise export : EUR et USD seulement", curVals.join(",") === "EUR,USD", `${curFormula} -> ${curVals.join(",")}`);
   report("Pre-rempli avec ses 2 produits, sans ceux du concurrent", Boolean(rowOf(prices, pA.id) && rowOf(prices, pB.id)) && !rowOf(prices, pR.id) && !rowOf(prices, pP.id));
   report("Conditionnement : 4 pictogrammes", pack.getImages().length === 4, String(pack.getImages().length));
   report("Listes deroulantes sur la devise", Boolean(prices.getCell(5, sk.get("currency")).dataValidation?.type === "list"));
@@ -85,6 +92,14 @@ try {
   const set = (ws, keys, row, key, v) => { ws.getCell(row, keys.get(key)).value = v; };
   set(prices, sk, rA, "sku", "AF-018");
   set(prices, sk, rA, "price", 5.5);
+  set(prices, sk, rA, "priceDzd", 750);
+  // Marge de negociation : -3 % a partir de 5 000 unites, -6 % a partir de 20 000 EUR de commande.
+  set(prices, sk, rA, "t1Basis", "Quantité / Quantity");
+  set(prices, sk, rA, "t1Threshold", 5000);
+  set(prices, sk, rA, "t1Discount", 3);
+  set(prices, sk, rA, "t2Basis", "Montant / Amount");
+  set(prices, sk, rA, "t2Threshold", 20000);
+  set(prices, sk, rA, "t2Discount", 6);
   set(prices, sk, rA, "priceBasis", "FOB");
   set(prices, sk, rA, "pricePlace", "Port d'Alger");
   // Date enregistree par Excel sous son numero de serie (format de cellule perdu).
@@ -99,6 +114,7 @@ try {
   set(prices, sk, free, "productName", `Nouveau filtre ${TAG}`);
   set(prices, sk, free, "unit", "unit");
   set(prices, sk, free, "price", 3);
+  set(prices, sk, free, "priceDzd", 400);
   set(prices, sk, free, "currency", "USD");
   set(prices, sk, free, "priceBasis", "FOB");
   set(prices, sk, free, "priceValidUntil", "31/12/2027");
@@ -163,6 +179,9 @@ try {
   report("Ligne en erreur non appliquee (B inchange)", Number(b.unit_price_ht) === 2.4);
   const { data: created } = await admin.from("products").select("status, unit_price_ht, currency, price_valid_until, company_id").eq("sku", "AF-099").eq("company_id", starter.companyId).maybeSingle();
   report("Nouvelle reference creee en brouillon (date 31/12/2027 lue)", created?.status === "draft" && Number(created.unit_price_ht) === 3 && created.currency === "USD" && created.price_valid_until === "2027-12-31", JSON.stringify(created));
+  const { data: priv } = await admin.from("products").select("price_dzd_ht, discount_tiers").eq("id", pA.id).single();
+  const tiersA = priv?.discount_tiers ?? [];
+  report("A : prix en dinars 750 et paliers (-3 % des 5 000 u., -6 % des 20 000 EUR)", Number(priv?.price_dzd_ht) === 750 && tiersA.length === 2 && tiersA[0].basis === "qty" && tiersA[0].threshold === 5000 && tiersA[0].discount === 3 && tiersA[1].basis === "amount" && tiersA[1].threshold === 20000 && tiersA[1].discount === 6, JSON.stringify(priv));
   const { data: r } = await admin.from("products").select("unit_price_ht").eq("id", pR.id).single();
   report("Produit du concurrent intact", Number(r.unit_price_ht) === 9);
 
@@ -174,12 +193,21 @@ try {
   report("Filtre 'prix a mettre a jour' : B seul (A et AF-099 ont un prix valide)", await waitFor(`${STALE} const t = document.querySelector("main table").innerText; return !t.includes("AF-018") && !t.includes("AF-099") && t.includes("Filtre a air B");`, 20), await run(`return document.querySelector("main table").innerText.replace(/\\s+/g, " ").slice(0, 400);`));
   await shot("price-list-catalog");
 
+  // Grille de remise par defaut du fournisseur (bas du catalogue).
+  await go("/fr/catalog", `return !!document.getElementById("dt-t1Basis");`);
+  const SETV_TOP = `const setV = (el, v) => { const p = el.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(p, "value").set.call(el, v); el.dispatchEvent(new Event("input", { bubbles: true })); el.dispatchEvent(new Event("change", { bubbles: true })); };`;
+  await run(`${SETV_TOP} setV(document.getElementById("dt-t1Basis"), "qty"); setV(document.getElementById("dt-t1Threshold"), "10000"); setV(document.getElementById("dt-t1Discount"), "5"); [...document.querySelectorAll("[data-default-tiers] button[type=submit]")][0].click(); return true;`);
+  report("Grille par defaut : enregistree", await waitFor(`return location.search.includes("saved=tiers");`));
+  const { data: grid } = await admin.from("supplier_pricing").select("discount_tiers").eq("company_id", starter.companyId).maybeSingle();
+  report("En base : -5 % des 10 000 unites (grille par defaut)", grid?.discount_tiers?.[0]?.basis === "qty" && grid.discount_tiers[0].threshold === 10000 && grid.discount_tiers[0].discount === 5, JSON.stringify(grid));
+
   // Editeur Starter : meme conditionnement saisi a la main sur B -> meme logistique qu'a l'import pour A.
   await go(`/fr/catalog/${pB.id}`, `return !!document.getElementById("pe-price");`);
   report("Editeur Starter : prix HT, incoterm, lieu, validite", await run(`return !!document.getElementById("pe-basis") && !!document.getElementById("pe-place") && !!document.getElementById("pe-valid") && !document.getElementById("pe-cost");`));
+  report("Editeur : prix en dinars, devise EUR/USD, paliers et rappel de la grille par defaut", await run(`const cur = [...document.getElementById("pe-currency").options].map((o) => o.value).filter(Boolean).join(","); return !!document.getElementById("pe-dzd") && cur === "EUR,USD" && !!document.getElementById("pe-t3Discount") && document.querySelector("[data-tiers]").innerText.includes("Grille par défaut appliquée si vide");`));
   const SETV = `const setV = (el, v) => { const p = el.tagName === "SELECT" ? HTMLSelectElement.prototype : el.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(p, "value").set.call(el, v); el.dispatchEvent(new Event("input", { bubbles: true })); el.dispatchEvent(new Event("change", { bubbles: true })); };`;
   // Saisie reappliquee tant que la page ne reagit pas (avant l'hydratation, les evenements sont perdus).
-  const FILL = `${SETV} ${Object.entries(PACK).map(([k, v]) => `setV(document.getElementById(${JSON.stringify(k === "maxStack" ? "pe-stack" : `pe-${k}`)}), ${JSON.stringify(String(v))});`).join(" ")} setV(document.getElementById("pe-pk2Type"), "carton"); setV(document.getElementById("pe-pk4Type"), "pallet_euro"); document.querySelector("input[name=storage][value=ambient]").click();`;
+  const FILL = `${SETV} ${Object.entries(PACK).map(([k, v]) => `setV(document.getElementById(${JSON.stringify(k === "maxStack" ? "pe-stack" : `pe-${k}`)}), ${JSON.stringify(String(v))});`).join(" ")} setV(document.getElementById("pe-pk2Type"), "carton"); setV(document.getElementById("pe-pk4Type"), "pallet_euro"); setV(document.getElementById("pe-dzd"), "900"); document.querySelector("input[name=storage][value=ambient]").click();`;
   report("Editeur : meme avertissement que l'import", await waitFor(`if (!document.querySelector("[data-pack-warnings]")) { ${FILL} } return document.querySelector("[data-pack-warnings]")?.innerText.includes("Niveau 4 : le poids total est inférieur au poids de son contenu");`, 30));
   report("Editeur : capacites palette et au sol affichees", await run(`return !!document.querySelector("[data-mode='pallet'][data-container='20']") && document.querySelector("[data-mode='floor'][data-container='20']").innerText.replace(/\\s/g, "").includes("13200");`));
   await run(`[...document.querySelectorAll("button[type=submit]")].find((b) => b.value === "draft").click(); return true;`);
@@ -197,6 +225,7 @@ try {
   const prow = rowOf(pw, pP.id);
   report("Formule FCA dans le fichier", Boolean(pw.getCell(prow, pk.get("fca")).value?.formula));
   pw.getCell(prow, pk.get("productCost")).value = 1.6;
+  pw.getCell(prow, pk.get("priceDzd")).value = 300;
   pw.getCell(prow, pk.get("packagingCost")).value = 0.4;
   pw.getCell(prow, pk.get("priceValidUntil")).value = new Date(`${day(60)}T00:00:00Z`);
   const PRO_FILE = `${OUT}/liste-de-prix-pro.xlsx`;
@@ -218,6 +247,11 @@ try {
   const { error: costErr } = await anonClient.from("products").select("product_cost").limit(1);
   const { error: skuErr } = await anonClient.from("products").select("sku").limit(1);
   report("Public : couts illisibles, reference lisible", Boolean(costErr) && !skuErr, costErr?.code);
+  const { error: dzdErr } = await anonClient.from("products").select("price_dzd_ht").limit(1);
+  const { error: tiersErr } = await anonClient.from("products").select("discount_tiers").limit(1);
+  report("Public : prix en dinars et paliers illisibles", Boolean(dzdErr) && Boolean(tiersErr), `${dzdErr?.code} ${tiersErr?.code}`);
+  const { data: rivalGrid } = await rival.client.from("supplier_pricing").select("company_id").eq("company_id", starter.companyId);
+  report("Concurrent : grille par defaut de l'autre invisible", rivalGrid?.length === 0);
   const { data: rivalPrices } = await rival.client.rpc("product_prices", { p_company: starter.companyId });
   report("Concurrent : aucun prix ni cout de l'autre fournisseur", (rivalPrices ?? []).length === 0);
 

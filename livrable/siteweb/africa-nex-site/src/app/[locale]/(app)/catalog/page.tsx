@@ -2,9 +2,10 @@ import { redirect } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { countRecentViews, getMyCompanyId, listProducts, productImages } from "@/lib/data/company";
+import { countRecentViews, getMyCompanyId, getSupplierPricing, listProducts, productImages } from "@/lib/data/company";
+import { DefaultTiersForm } from "@/components/catalog/DefaultTiersForm";
 import { CatalogTable, type CatalogRow } from "@/components/catalog/CatalogTable";
-import { priceStatus, todayIso } from "@/lib/catalog/price-list";
+import { priceStatus, tierValues, todayIso } from "@/lib/catalog/price-list";
 
 export const instant = false;
 
@@ -40,12 +41,13 @@ export default async function CatalogPage({
   const companyId = await getMyCompanyId(user.supabase, user.userId);
   if (!companyId) redirect(`/${locale}/onboarding`);
 
-  const [c, format, products, { saved, deleted, imported }, views] = await Promise.all([
+  const [c, format, products, { saved, deleted, imported }, views, pricing] = await Promise.all([
     getTranslations({ locale, namespace: "catalog" }),
     getFormatter({ locale }),
     listProducts(user.supabase, companyId),
     searchParams,
     countRecentViews(user.supabase, companyId),
+    getSupplierPricing(user.supabase, companyId),
   ]);
   const published = products.filter((p) => p.status === "published").length;
   const drafts = products.length - published;
@@ -76,7 +78,7 @@ export default async function CatalogPage({
     <div className="flex flex-col gap-6">
       {(saved || deleted || imported) && (
         <p role="status" className="p-4 font-semibold" style={{ background: "white", borderInlineStart: "4px solid #10b981" }}>
-          {imported ? c("importedNotice", { count: Number(imported) || 0 }) : saved ? c("savedNotice") : c("deletedNotice")}
+          {imported ? c("importedNotice", { count: Number(imported) || 0 }) : saved === "tiers" ? c("tiersSaved") : saved ? c("savedNotice") : c("deletedNotice")}
         </p>
       )}
 
@@ -121,6 +123,13 @@ export default async function CatalogPage({
       ) : (
         <CatalogTable rows={rows} />
       )}
+
+      {/* Marge de negociation par defaut : confidentielle, visible par AFRICA NEX seulement. */}
+      <section className="flex flex-col gap-3 p-5" style={{ background: "white", border: `1px solid ${HAIR}`, borderInlineStart: "4px solid #f97316" }} aria-labelledby="tiers-title">
+        <h2 id="tiers-title" className="font-extrabold" style={{ fontSize: "1.1rem" }}>{c("tiersDefaultTitle")}</h2>
+        <p className="text-sm" style={{ color: "var(--muted)" }}>{c("tiersDefaultHelp")}</p>
+        <DefaultTiersForm defaults={tierValues(pricing.discount_tiers)} />
+      </section>
 
       <p className="text-sm" style={{ color: "var(--muted)" }}>{c("visibilityNote")}</p>
     </div>

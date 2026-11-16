@@ -1,7 +1,7 @@
 import "server-only";
 import ExcelJS from "exceljs";
-import { CURRENCIES, UNITS } from "@/lib/onboarding/reference";
-import { PACK_LABELS, PACK_LEVELS, PACK_PROTECTIONS, PACK_TYPES, PACK_WEDGING, STARTER_BASES, isDetailedTier, packagingValues, type PackField, type PriceField } from "@/lib/catalog/price-list";
+import { UNITS } from "@/lib/onboarding/reference";
+import { EXPORT_CURRENCIES, PACK_LABELS, PACK_LEVELS, PACK_PROTECTIONS, PACK_TYPES, PACK_WEDGING, STARTER_BASES, TIER_BASES, TIER_SLOTS, isDetailedTier, packagingValues, tierValues, type PackField, type PriceField } from "@/lib/catalog/price-list";
 import { PACK_PICTOGRAMS } from "@/lib/catalog/pictograms";
 
 // Liste de prix fournisseur en Excel : modele selon le forfait (Starter ou detaille), pre-rempli
@@ -16,7 +16,7 @@ const FIRST_ROW = 5;
 const EXTRA_ROWS = 200; // lignes vides pour de nouvelles references
 
 type Col = { key: string; fr: string; en: string; width: number; editable: boolean; list?: string; kind?: "date" | "number" | "formula" };
-type Labels = Record<"packType" | "packLabel" | "packWedging" | "packProtection" | "storage", Record<string, string>>;
+type Labels = Record<"packType" | "packLabel" | "packWedging" | "packProtection" | "storage" | "tierBasis", Record<string, string>>;
 
 export function priceColumns(tier: string | null | undefined): Col[] {
   const head: Col[] = [
@@ -38,13 +38,22 @@ export function priceColumns(tier: string | null | undefined): Col[] {
         { key: "priceBasis", fr: "Incoterm", en: "Incoterm", width: 10, editable: true, list: "bases" },
         { key: "pricePlace", fr: "Lieu de l'incoterm", en: "Incoterm place", width: 18, editable: true },
       ];
+  // Deuxieme prix (confidentiel) puis marge de negociation par paliers (facultative).
+  const dzd: Col[] = [{ key: "priceDzd", fr: "Prix en dinars HT (confidentiel)", en: "Price in DZD excl. tax (confidential)", width: 16, editable: true, kind: "number" }];
+  const tiers: Col[] = TIER_SLOTS.flatMap((n) => [
+    { key: `t${n}Basis`, fr: `Remise palier ${n} : seuil en`, en: `Discount tier ${n}: threshold in`, width: 16, editable: true, list: "tierBases" },
+    { key: `t${n}Threshold`, fr: `Palier ${n} : à partir de`, en: `Tier ${n}: from`, width: 13, editable: true, kind: "number" },
+    { key: `t${n}Discount`, fr: `Palier ${n} : remise max. (%)`, en: `Tier ${n}: max. discount (%)`, width: 13, editable: true, kind: "number" },
+  ] as Col[]);
   const tail: Col[] = [
+    ...dzd,
     { key: "priceValidUntil", fr: "Prix valable jusqu'au", en: "Price valid until", width: 15, editable: true, kind: "date" },
     { key: "stock", fr: "Stock disponible", en: "Stock available", width: 13, editable: true, kind: "number" },
     { key: "moq", fr: "MOQ (commande min.)", en: "MOQ", width: 12, editable: true, kind: "number" },
     { key: "leadDays", fr: "Délai de production (jours)", en: "Production lead time (days)", width: 14, editable: true, kind: "number" },
     { key: "originCountry", fr: "Pays d'origine (code)", en: "Made in (code)", width: 12, editable: true },
     { key: "crossRefs", fr: "Réf. croisées (séparées par ,)", en: "Cross references", width: 26, editable: true },
+    ...tiers,
   ];
   return [...head, ...price, ...tail];
 }
@@ -90,7 +99,7 @@ export type ExportProduct = {
   id: string; sku: string | null; product_name: string; unit: string | null; unit_price_ht: number | null; product_cost: number | null; packaging_cost: number | null;
   currency: string | null; price_basis: string | null; price_place: string | null; price_valid_until: string | null; stock_quantity: number | null;
   min_order_quantity: number | null; lead_time_days: number | null; origin_country: string | null; cross_refs: string[] | null; packaging_spec: unknown;
-  storage_condition: string | null; max_stack_layers: number | null;
+  storage_condition: string | null; max_stack_layers: number | null; price_dzd_ht: number | null; discount_tiers: unknown;
 };
 
 export async function buildPriceListWorkbook({ products, tier, companyName, labels, generatedOn }: { products: ExportProduct[]; tier: string; companyName: string; labels: Labels; generatedOn: string }) {
@@ -103,7 +112,8 @@ export async function buildPriceListWorkbook({ products, tier, companyName, labe
   const listRanges: Record<string, string> = {};
   const listValues: Record<string, string[]> = {
     units: [...UNITS],
-    currencies: [...CURRENCIES],
+    currencies: [...EXPORT_CURRENCIES],
+    tierBases: TIER_BASES.map((b) => labels.tierBasis[b]),
     bases: [...STARTER_BASES],
     packType: PACK_TYPES.map((c) => labels.packType[c]),
     packLabel: PACK_LABELS.map((c) => labels.packLabel[c]),
@@ -127,6 +137,8 @@ export async function buildPriceListWorkbook({ products, tier, companyName, labe
     detailed
       ? "2. Forfait Pro / Enterprise : indiquez le coût produit et le coût emballage HT ; le total FCA est calculé. AFRICA NEX ajoute le fret et l'assurance."
       : "2. Forfait Starter : indiquez votre prix HT et son incoterm (EXW, FOB, CIF...). Le fret et l'assurance éventuels sont compris dans votre prix.",
+    "   Votre prix export est en EUR ou en USD (une seule devise). Indiquez aussi votre prix en dinars HT : il reste confidentiel, réservé à AFRICA NEX, et n'est jamais montré à l'acheteur.",
+    "   Facultatif : votre marge de négociation, jusqu'à 3 paliers (seuil en quantité ou en montant, remise maximale en %). Confidentielle, jamais appliquée d'office. Laissée vide, votre grille par défaut s'applique.",
     "3. Indiquez la date jusqu'à laquelle chaque prix est valable : un prix expiré n'est plus proposé aux acheteurs.",
     "4. Tenez le stock disponible à jour : la date de mise à jour est enregistrée à l'import.",
     "5. Nouvelle référence : remplissez une ligne vide (désignation et unité au minimum). Elle sera créée en brouillon.",
@@ -181,7 +193,10 @@ export async function buildPriceListWorkbook({ products, tier, companyName, labe
       ? {
           id: p.id, sku: p.sku ?? "", productName: p.product_name, unit: p.unit ?? "",
           productCost: p.product_cost, packagingCost: p.packaging_cost, price: p.unit_price_ht,
-          currency: p.currency ?? "USD", priceBasis: p.price_basis ?? "FOB", pricePlace: p.price_place ?? "",
+          // Devise export : EUR ou USD seulement (un ancien prix en DZD passe dans la colonne dinars).
+          currency: p.currency === "EUR" || p.currency === "USD" ? p.currency : "", priceBasis: p.price_basis ?? "FOB", pricePlace: p.price_place ?? "",
+          priceDzd: p.price_dzd_ht,
+          ...Object.fromEntries(Object.entries(tierValues(p.discount_tiers)).map(([k, val]) => [k, k.endsWith("Basis") ? (labels.tierBasis[val] ?? "") : val === "" ? null : Number(val)])),
           priceValidUntil: p.price_valid_until ? new Date(`${p.price_valid_until}T00:00:00Z`) : null,
           stock: p.stock_quantity, moq: p.min_order_quantity, leadDays: p.lead_time_days, originCountry: p.origin_country ?? "DZ",
           crossRefs: (p.cross_refs ?? []).join(", "),
@@ -294,7 +309,7 @@ export async function readPriceListWorkbook(buffer: ArrayBuffer, labels: Labels)
     }
     return out;
   };
-  const maps = { packType: reverse(labels.packType), packLabel: reverse(labels.packLabel), packWedging: reverse(labels.packWedging), packProtection: reverse(labels.packProtection), storage: reverse(labels.storage) };
+  const maps = { packType: reverse(labels.packType), packLabel: reverse(labels.packLabel), packWedging: reverse(labels.packWedging), packProtection: reverse(labels.packProtection), storage: reverse(labels.storage), tierBasis: reverse(labels.tierBasis) };
   const readSheet = (name: string) => {
     const ws = wb.getWorksheet(name);
     if (!ws) return null;
@@ -311,6 +326,7 @@ export async function readPriceListWorkbook(buffer: ArrayBuffer, labels: Labels)
         if (values[k]) values[k] = m.get(values[k].toLowerCase()) ?? values[k];
       }
       for (const n of PACK_LEVELS) { const k = `pk${n}Type`; if (values[k]) values[k] = maps.packType.get(values[k].toLowerCase()) ?? values[k]; }
+      for (const n of TIER_SLOTS) { const k = `t${n}Basis`; if (values[k]) values[k] = maps.tierBasis.get(values[k].toLowerCase()) ?? values[k]; }
       if (Object.entries(values).some(([k, v]) => v && k !== "fca")) rows.push({ row: n, values });
     });
     return { rows, keys: new Set(keys.values()) };

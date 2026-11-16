@@ -8,7 +8,7 @@ import { resolveLocale } from "@/lib/auth/next-path";
 import { getCompanyTier, getMyCompanyId, getProduct, productImages, type ProductImage } from "@/lib/data/company";
 import { contentTypeOf, readImage } from "@/lib/images";
 import { UNITS, normalizeHsCode } from "@/lib/onboarding/reference";
-import { PACK_FIELDS, PRICE_FIELDS, readPackagingInput, readPriceInput, type PackField, type PriceField } from "@/lib/catalog/price-list";
+import { PACK_FIELDS, PRICE_FIELDS, TIER_FIELDS, readDiscountTiers, readPackagingInput, readPriceInput, type PackField, type PriceField, type TierField } from "@/lib/catalog/price-list";
 import type { Database } from "@/lib/supabase/database.types";
 import { packagingFields, readLogisticsExtras } from "@/lib/catalog/packaging-logic";
 
@@ -142,6 +142,20 @@ export async function saveProduct(_prev: CatalogState, formData: FormData): Prom
 
   updateTag("producers"); // annuaire et fiche publique a jour
   redirect(`/${locale}/catalog?saved=1`);
+}
+
+export type TiersState = { errors: Partial<Record<TierField, string>>; values?: Record<string, string>; attempt?: number };
+
+// Grille de remise par defaut du fournisseur (marge de negociation, confidentielle) : s'applique
+// aux produits qui n'ont pas leur propre grille.
+export async function saveDefaultTiers(_prev: TiersState, formData: FormData): Promise<TiersState> {
+  const { locale, supabase, companyId } = await producerContext(formData);
+  const values = Object.fromEntries(TIER_FIELDS.map((k) => [k, text(formData, k)]));
+  const { errors, tiers } = readDiscountTiers((k) => values[k] ?? "");
+  if (Object.keys(errors).length) return { errors, values, attempt: Date.now() };
+  const { error } = await supabase.from("supplier_pricing").upsert({ company_id: companyId, discount_tiers: tiers ?? [], updated_at: new Date().toISOString() });
+  if (error) { console.error("Default tiers save failed:", error.message); return { errors: { t1Basis: "errorGeneric" }, values, attempt: Date.now() }; }
+  redirect(`/${locale}/catalog?saved=tiers`);
 }
 
 // Suppression d'un produit et de ses photos.

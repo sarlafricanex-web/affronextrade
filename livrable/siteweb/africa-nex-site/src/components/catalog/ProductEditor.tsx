@@ -5,8 +5,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { saveProduct, type CatalogField, type CatalogState } from "@/app/[locale]/(app)/catalog/actions";
 import { Alert } from "@/components/auth/fields";
 import { Link } from "@/i18n/navigation";
-import { CURRENCIES, UNITS } from "@/lib/onboarding/reference";
-import { PACK_LABELS, PACK_LEVELS, PACK_PROTECTIONS, PACK_TYPES, PACK_WEDGING, STARTER_BASES, isDetailedTier, readPackagingInput, type PackField } from "@/lib/catalog/price-list";
+import { UNITS } from "@/lib/onboarding/reference";
+import { EXPORT_CURRENCIES, PACK_LABELS, PACK_LEVELS, PACK_PROTECTIONS, PACK_TYPES, PACK_WEDGING, STARTER_BASES, TIER_BASES, TIER_SLOTS, isDetailedTier, readPackagingInput, type DiscountTier, type PackField, type TierField } from "@/lib/catalog/price-list";
 import { CountrySelect } from "@/components/country/CountrySelect";
 import type { CountryCode } from "libphonenumber-js";
 import { prepareUpload } from "@/lib/client/prepare-upload";
@@ -52,7 +52,8 @@ export type EditorProduct = {
   leadDays: string;
   originCountry: string;
   stockUpdatedAt: string;
-} & Record<PackField, string>;
+  priceDzd: string;
+} & Record<PackField, string> & Record<TierField, string>;
 
 
 // Logistique deduite des 4 niveaux (meme calcul que le serveur et l'import Excel) + controles de coherence.
@@ -110,7 +111,7 @@ function readChecks(form: HTMLFormElement | null, product: EditorProduct, hasNew
   };
 }
 
-export function ProductEditor({ product: initial, tier }: { product: EditorProduct; tier: string }) {
+export function ProductEditor({ product: initial, tier, defaultTiers }: { product: EditorProduct; tier: string; defaultTiers: DiscountTier[] }) {
   const detailed = isDetailedTier(tier);
   const t = useTranslations("onboarding");
   const c = useTranslations("catalog");
@@ -260,11 +261,24 @@ export function ProductEditor({ product: initial, tier }: { product: EditorProdu
             </div>
           )}
           <p className="text-xs" style={{ color: "var(--muted)" }}>{c(detailed ? "priceRuleDetailed" : "priceRuleStarter")}</p>
+          {/* Deuxieme prix : en dinars HT, confidentiel (AFRICA NEX seule, jamais montre a l'acheteur). */}
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="pe-dzd">{c("priceDzdLabel")}</Label>
+              <div className="flex" dir="ltr" style={{ border: `1px solid ${HAIR}` }}>
+                <input id="pe-dzd" name="priceDzd" required inputMode="decimal" placeholder="1 250,00" defaultValue={product.priceDzd} className={`${inputCls} text-end`} style={{ background: FIELD, border: 0, outline: "none" }} />
+                <span className="flex items-center px-3 text-xs font-bold" style={{ background: "white", borderInlineStart: `1px solid ${HAIR}` }}>DZD HT</span>
+              </div>
+              <span className="mt-1 block text-xs" style={{ color: "#c2410c" }}>{c("priceDzdHelp")}</span>
+              {err("priceDzd")}
+            </div>
+          </div>
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
             <div>
-              <Label htmlFor="pe-currency">{t("currency")}</Label>
-              <select id="pe-currency" name="currency" required defaultValue={product.currency || "USD"} className={inputCls} style={fieldStyle}>
-                {CURRENCIES.map((cur) => <option key={cur} value={cur}>{cur}</option>)}
+              <Label htmlFor="pe-currency">{c("exportCurrencyLabel")}</Label>
+              <select id="pe-currency" name="currency" required defaultValue={(EXPORT_CURRENCIES as readonly string[]).includes(product.currency) ? product.currency : ""} className={inputCls} style={fieldStyle}>
+                <option value="" disabled>{t("choose")}</option>
+                {EXPORT_CURRENCIES.map((cur) => <option key={cur} value={cur}>{cur}</option>)}
               </select>
               {err("currency")}
             </div>
@@ -288,6 +302,42 @@ export function ProductEditor({ product: initial, tier }: { product: EditorProdu
               {err("priceValidUntil")}
             </div>
           </div>
+          {/* Marge de negociation : remise maximale par paliers, confidentielle, jamais appliquee d'office. */}
+          <fieldset className="flex flex-col gap-3 p-4" style={{ border: `1px solid ${HAIR}`, background: "#fffaf3" }} data-tiers="">
+            <legend className="px-1 text-[11px] font-bold uppercase" style={labelStyle}>{c("tiersTitle")}</legend>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>{c("tiersHelp")}</p>
+            {TIER_SLOTS.map((n) => (
+              <div key={n} className="grid grid-cols-[auto_1fr] items-end gap-2 sm:grid-cols-[auto_180px_1fr_140px]">
+                <span className="mb-3 text-xs font-bold">{c("tierN", { n })}</span>
+                <div>
+                  <label htmlFor={`pe-t${n}Basis`} className="mb-1 block text-xs" style={{ color: "var(--muted)" }}>{c("tierBasis")}</label>
+                  <select id={`pe-t${n}Basis`} name={`t${n}Basis`} defaultValue={product[`t${n}Basis`]} className={inputCls} style={fieldStyle}>
+                    <option value="">-</option>
+                    {TIER_BASES.map((b) => <option key={b} value={b}>{c(`tierBasis_${b}`)}</option>)}
+                  </select>
+                  {err(`t${n}Basis`)}
+                </div>
+                <div>
+                  <label htmlFor={`pe-t${n}Threshold`} className="mb-1 block text-xs" style={{ color: "var(--muted)" }}>{c("tierThreshold")}</label>
+                  <input id={`pe-t${n}Threshold`} name={`t${n}Threshold`} dir="ltr" inputMode="decimal" defaultValue={product[`t${n}Threshold`]} className={`${inputCls} text-end`} style={fieldStyle} />
+                  {err(`t${n}Threshold`)}
+                </div>
+                <div>
+                  <label htmlFor={`pe-t${n}Discount`} className="mb-1 block text-xs" style={{ color: "var(--muted)" }}>{c("tierDiscount")}</label>
+                  <div className="flex" dir="ltr" style={{ border: `1px solid ${HAIR}` }}>
+                    <input id={`pe-t${n}Discount`} name={`t${n}Discount`} inputMode="decimal" defaultValue={product[`t${n}Discount`]} className={`${inputCls} text-end`} style={{ background: FIELD, border: 0, outline: "none" }} />
+                    <span className="flex items-center px-3 text-xs font-bold" style={{ background: "white", borderInlineStart: `1px solid ${HAIR}` }}>%</span>
+                  </div>
+                  {err(`t${n}Discount`)}
+                </div>
+              </div>
+            ))}
+            <p className="text-xs" style={{ color: "var(--muted)" }}>
+              {defaultTiers.length
+                ? c("tiersDefault", { list: defaultTiers.map((d) => `${c(`tierBasis_${d.basis}`)} ≥ ${d.threshold.toLocaleString(locale)} : −${d.discount.toLocaleString(locale)} %`).join(" ; ") })
+                : c("tiersNoDefault")}
+            </p>
+          </fieldset>
           <p className="text-xs" style={{ color: "var(--muted)" }}>{c("priceConfidential")}</p>
         </Block>
 

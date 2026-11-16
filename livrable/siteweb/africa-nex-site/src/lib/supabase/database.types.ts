@@ -749,6 +749,7 @@ export type Database = {
           description_en: string | null
           description_fr: string | null
           dimensions_cm: Json | null
+          discount_tiers: Json | null
           hs_code: string | null
           id: string
           images: Json
@@ -762,6 +763,7 @@ export type Database = {
           packaging_spec: Json | null
           palletized: boolean
           price_basis: string | null
+          price_dzd_ht: number | null
           price_place: string | null
           price_valid_until: string | null
           product_cost: number | null
@@ -799,6 +801,7 @@ export type Database = {
           description_en?: string | null
           description_fr?: string | null
           dimensions_cm?: Json | null
+          discount_tiers?: Json | null
           hs_code?: string | null
           id?: string
           images?: Json
@@ -812,6 +815,7 @@ export type Database = {
           packaging_spec?: Json | null
           palletized?: boolean
           price_basis?: string | null
+          price_dzd_ht?: number | null
           price_place?: string | null
           price_valid_until?: string | null
           product_cost?: number | null
@@ -849,6 +853,7 @@ export type Database = {
           description_en?: string | null
           description_fr?: string | null
           dimensions_cm?: Json | null
+          discount_tiers?: Json | null
           hs_code?: string | null
           id?: string
           images?: Json
@@ -862,6 +867,7 @@ export type Database = {
           packaging_spec?: Json | null
           palletized?: boolean
           price_basis?: string | null
+          price_dzd_ht?: number | null
           price_place?: string | null
           price_valid_until?: string | null
           product_cost?: number | null
@@ -1523,6 +1529,46 @@ export type Database = {
         }
         Relationships: []
       }
+      supplier_pricing: {
+        Row: {
+          company_id: string
+          discount_tiers: Json
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          discount_tiers?: Json
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          discount_tiers?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_pricing_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "cdct_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_pricing_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_pricing_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "producer_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_settings: {
         Row: {
           company_id: string
@@ -1724,7 +1770,9 @@ export type Database = {
       product_prices: {
         Args: { p_company: string }
         Returns: {
+          discount_tiers: Json
           packaging_cost: number
+          price_dzd_ht: number
           price_valid_until: string
           product_cost: number
           product_id: string
