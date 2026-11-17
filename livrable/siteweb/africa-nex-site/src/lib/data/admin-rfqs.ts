@@ -38,7 +38,7 @@ export async function getAdminRfq(client: Client, id: string) {
       .select(`id, reference, status, respond_by, viewed_at, created_at, brief_title, unit, company:companies(id, company_name, slug, claim_status, owner_profile_id, wilaya, city), quotes(${QUOTE_COLUMNS})`)
       .eq("rfq_id", id)
       .order("created_at"),
-    client.from("offers").select(`${OFFER_COLUMNS}, offer_margins(${MARGIN_COLUMNS})`).eq("rfq_id", id).order("label"),
+    client.from("offers").select(`${OFFER_COLUMNS}, offer_margins(${MARGIN_COLUMNS}), offer_lines(count)`).eq("rfq_id", id).order("label"),
   ]);
   // Date de reponse proposee par defaut aux producteurs : dans 7 jours.
   const now = Date.now();
@@ -51,7 +51,7 @@ const QUOTE_COLUMNS =
   "id, unit_price_ht, currency, price_basis, port_of_loading, quantity, production_lead_days, available_at_port_on, payment_terms, valid_until, notes, attachments, status, author_profile_id, created_at, updated_at";
 const OFFER_COLUMNS =
   "id, label, unit_price, currency, incoterm, incoterm_place, quantity, total_amount, lead_time_days, origin_region, packaging, certifications, payment_terms, cagex_insured, valid_until, notes, status, published_at";
-const MARGIN_COLUMNS = "source_quote_id, producer_unit_price, producer_currency, freight_cost, insurance_rate, insurance_cost, commission_rate, commission_amount";
+const MARGIN_COLUMNS = "source_quote_id, producer_unit_price, producer_currency, freight_cost, insurance_rate, insurance_cost, commission_rate, commission_amount, auto, export_mode, margin_pending, freight_pending";
 
 // Composeur d'offre : la demande, le devis source (et son producteur, jamais montre a
 // l'acheteur) et l'offre deja composee depuis ce devis s'il y en a une.

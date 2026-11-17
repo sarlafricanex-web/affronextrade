@@ -12,6 +12,11 @@ Ne jamais retirer ce garde-fou, ne jamais les lancer contre la production.
 Les comptes créés sont tous en `test-...@example.com`. Le compte de démonstration
 `demo.producteur@example.com` n'est jamais touché.
 
+## Tests hors ligne
+
+- `npm run test:unit` : calcul automatique de l'offre (fonction pure, sans base ni serveur).
+- `npm run test:rls` : règles d'accès en base (PostgreSQL en local via PGlite).
+
 ## Lancer les tests
 
 1. Construire et démarrer l'aperçu local :
@@ -43,6 +48,7 @@ Chrome doit être installé. Autre emplacement : variable `CHROME_PATH`.
 | `rfq-buyer` | Demande de devis côté acheteur : en unités ou en conteneurs, pièce jointe, liste, compteur, annulation, isolement |
 | `rfq-producer` | Demandes reçues côté producteur : liste, compteur, devis (refus, envoi, mise à jour), déclin, verrouillage, cloisonnement |
 | `rfq-offer` | Comparatif des devis, saisie hors ligne, composition de l'offre (grille de commission, assurance, fret), garde-fou d'anonymat, publication, retrait |
+| `rfq-auto-offer` | Offre calculée depuis les listes de prix : une offre par mode et par devise, palier de commission sur le total de la demande, assurance et change, ligne hors catalogue signalée, remise maximale visible, brouillons, publication bloquée tant que marge ou fret restent à saisir, recalcul, confidentialité, arabe et téléphone |
 | `price-list` | Liste de prix fournisseur : modèle Excel selon le forfait (Starter ou Pro), import avec aperçu, erreurs ligne par ligne, conditionnement 4 niveaux, prix FCA calculé, confidentialité des coûts |
 | `admin-settings` | Réglages admin : taux de référence EUR et USD, mode d'affaire de chaque fournisseur (confidentiel) |
 | `admin-producers` | Console admin des producteurs |

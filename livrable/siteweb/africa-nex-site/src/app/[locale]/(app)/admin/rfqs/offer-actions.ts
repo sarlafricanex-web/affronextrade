@@ -6,6 +6,7 @@ import { resolveLocale } from "@/lib/auth/next-path";
 import { parseAmount } from "@/lib/onboarding/reference";
 import { readQuoteForm, storeQuoteFile, type QuoteState } from "@/lib/quote-input";
 import { priceOffer } from "@/lib/offer-pricing";
+import { autoOffersPayload, computeRfqAutoOffers } from "@/lib/data/auto-offer";
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -160,7 +161,7 @@ export async function saveOffer(_prev: OfferState, formData: FormData): Promise<
   });
   if (marginError) { console.error("Offer margin failed:", marginError.message); return fail({ errors: {}, formError: "rfqErrorGeneric" }); }
 
-  if (publish) await publishOffer(supabase, offerId, rfqId, quoteId);
+  if (publish && !(await publishOffer(supabase, offerId, rfqId, quoteId))) redirect(`/${locale}/admin/rfqs/${rfqId}?done=offerPending`);
   await supabase.from("audit_log").insert({
     actor_profile_id: userId,
     action: publish ? "offer.publish" : "offer.save",
@@ -174,10 +175,48 @@ export async function saveOffer(_prev: OfferState, formData: FormData): Promise<
 type Client = Awaited<ReturnType<typeof adminContext>>["supabase"];
 
 // Publication : l'acheteur voit l'offre, la demande passe "offres pretes", le devis source est retenu.
+// Refusee par la base si la marge (export AFRICA NEX) ou le fret restent a saisir : rien d'autre ne bouge.
 async function publishOffer(supabase: Client, offerId: string, rfqId: string, quoteId: string | null) {
-  await supabase.from("offers").update({ status: "published", published_at: new Date().toISOString() }).eq("id", offerId).eq("status", "draft");
+  const { error } = await supabase.from("offers").update({ status: "published", published_at: new Date().toISOString() }).eq("id", offerId).eq("status", "draft");
+  if (error) return false;
   await supabase.from("rfqs").update({ status: "offered" }).eq("id", rfqId).in("status", ["qualified", "dispatched"]);
   if (quoteId) await supabase.from("quotes").update({ status: "selected" }).eq("id", quoteId).eq("status", "submitted");
+  return true;
+}
+
+// Lot 6c : offre calculee depuis la liste de prix. Une offre par couple (mode, devise), en brouillon ;
+// un nouveau calcul remplace les brouillons automatiques de la demande. Le calcul est refait ici,
+// l'apercu de l'ecran n'est qu'indicatif.
+export async function createAutoOffers(formData: FormData) {
+  const { locale, supabase, userId } = await adminContext(formData);
+  const rfqId = text(formData, "rfqId");
+  if (!UUID.test(rfqId)) redirect(`/${locale}/admin/rfqs`);
+  const back = (done: string, count = 0) => redirect(`/${locale}/admin/rfqs/${rfqId}?done=${done}${count ? `&count=${count}` : ""}`);
+
+  const result = await computeRfqAutoOffers(supabase, rfqId);
+  if (!result || !result.offers.length) back("autoNothing");
+
+  // Lettres libres : celles des offres composees a la main et des offres deja publiees restent prises.
+  const { data: existing } = await supabase.from("offers").select("label, status, offer_margins(auto)").eq("rfq_id", rfqId);
+  const taken = new Set((existing ?? []).filter((o) => !(o.status === "draft" && one<{ auto: boolean }>(o.offer_margins)?.auto)).map((o) => o.label));
+  const labels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").filter((l) => !taken.has(l));
+  if (labels.length < result!.offers.length) back("autoNoLabel");
+
+  const { data: count, error } = await supabase.rpc("save_auto_offers", { p_rfq: rfqId, p_offers: autoOffersPayload(result!.offers, labels) });
+  if (error) {
+    if (/auto offer already published/.test(error.message)) back("autoPublished");
+    if (/rfq closed/.test(error.message)) back("autoClosed");
+    console.error("Auto offers failed:", error.code, error.message);
+    back("autoError");
+  }
+  await supabase.from("audit_log").insert({
+    actor_profile_id: userId,
+    action: "offer.auto",
+    entity: "rfq",
+    entity_id: rfqId,
+    payload: { offers: count, lines: result!.offers.reduce((s, o) => s + o.lines.length, 0), skipped: result!.skipped.length, commission_rate: result!.commissionRate },
+  });
+  back("autoCreated", Number(count) || 0);
 }
 
 // Publier un brouillon, retirer une offre publiee (retour en brouillon) ou supprimer un brouillon.
@@ -193,7 +232,7 @@ export async function changeOffer(formData: FormData) {
 
   if (op === "publish" && offer.status === "draft") {
     if (offer.valid_until && offer.valid_until < new Date().toISOString().slice(0, 10)) back("offerExpired");
-    await publishOffer(supabase, id, offer.rfq_id, quoteId);
+    if (!(await publishOffer(supabase, id, offer.rfq_id, quoteId))) back("offerPending");
   } else if (op === "withdraw" && offer.status === "published") {
     await supabase.from("offers").update({ status: "draft", published_at: null }).eq("id", id).eq("status", "published");
     if (quoteId) await supabase.from("quotes").update({ status: "submitted" }).eq("id", quoteId).eq("status", "selected");

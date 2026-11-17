@@ -26,7 +26,8 @@ export const EXPORT_CURRENCIES = ["EUR", "USD"] as const;
 // quantite ou par un montant de commande. Confidentielle, jamais appliquee automatiquement.
 export const TIER_SLOTS = [1, 2, 3] as const;
 export const TIER_BASES = ["qty", "amount"] as const;
-export type DiscountTier = { basis: "qty" | "amount"; threshold: number; discount: number };
+export type { DiscountTier } from "@/lib/discount-tiers";
+import type { DiscountTier } from "@/lib/discount-tiers";
 export type TierField = `t${1 | 2 | 3}${"Basis" | "Threshold" | "Discount"}`;
 export const TIER_FIELDS: TierField[] = TIER_SLOTS.flatMap((n) => [`t${n}Basis`, `t${n}Threshold`, `t${n}Discount`] as TierField[]);
 
@@ -140,15 +141,7 @@ export function tierValues(tiers: unknown): Record<TierField, string> {
   return out;
 }
 
-// Palier atteint par une commande (quantite et montant) : la plus forte remise applicable.
-export function reachedTier(tiers: DiscountTier[] | null | undefined, quantity: number, amount: number): DiscountTier | null {
-  let best: DiscountTier | null = null;
-  for (const t of tiers ?? []) {
-    const ok = t.basis === "qty" ? quantity >= t.threshold : amount >= t.threshold;
-    if (ok && (!best || t.discount > best.discount)) best = t;
-  }
-  return best;
-}
+export { reachedTier } from "@/lib/discount-tiers";
 
 // Conditionnement : tout est facultatif ; un nombre saisi doit etre valide.
 export function readPackagingInput(get: (k: PackField) => string) {

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:rls": "node supabase/tests/rls.test.mjs",
+    "test:unit": "node --test tests/unit/",
     "flags": "node scripts/copy-flags.mjs"
   },
   "dependencies": {

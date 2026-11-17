@@ -11,6 +11,8 @@ import { WILAYAS } from "@/lib/onboarding/reference";
 import { isSector } from "@/lib/sectors";
 import { StatusBadge } from "@/components/rfq/RfqList";
 import { DispatchForm } from "@/components/admin/DispatchForm";
+import { AutoOfferPanel } from "@/components/admin/AutoOfferPanel";
+import { computeRfqAutoOffers } from "@/lib/data/auto-offer";
 import { closeRfq, qualifyRfq } from "../actions";
 import { changeOffer } from "../offer-actions";
 import { oneOf } from "@/lib/data/requests";
@@ -76,6 +78,9 @@ export default async function AdminRfqPage({
   for (const { q } of quotes) if (!bestPrice.has(q.currency)) bestPrice.set(q.currency, Number(q.unit_price_ht));
   const offerByQuote = new Map(rfq.offers.map((o) => [oneOf(o.offer_margins)?.source_quote_id ?? "", o]));
   const canOffer = ["qualified", "dispatched", "offered"].includes(rfq.status);
+  // Lot 6c : offre calculee depuis les listes de prix (lignes rattachees a un produit du catalogue).
+  const autoResult = lines.some((l) => l.product_id) ? await computeRfqAutoOffers(user.supabase, rfq.id) : null;
+  const autoOffers = rfq.offers.filter((o) => oneOf(o.offer_margins)?.auto);
   const canEnterQuote = (d: (typeof rfq.dispatches)[number]) => {
     const q = oneOf(d.quotes);
     return d.status !== "expired" && (!q || q.status === "submitted" || q.status === "draft") && ["dispatched", "offered", "qualified"].includes(rfq.status);
@@ -185,23 +190,41 @@ export default async function AdminRfqPage({
         </section>
       )}
 
+      {autoResult && (
+        <AutoOfferPanel
+          rfqId={rfq.id}
+          locale={locale}
+          result={autoResult}
+          canCreate={canOffer}
+          hasAutoDraft={autoOffers.some((o) => o.status === "draft")}
+          hasAutoPublished={autoOffers.some((o) => o.status !== "draft")}
+        />
+      )}
+
       {rfq.offers.length > 0 && (
         <section style={{ background: "white", border: `1px solid ${HAIR}` }} aria-labelledby="offers-title">
           <h2 id="offers-title" className="px-5 py-3 text-xs font-bold uppercase" style={{ ...caps, background: "#f5efe6", borderBottom: `1px solid ${HAIR}` }}>{t("offersTitle")}</h2>
           <ul>
             {rfq.offers.map((o) => {
               const m = oneOf(o.offer_margins);
+              const lineCount = oneOf(o.offer_lines as unknown as { count: number }[])?.count ?? 0;
+              const total = `${Number(o.total_amount).toLocaleString(locale, { minimumFractionDigits: 2 })} ${o.currency}`;
               return (
                 <li key={o.id} data-offer={o.label} className="flex flex-col gap-3 px-5 py-4 md:flex-row md:items-center md:justify-between" style={{ borderTop: `1px solid ${HAIR}` }}>
                   <div className="min-w-0">
                     <p className="flex flex-wrap items-center gap-2">
                       <span className="px-2 py-0.5 text-xs font-bold" style={{ background: "var(--ink)", color: "white" }}>{t("offerName", { label: o.label })}</span>
                       <span className="px-2 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, border: `1px solid ${HAIR}`, background: o.status === "published" ? "#ecfdf5" : o.status === "accepted" ? "#10b981" : "#f5efe6", color: o.status === "accepted" ? "white" : undefined }}>{t(`offerStatus_${o.status}`)}</span>
+                      {m?.auto && <span className="px-2 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, border: `1px solid ${HAIR}` }}>{t("offerAutoBadge")}{m.export_mode ? ` · ${t(`autoMode_${m.export_mode}`)}` : ""}</span>}
+                      {m?.margin_pending && <span className="px-2 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, background: "#fff7ed", color: "#c2410c" }} data-pending="margin">{t("offerPendingMargin")}</span>}
+                      {m?.freight_pending && <span className="px-2 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, background: "#fff7ed", color: "#c2410c" }} data-pending="freight">{t("offerPendingFreight")}</span>}
                     </p>
                     <p className="mt-1 font-bold" dir="ltr" style={{ textAlign: "start" }}>
-                      {Number(o.unit_price).toLocaleString(locale, { minimumFractionDigits: 2 })} {o.currency} · {o.incoterm} {o.incoterm_place ?? ""} · {t("offerTotal", { total: `${Number(o.total_amount).toLocaleString(locale, { minimumFractionDigits: 2 })} ${o.currency}` })}
+                      {o.unit_price == null
+                        ? `${o.incoterm ?? ""} · ${t("offerLinesTotal", { count: lineCount, total })}`
+                        : `${Number(o.unit_price).toLocaleString(locale, { minimumFractionDigits: 2 })} ${o.currency} · ${o.incoterm} ${o.incoterm_place ?? ""} · ${t("offerTotal", { total })}`}
                     </p>
-                    {m && (
+                    {m && !m.auto && (
                       <p className="mt-1 text-xs font-semibold" style={{ color: "#c2410c" }}>
                         {t("offerMarginLine", {
                           commission: `${Number(m.commission_amount).toLocaleString(locale, { minimumFractionDigits: 2 })} ${o.currency}`,

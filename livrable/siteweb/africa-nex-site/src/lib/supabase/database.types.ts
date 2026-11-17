@@ -582,14 +582,191 @@ export type Database = {
           },
         ]
       }
+      offer_line_margins: {
+        Row: {
+          base_amount: number
+          commission_amount: number
+          commission_rate: number
+          company_id: string | null
+          export_mode: string
+          fx_margin_amount: number
+          fx_margin_rate: number
+          insurance_amount: number
+          insurance_rate: number
+          margin_amount: number
+          max_discount_rate: number | null
+          offer_line_id: string
+          product_id: string | null
+          supplier_currency: string
+          supplier_unit_price: number
+          warnings: string[]
+        }
+        Insert: {
+          base_amount: number
+          commission_amount?: number
+          commission_rate?: number
+          company_id?: string | null
+          export_mode: string
+          fx_margin_amount?: number
+          fx_margin_rate?: number
+          insurance_amount?: number
+          insurance_rate?: number
+          margin_amount?: number
+          max_discount_rate?: number | null
+          offer_line_id: string
+          product_id?: string | null
+          supplier_currency: string
+          supplier_unit_price: number
+          warnings?: string[]
+        }
+        Update: {
+          base_amount?: number
+          commission_amount?: number
+          commission_rate?: number
+          company_id?: string | null
+          export_mode?: string
+          fx_margin_amount?: number
+          fx_margin_rate?: number
+          insurance_amount?: number
+          insurance_rate?: number
+          margin_amount?: number
+          max_discount_rate?: number | null
+          offer_line_id?: string
+          product_id?: string | null
+          supplier_currency?: string
+          supplier_unit_price?: number
+          warnings?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_line_margins_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "cdct_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_line_margins_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_line_margins_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "producer_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_line_margins_offer_line_id_fkey"
+            columns: ["offer_line_id"]
+            isOneToOne: true
+            referencedRelation: "offer_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_line_margins_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "cdct_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_line_margins_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offer_lines: {
+        Row: {
+          availability: string | null
+          created_at: string
+          description: string
+          id: string
+          incoterm: string | null
+          incoterm_place: string | null
+          lead_time_days: number | null
+          offer_id: string
+          position: number
+          quantity: number
+          reference: string | null
+          rfq_line_id: string | null
+          total_amount: number
+          unit: string | null
+          unit_price: number
+        }
+        Insert: {
+          availability?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          incoterm?: string | null
+          incoterm_place?: string | null
+          lead_time_days?: number | null
+          offer_id: string
+          position: number
+          quantity: number
+          reference?: string | null
+          rfq_line_id?: string | null
+          total_amount: number
+          unit?: string | null
+          unit_price: number
+        }
+        Update: {
+          availability?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          incoterm?: string | null
+          incoterm_place?: string | null
+          lead_time_days?: number | null
+          offer_id?: string
+          position?: number
+          quantity?: number
+          reference?: string | null
+          rfq_line_id?: string | null
+          total_amount?: number
+          unit?: string | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_lines_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_lines_rfq_line_id_fkey"
+            columns: ["rfq_line_id"]
+            isOneToOne: false
+            referencedRelation: "rfq_lines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offer_margins: {
         Row: {
+          auto: boolean
           commission_amount: number | null
           commission_rate: number | null
           created_at: string
+          export_mode: string | null
           freight_cost: number | null
+          freight_pending: boolean
+          fx_margin_rate: number | null
+          fx_rate: number | null
           insurance_cost: number | null
           insurance_rate: number | null
+          margin_amount: number | null
+          margin_pending: boolean
+          margin_rate: number | null
           offer_id: string
           producer_currency: string | null
           producer_unit_price: number | null
@@ -597,12 +774,20 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          auto?: boolean
           commission_amount?: number | null
           commission_rate?: number | null
           created_at?: string
+          export_mode?: string | null
           freight_cost?: number | null
+          freight_pending?: boolean
+          fx_margin_rate?: number | null
+          fx_rate?: number | null
           insurance_cost?: number | null
           insurance_rate?: number | null
+          margin_amount?: number | null
+          margin_pending?: boolean
+          margin_rate?: number | null
           offer_id: string
           producer_currency?: string | null
           producer_unit_price?: number | null
@@ -610,12 +795,20 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          auto?: boolean
           commission_amount?: number | null
           commission_rate?: number | null
           created_at?: string
+          export_mode?: string | null
           freight_cost?: number | null
+          freight_pending?: boolean
+          fx_margin_rate?: number | null
+          fx_rate?: number | null
           insurance_cost?: number | null
           insurance_rate?: number | null
+          margin_amount?: number | null
+          margin_pending?: boolean
+          margin_rate?: number | null
           offer_id?: string
           producer_currency?: string | null
           producer_unit_price?: number | null
@@ -646,6 +839,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           currency: string
+          freight_amount: number | null
           id: string
           incoterm: string | null
           incoterm_place: string | null
@@ -660,7 +854,7 @@ export type Database = {
           rfq_id: string
           status: string
           total_amount: number | null
-          unit_price: number
+          unit_price: number | null
           updated_at: string
           valid_until: string | null
         }
@@ -670,6 +864,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency: string
+          freight_amount?: number | null
           id?: string
           incoterm?: string | null
           incoterm_place?: string | null
@@ -684,7 +879,7 @@ export type Database = {
           rfq_id: string
           status?: string
           total_amount?: number | null
-          unit_price: number
+          unit_price?: number | null
           updated_at?: string
           valid_until?: string | null
         }
@@ -694,6 +889,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          freight_amount?: number | null
           id?: string
           incoterm?: string | null
           incoterm_place?: string | null
@@ -708,7 +904,7 @@ export type Database = {
           rfq_id?: string
           status?: string
           total_amount?: number | null
-          unit_price?: number
+          unit_price?: number | null
           updated_at?: string
           valid_until?: string | null
         }
@@ -1767,6 +1963,35 @@ export type Database = {
       is_owner_of: { Args: { target_company: string }; Returns: boolean }
       is_privileged: { Args: never; Returns: boolean }
       my_role: { Args: never; Returns: string }
+      offer_auto_inputs: {
+        Args: { p_rfq: string }
+        Returns: {
+          company_id: string
+          company_name: string
+          currency: string
+          discount_tiers: Json
+          export_mode: string
+          lead_time_days: number
+          line_description: string
+          line_id: string
+          line_position: number
+          line_quantity: number
+          line_reference: string
+          line_unit: string
+          min_order_quantity: number
+          price_basis: string
+          price_dzd_ht: number
+          price_place: string
+          price_valid_until: string
+          product_id: string
+          product_name: string
+          product_status: string
+          product_unit: string
+          stock_quantity: number
+          subscription_tier: string
+          unit_price_ht: number
+        }[]
+      }
       product_prices: {
         Args: { p_company: string }
         Returns: {
@@ -1780,6 +2005,10 @@ export type Database = {
         }[]
       }
       reject_claim: { Args: { p_claim: string }; Returns: undefined }
+      save_auto_offers: {
+        Args: { p_offers: Json; p_rfq: string }
+        Returns: number
+      }
       try_uuid: { Args: { p: string }; Returns: string }
     }
     Enums: {

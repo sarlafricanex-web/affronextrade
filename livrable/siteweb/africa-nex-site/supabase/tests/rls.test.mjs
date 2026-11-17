@@ -86,7 +86,7 @@ function expect(condition, message) {
 
 // Un refus doit venir d'une regle de securite, pas d'une faute dans le SQL du test.
 const SECURITY_ERROR =
-  /row-level security|permission denied|protected .* fields|role cannot be changed|onboarding cannot|only the dispatch status|invalid dispatch status|violates check constraint|offer not available/;
+  /row-level security|permission denied|protected .* fields|role cannot be changed|onboarding cannot|only the dispatch status|invalid dispatch status|violates check constraint|offer not available|forbidden|pending margin or freight|auto offer already published/;
 const verbose = process.argv.includes("--verbose");
 
 async function expectError(promise) {
@@ -115,14 +115,18 @@ await check("Inscription : le role admin ne peut pas etre choisi depuis le navig
 });
 await db.query("update public.profiles set role = 'admin' where id = $1", [U.admin]);
 
-const newCompany = (owner, slug) =>
-  as(owner, () =>
+// Le producteur cree sa fiche en brouillon (migration 10) ; seule AFRICA NEX la met en ligne.
+const newCompany = async (owner, slug) => {
+  // Insertion sans "returning", comme le site : le brouillon n'est lisible qu'une fois le membre ajoute.
+  await as(owner, () =>
     rows(
       `insert into public.companies (company_name, slug, kind, owner_profile_id, visibility, sector)
-       values ($1, $2, 'producer', $3, 'published', 'agrifood') returning id`,
+       values ($1, $2, 'producer', $3, 'draft', 'C10')`,
       [slug, slug, owner],
     ),
   );
+  return rows("update public.companies set visibility = 'published' where slug = $1 returning id", [slug]);
+};
 
 const [{ id: companyA }] = await newCompany(U.prodA, "producteur-a");
 const [{ id: companyB }] = await newCompany(U.prodB, "producteur-b");
@@ -181,7 +185,7 @@ await check("Test 3 : un visiteur anonyme ne peut pas deposer d'avis", () =>
 
 // Parcours complet d'une demande de devis
 const [{ id: rfq }] = await as(U.buyer, () =>
-  rows("insert into public.rfqs (buyer_profile_id, title, quantity) values ($1, 'Huile 20 000 L', 20000) returning id", [U.buyer]));
+  rows("insert into public.rfqs (buyer_profile_id, title, quantity, unit) values ($1, 'Huile 20 000 L', 20000, 'l') returning id", [U.buyer]));
 
 await check("Un acheteur ne peut pas creer une demande deja au statut offre", () =>
   expectError(as(U.buyer, () => rows(
@@ -276,6 +280,90 @@ await check("L'acheteur accepte son offre", async () => {
   const [r] = await rows("select status from public.rfqs where id = $1", [rfq]);
   expect(r.status === "accepted", `statut ${r.status}`);
 });
+
+// Lot 6c : offre calculee automatiquement (lignes visibles de l'acheteur, construction du prix secrete)
+const [{ id: rfqAuto }] = await as(U.buyer, () =>
+  rows("insert into public.rfqs (buyer_profile_id, title, currency) values ($1, 'Demande multi-lignes', 'EUR') returning id", [U.buyer]));
+const [{ id: productAuto }] = await rows(
+  `insert into public.products (company_id, product_name, unit, unit_price_ht, currency, price_dzd_ht, status)
+   values ($1, 'Huile 1 L', 'carton', 10, 'EUR', 1500, 'draft') returning id`, [companyA]);
+const [{ id: lineAuto }] = await as(U.buyer, () => rows(
+  `insert into public.rfq_lines (rfq_id, position, product_id, description, quantity, unit)
+   values ($1, 1, $2, 'Huile 1 L', 100, 'carton') returning id`, [rfqAuto, productAuto]));
+await as(U.admin, () => rows("update public.rfqs set status = 'qualified' where id = $1", [rfqAuto]));
+
+const autoPayload = (marginPending) => JSON.stringify([{
+  label: "A", currency: "EUR", incoterm: "FOB", valid_until: "2099-12-31", lead_time_days: 10, total_amount: 1100,
+  margin: { export_mode: "self", margin_pending: marginPending, freight_pending: false, producer_currency: "EUR", commission_rate: 10, commission_amount: 100, insurance_rate: 0, insurance_cost: 0 },
+  lines: [{
+    rfq_line_id: lineAuto, position: 1, description: "Huile 1 L", quantity: 100, unit: "carton", unit_price: 11, total_amount: 1100, incoterm: "FOB",
+    margin: { product_id: productAuto, company_id: companyA, export_mode: "self", supplier_unit_price: 10, supplier_currency: "EUR", base_amount: 1000, commission_rate: 10, commission_amount: 100, warnings: ["stockUnknown"] },
+  }],
+}]);
+
+for (const [who, user] of [["l'acheteur", U.buyer], ["un producteur", U.prodA]]) {
+  await check(`Lot 6c : ${who} ne lit pas les donnees du calcul (prix fournisseurs)`, () =>
+    expectError(as(user, () => rows("select * from public.offer_auto_inputs($1)", [rfqAuto]))));
+  await check(`Lot 6c : ${who} ne peut pas ecrire d'offre calculee`, () =>
+    expectError(as(user, () => rows("select public.save_auto_offers($1, $2::jsonb)", [rfqAuto, autoPayload(false)]))));
+}
+
+await check("Lot 6c : l'admin lit la ligne avec le prix fournisseur et le prix en dinars", async () => {
+  const r = await as(U.admin, () => rows("select * from public.offer_auto_inputs($1)", [rfqAuto]));
+  expect(r.length === 1 && Number(r[0].unit_price_ht) === 10 && Number(r[0].price_dzd_ht) === 1500 && r[0].company_id === companyA, JSON.stringify(r));
+});
+
+let autoOffer;
+await check("Lot 6c : l'admin enregistre l'offre calculee (brouillon, lignes et marges)", async () => {
+  await as(U.admin, () => rows("select public.save_auto_offers($1, $2::jsonb)", [rfqAuto, autoPayload(true)]));
+  const r = await rows(
+    `select o.id, o.status, m.auto, m.margin_pending, (select count(*) from public.offer_lines l where l.offer_id = o.id)::int as lines,
+            (select count(*) from public.offer_line_margins lm join public.offer_lines l on l.id = lm.offer_line_id where l.offer_id = o.id)::int as margins
+       from public.offers o join public.offer_margins m on m.offer_id = o.id where o.rfq_id = $1`, [rfqAuto]);
+  expect(r.length === 1 && r[0].status === "draft" && r[0].auto && r[0].margin_pending && r[0].lines === 1 && r[0].margins === 1, JSON.stringify(r));
+  autoOffer = r[0].id;
+});
+
+await check("Lot 6c : un recalcul remplace le brouillon automatique (pas de doublon)", async () => {
+  await as(U.admin, () => rows("select public.save_auto_offers($1, $2::jsonb)", [rfqAuto, autoPayload(true)]));
+  const r = await rows("select id from public.offers where rfq_id = $1", [rfqAuto]);
+  expect(r.length === 1, `${r.length} offres`);
+  autoOffer = r[0].id;
+});
+
+await check("Lot 6c : l'acheteur ne voit pas les lignes d'un brouillon", async () => {
+  const r = await as(U.buyer, () => rows("select * from public.offer_lines"));
+  expect(r.length === 0, `${r.length} lignes`);
+});
+
+await check("Lot 6c : une offre avec marge a saisir ne peut pas etre publiee", () =>
+  expectError(as(U.admin, () => rows("update public.offers set status = 'published', published_at = now() where id = $1", [autoOffer]))));
+
+await as(U.admin, async () => {
+  await rows("update public.offer_margins set margin_pending = false where offer_id = $1", [autoOffer]);
+  await rows("update public.offers set status = 'published', published_at = now() where id = $1", [autoOffer]);
+});
+
+await check("Lot 6c : l'acheteur voit les lignes publiees, jamais la construction du prix", async () => {
+  const lines = await as(U.buyer, () => rows("select unit_price from public.offer_lines"));
+  const margins = await as(U.buyer, () => rows("select * from public.offer_line_margins"));
+  expect(lines.length === 1 && Number(lines[0].unit_price) === 11 && margins.length === 0, `lignes ${lines.length}, marges ${margins.length}`);
+});
+
+await check("Lot 6c : le producteur et le visiteur ne voient ni les lignes ni les marges", async () => {
+  for (const user of [U.prodA, null]) {
+    for (const table of ["offer_lines", "offer_line_margins"]) {
+      const r = await as(user, () => rows(`select * from public.${table}`).catch((e) => {
+        if (/permission denied/.test(e.message)) return [];
+        throw e;
+      }));
+      expect(r.length === 0, `${user ?? "anonyme"} lit ${r.length} lignes de ${table}`);
+    }
+  }
+});
+
+await check("Lot 6c : pas de recalcul une fois l'offre automatique publiee", () =>
+  expectError(as(U.admin, () => rows("select public.save_auto_offers($1, $2::jsonb)", [rfqAuto, autoPayload(false)]))));
 
 // Messages : deux fils, jamais acheteur avec producteur
 await as(U.buyer, () => rows(
