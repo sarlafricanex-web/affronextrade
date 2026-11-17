@@ -365,6 +365,67 @@ await check("Lot 6c : le producteur et le visiteur ne voient ni les lignes ni le
 await check("Lot 6c : pas de recalcul une fois l'offre automatique publiee", () =>
   expectError(as(U.admin, () => rows("select public.save_auto_offers($1, $2::jsonb)", [rfqAuto, autoPayload(false)]))));
 
+// Lot 6d : consultation par ligne et devis retenu (AFRICA NEX seule)
+const [{ id: lineDispatch }] = await as(U.admin, () => rows(
+  `insert into public.rfq_dispatches (rfq_id, rfq_line_id, company_id, brief_title) values ($1, $2, $3, 'Huile 1 L') returning id`,
+  [rfqAuto, lineAuto, companyA]));
+
+await check("Lot 6d : un seul brief par ligne et par producteur", async () => {
+  try {
+    await as(U.admin, () => rows(
+      `insert into public.rfq_dispatches (rfq_id, rfq_line_id, company_id, brief_title) values ($1, $2, $3, 'Doublon')`,
+      [rfqAuto, lineAuto, companyA]));
+  } catch (e) {
+    expect(/duplicate key/.test(e.message), e.message);
+    return;
+  }
+  throw new Error("doublon accepte");
+});
+
+await check("Lot 6d : un brief de ligne et un brief de toute la demande coexistent", async () => {
+  await as(U.admin, () => rows(
+    `insert into public.rfq_dispatches (rfq_id, company_id, brief_title) values ($1, $2, 'Toute la demande')`, [rfqAuto, companyA]));
+  const [{ n }] = await rows("select count(*)::int as n from public.rfq_dispatches where rfq_id = $1 and company_id = $2", [rfqAuto, companyA]);
+  expect(n === 2, `${n} envois`);
+});
+
+await check("Lot 6d : une ligne d'une autre demande est refusee", async () => {
+  try {
+    await as(U.admin, () => rows(
+      `insert into public.rfq_dispatches (rfq_id, rfq_line_id, company_id, brief_title) values ($1, $2, $3, 'Melange')`,
+      [rfq, lineAuto, companyB]));
+  } catch (e) {
+    expect(/foreign key/.test(e.message), e.message);
+    return;
+  }
+  throw new Error("ligne d'une autre demande acceptee");
+});
+
+const [{ id: lineQuote }] = await quote(U.prodA, companyA, lineDispatch, 9.5);
+
+await check("Lot 6d : l'admin lit le devis de la ligne pour le calcul", async () => {
+  const r = await as(U.admin, () => rows("select * from public.offer_auto_quotes($1)", [rfqAuto]));
+  expect(r.length === 1 && r[0].quote_id === lineQuote && r[0].line_id === lineAuto && Number(r[0].unit_price_ht) === 9.5 && r[0].chosen === false, JSON.stringify(r));
+});
+
+await check("Lot 6d : l'acheteur ne lit pas les devis de la demande", () =>
+  expectError(as(U.buyer, () => rows("select * from public.offer_auto_quotes($1)", [rfqAuto]))));
+
+await as(U.admin, () => rows("insert into public.rfq_line_choices (rfq_line_id, quote_id, chosen_by) values ($1, $2, $3)", [lineAuto, lineQuote, U.admin]));
+
+await check("Lot 6d : le devis retenu est signale au calcul", async () => {
+  const r = await as(U.admin, () => rows("select chosen from public.offer_auto_quotes($1)", [rfqAuto]));
+  expect(r[0]?.chosen === true, JSON.stringify(r));
+});
+
+for (const [who, user] of [["l'acheteur", U.buyer], ["le producteur", U.prodA]]) {
+  await check(`Lot 6d : ${who} ne lit ni ne modifie le devis retenu`, async () => {
+    const r = await as(user, () => rows("select * from public.rfq_line_choices"));
+    expect(r.length === 0, `${r.length} lignes`);
+    await expectError(as(user, () => rows("insert into public.rfq_line_choices (rfq_line_id, quote_id) values ($1, $2)", [lineAuto, lineQuote])));
+  });
+}
+
 // Messages : deux fils, jamais acheteur avec producteur
 await as(U.buyer, () => rows(
   "insert into public.messages (rfq_id, sender_profile_id, sender_role, body) values ($1, $2, 'buyer', 'Question acheteur')",

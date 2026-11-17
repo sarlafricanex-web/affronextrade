@@ -898,7 +898,22 @@
     "autoRecreate": "Recalculer les brouillons",
     "autoRecreateNote": "Le recalcul remplace les brouillons calculés de cette demande.",
     "autoPublishedNote": "Une offre calculée est déjà publiée : retirez-la pour recalculer.",
-    "autoEmpty": "Aucune ligne ne peut être chiffrée pour l'instant."
+    "autoEmpty": "Aucune ligne ne peut être chiffrée pour l'instant.",
+    "rfqDone_lineDispatch": "Brief de la ligne envoyé à {count, plural, one {# producteur} other {# producteurs}}.",
+    "rfqDone_lineQuoteChosen": "Devis retenu pour la ligne : le calcul l'utilise.",
+    "rfqDone_lineQuoteAuto": "Retour au devis le moins cher pour la ligne.",
+    "rfqDone_lineQuoteInvalid": "Ce devis ne peut pas être retenu pour cette ligne.",
+    "quoteLineLabel": "Ligne {position}",
+    "quoteChosen": "Retenu",
+    "quoteUsed": "Utilisé dans le calcul",
+    "quoteChoose": "Retenir pour la ligne",
+    "quoteChooseAuto": "Revenir au moins cher",
+    "consultLineTitle": "Consulter des producteurs pour la ligne {position}",
+    "consultLineBack": "Revenir au brief de toute la demande",
+    "autoConsult": "Consulter des producteurs",
+    "autoQuotesUnusable": "{count, plural, one {# devis reçu, inutilisable (validité, devise ou mode du producteur).} other {# devis reçus, aucun utilisable (validité, devise ou mode du producteur).}}",
+    "autoFromQuote": "{count, plural, one {Devis consulté} other {Devis consulté · # reçus}}",
+    "autoWarn_quoteQuantityShort": "Quantité proposée insuffisante"
   },
   "phone": {
     "countryCode": "Indicatif du pays : {code}. Changer de pays",

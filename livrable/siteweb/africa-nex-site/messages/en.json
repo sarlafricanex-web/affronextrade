@@ -898,7 +898,22 @@
     "autoRecreate": "Recalculate the drafts",
     "autoRecreateNote": "Recalculating replaces this request's calculated drafts.",
     "autoPublishedNote": "A calculated offer is already published: withdraw it to recalculate.",
-    "autoEmpty": "No line can be priced for now."
+    "autoEmpty": "No line can be priced for now.",
+    "rfqDone_lineDispatch": "Line brief sent to {count, plural, one {# producer} other {# producers}}.",
+    "rfqDone_lineQuoteChosen": "Quote selected for the line: the calculation now uses it.",
+    "rfqDone_lineQuoteAuto": "Back to the cheapest quote for the line.",
+    "rfqDone_lineQuoteInvalid": "This quote cannot be selected for this line.",
+    "quoteLineLabel": "Line {position}",
+    "quoteChosen": "Selected",
+    "quoteUsed": "Used in the calculation",
+    "quoteChoose": "Select for the line",
+    "quoteChooseAuto": "Back to the cheapest",
+    "consultLineTitle": "Consult producers for line {position}",
+    "consultLineBack": "Back to the brief for the whole request",
+    "autoConsult": "Consult producers",
+    "autoQuotesUnusable": "{count, plural, one {# quote received, not usable (validity, currency or producer mode).} other {# quotes received, none usable (validity, currency or producer mode).}}",
+    "autoFromQuote": "{count, plural, one {Consulted quote} other {Consulted quote · # received}}",
+    "autoWarn_quoteQuantityShort": "Offered quantity too low"
   },
   "phone": {
     "countryCode": "Country code: {code}. Change country",

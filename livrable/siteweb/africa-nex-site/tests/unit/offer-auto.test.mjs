@@ -141,6 +141,80 @@ test("validite de l'offre : la plus proche des validites de prix, 30 jours au pl
   assert.ok(r2.offers[0].lines[0].warnings.includes("noPriceValidity"));
 });
 
+// Lot 6d : devis recus par ligne
+let qn = 0;
+function quote(line_id, over = {}) {
+  qn += 1;
+  return {
+    line_id, quote_id: `q-${qn}`, quote_status: "submitted", unit_price_ht: 8, currency: "EUR", price_basis: "FOB",
+    port_of_loading: "Oran", quantity: 100, production_lead_days: 20, valid_until: "2026-12-31",
+    company_id: `co-q${qn}`, company_name: `Producteur ${qn}`, subscription_tier: "starter", export_mode: "self", chosen: false,
+    ...over,
+  };
+}
+
+test("ligne hors catalogue : le devis le moins cher entre dans le calcul", () => {
+  const r0 = row({ product_id: null });
+  const quotes = [quote(r0.line_id, { unit_price_ht: 9 }), quote(r0.line_id, { unit_price_ht: 7 })];
+  const r = computeAutoOffers(ctx([r0], { quotes }));
+  assert.equal(r.skipped.length, 0);
+  const l = r.offers[0].lines[0];
+  assert.equal(l.source, "quote");
+  assert.equal(l.quoteId, quotes[1].quote_id);
+  assert.equal(l.supplierName, quotes[1].company_name);
+  assert.equal(l.quotesUsable, 2);
+  assert.equal(l.unitPrice, 7.7);
+  assert.equal(l.incoterm, "FOB");
+  assert.equal(l.incotermPlace, "Oran");
+  assert.equal(l.leadDays, 20);
+  assert.equal(l.availability, "production");
+});
+
+test("devis retenu par AFRICA NEX : il passe avant le moins cher et avant la liste de prix", () => {
+  const r0 = row();
+  const quotes = [quote(r0.line_id, { unit_price_ht: 7 }), quote(r0.line_id, { unit_price_ht: 12, chosen: true })];
+  const l = computeAutoOffers(ctx([r0], { quotes })).offers[0].lines[0];
+  assert.equal(l.quoteId, quotes[1].quote_id);
+  assert.equal(l.supplierUnitPrice, 12);
+});
+
+test("liste de prix valide : elle passe avant un devis non retenu", () => {
+  const r0 = row({ unit_price_ht: 10 });
+  const l = computeAutoOffers(ctx([r0], { quotes: [quote(r0.line_id, { unit_price_ht: 5 })] })).offers[0].lines[0];
+  assert.equal(l.source, "catalog");
+});
+
+test("devis en dinars : il sert l'export par AFRICA NEX, pas l'intermediation", () => {
+  const r0 = row({ product_id: null });
+  const dz = computeAutoOffers(ctx([r0], { quotes: [quote(r0.line_id, { currency: "DZD", unit_price_ht: 1500, export_mode: "africanex" })] }));
+  assert.equal(dz.offers[0].mode, "africanex");
+  assert.equal(dz.offers[0].lines[0].unitPrice, 10.3);
+  const bad = computeAutoOffers(ctx([r0], { quotes: [quote(r0.line_id, { currency: "DZD", unit_price_ht: 1500, export_mode: "self" })] }));
+  assert.equal(bad.offers.length, 0);
+  assert.equal(bad.skipped[0].issue, "noProduct");
+  assert.equal(bad.skipped[0].quotesReceived, 1);
+});
+
+test("devis expire ou producteur sans mode : ignores ; quantite proposee insuffisante signalee", () => {
+  const r0 = row({ product_id: null, line_quantity: 100 });
+  const quotes = [
+    quote(r0.line_id, { unit_price_ht: 5, valid_until: "2026-11-01" }),
+    quote(r0.line_id, { unit_price_ht: 6, export_mode: null }),
+    quote(r0.line_id, { unit_price_ht: 9, quantity: 60 }),
+  ];
+  const l = computeAutoOffers(ctx([r0], { quotes })).offers[0].lines[0];
+  assert.equal(l.supplierUnitPrice, 9);
+  assert.equal(l.quotesUsable, 1);
+  assert.ok(l.warnings.includes("quoteQuantityShort"));
+});
+
+test("devis d'un producteur Pro : assurance 1 % et fret a saisir", () => {
+  const r0 = row({ product_id: null });
+  const o = computeAutoOffers(ctx([r0], { quotes: [quote(r0.line_id, { unit_price_ht: 10, subscription_tier: "pro" })] })).offers[0];
+  assert.equal(o.lines[0].unitPrice, 11.1);
+  assert.equal(o.freightPending, true);
+});
+
 test("arrondis : total = prix unitaire x quantite, l'ecart va dans la commission", () => {
   const r = computeAutoOffers(ctx([row({ unit_price_ht: 3.33, line_quantity: 7 })]));
   const o = r.offers[0];

@@ -71,12 +71,21 @@ export async function dispatchRfq(_prev: DispatchState, formData: FormData): Pro
   if (!companies.length || companies.length > 20) errors.companies = "rfqErrorCompanies";
   if (Object.keys(errors).length) return fail({ errors });
 
+  // Lot 6d : brief rattache a une seule ligne de la demande (ligne sans prix a faire chiffrer).
+  const lineId = text(formData, "rfqLineId");
+  if (lineId && !UUID.test(lineId)) redirect(`/${locale}/admin/rfqs/${id}`);
   const { data: rfq } = await supabase
     .from("rfqs")
     .select("id, status, buyer_profile_id, buyer:companies!rfqs_buyer_company_id_fkey(company_name)")
     .eq("id", id)
     .maybeSingle();
-  if (!rfq || !["submitted", "qualified", "dispatched"].includes(rfq.status)) return fail({ errors: {}, formError: "rfqErrorNotDispatchable" });
+  // Une ligne peut encore etre chiffree quand des offres sont deja publiees.
+  const open = lineId ? ["submitted", "qualified", "dispatched", "offered"] : ["submitted", "qualified", "dispatched"];
+  if (!rfq || !open.includes(rfq.status)) return fail({ errors: {}, formError: "rfqErrorNotDispatchable" });
+  if (lineId) {
+    const { data: line } = await supabase.from("rfq_lines").select("id").eq("id", lineId).eq("rfq_id", id).maybeSingle();
+    if (!line) redirect(`/${locale}/admin/rfqs/${id}`);
+  }
 
   // Garde-fou d'anonymat
   const [{ data: profile }, { data: priv }] = await Promise.all([
@@ -98,7 +107,8 @@ export async function dispatchRfq(_prev: DispatchState, formData: FormData): Pro
   if (leaks.some(Boolean)) return fail({ errors: { briefSpecs: "rfqErrorLeak" } });
 
   // Producteurs deja consultes : on n'envoie qu'aux nouveaux.
-  const { data: existing } = await supabase.from("rfq_dispatches").select("company_id").eq("rfq_id", id);
+  const sentQuery = supabase.from("rfq_dispatches").select("company_id").eq("rfq_id", id);
+  const { data: existing } = await (lineId ? sentQuery.eq("rfq_line_id", lineId) : sentQuery.is("rfq_line_id", null));
   const already = new Set((existing ?? []).map((d) => d.company_id));
   const fresh = companies.filter((c) => !already.has(c));
   if (!fresh.length) return fail({ errors: { companies: "rfqErrorAlreadySent" } });
@@ -106,6 +116,7 @@ export async function dispatchRfq(_prev: DispatchState, formData: FormData): Pro
   const { error } = await supabase.from("rfq_dispatches").insert(
     fresh.map((company_id) => ({
       rfq_id: id,
+      rfq_line_id: lineId || null,
       company_id,
       brief_title: v.briefTitle,
       brief_specs: v.briefSpecs || null,
@@ -124,7 +135,7 @@ export async function dispatchRfq(_prev: DispatchState, formData: FormData): Pro
   }
   await Promise.all([
     supabase.from("rfqs").update({ status: "dispatched" }).eq("id", id).in("status", ["submitted", "qualified"]),
-    supabase.from("audit_log").insert({ actor_profile_id: userId, action: "rfq.dispatch", entity: "rfq", entity_id: id, payload: { companies: fresh } }),
+    supabase.from("audit_log").insert({ actor_profile_id: userId, action: "rfq.dispatch", entity: "rfq", entity_id: id, payload: { companies: fresh, line: lineId || null } }),
   ]);
-  redirect(`/${locale}/admin/rfqs/${id}?done=dispatch&count=${fresh.length}`);
+  redirect(`/${locale}/admin/rfqs/${id}?done=${lineId ? "lineDispatch" : "dispatch"}&count=${fresh.length}`);
 }

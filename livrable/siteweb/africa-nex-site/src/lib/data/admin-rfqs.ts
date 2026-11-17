@@ -35,7 +35,7 @@ export async function getAdminRfq(client: Client, id: string) {
     rfq.buyer_company_id ? client.from("company_private").select("contact_phone, contact_whatsapp").eq("company_id", rfq.buyer_company_id).maybeSingle() : Promise.resolve({ data: null }),
     client
       .from("rfq_dispatches")
-      .select(`id, reference, status, respond_by, viewed_at, created_at, brief_title, unit, company:companies(id, company_name, slug, claim_status, owner_profile_id, wilaya, city), quotes(${QUOTE_COLUMNS})`)
+      .select(`id, reference, status, respond_by, viewed_at, created_at, brief_title, unit, rfq_line_id, company:companies(id, company_name, slug, claim_status, owner_profile_id, wilaya, city), quotes(${QUOTE_COLUMNS})`)
       .eq("rfq_id", id)
       .order("created_at"),
     client.from("offers").select(`${OFFER_COLUMNS}, offer_margins(${MARGIN_COLUMNS}), offer_lines(count)`).eq("rfq_id", id).order("label"),

@@ -2,24 +2,28 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import { getFxRates } from "@/lib/data/settings";
-import { computeAutoOffers, type AutoInputRow, type AutoOffer, type AutoResult } from "@/lib/offer-auto";
+import { computeAutoOffers, type AutoInputRow, type AutoOffer, type AutoQuoteRow, type AutoResult } from "@/lib/offer-auto";
 
 type Client = SupabaseClient<Database>;
 
-// Calcul automatique d'une demande (lot 6c), avec la session de l'admin : offer_auto_inputs()
-// refuse tout autre role. Le meme calcul sert a l'apercu de la console et a l'action serveur.
+// Calcul automatique d'une demande (lots 6c et 6d), avec la session de l'admin : offer_auto_inputs()
+// et offer_auto_quotes() refusent tout autre role. Le meme calcul sert a l'apercu de la console et a
+// l'action serveur.
 export async function computeRfqAutoOffers(client: Client, rfqId: string): Promise<(AutoResult & { rates: Awaited<ReturnType<typeof getFxRates>> }) | null> {
   if (!/^[0-9a-f-]{36}$/i.test(rfqId)) return null;
-  const [{ data: rfq }, { data: rows, error }, rates] = await Promise.all([
+  const [{ data: rfq }, { data: rows, error }, { data: quotes, error: quotesError }, rates] = await Promise.all([
     client.from("rfqs").select("id, currency, incoterm").eq("id", rfqId).maybeSingle(),
     client.rpc("offer_auto_inputs", { p_rfq: rfqId }),
+    client.rpc("offer_auto_quotes", { p_rfq: rfqId }),
     getFxRates(client),
   ]);
   if (error) throw error;
+  if (quotesError) throw quotesError;
   if (!rfq || !rows?.length) return null;
   const today = new Date().toISOString().slice(0, 10);
   const result = computeAutoOffers({
     rows: rows as AutoInputRow[],
+    quotes: (quotes ?? []) as AutoQuoteRow[],
     buyerCurrency: rfq.currency,
     requestedIncoterm: rfq.incoterm,
     rates: { EUR: rates.EUR?.dzd_per_unit, USD: rates.USD?.dzd_per_unit },
@@ -66,8 +70,9 @@ export function autoOffersPayload(offers: AutoOffer[], labels: string[]) {
       lead_time_days: l.leadDays,
       availability: l.availability,
       margin: {
-        product_id: l.row.product_id,
-        company_id: l.row.company_id,
+        product_id: l.source === "catalog" ? l.row.product_id : null,
+        quote_id: l.quoteId,
+        company_id: l.companyId,
         export_mode: l.mode,
         supplier_unit_price: l.supplierUnitPrice,
         supplier_currency: l.supplierCurrency,

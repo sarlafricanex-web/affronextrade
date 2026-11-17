@@ -219,6 +219,34 @@ export async function createAutoOffers(formData: FormData) {
   back("autoCreated", Number(count) || 0);
 }
 
+// Lot 6d : devis retenu pour une ligne (sinon le calcul prend le moins cher). quote = "auto" revient
+// au choix automatique. Le devis doit repondre a un brief de cette ligne.
+export async function chooseLineQuote(formData: FormData) {
+  const { locale, supabase, userId } = await adminContext(formData);
+  const rfqId = text(formData, "rfqId");
+  const lineId = text(formData, "lineId");
+  const quoteId = text(formData, "quote");
+  if (!UUID.test(rfqId) || !UUID.test(lineId) || (quoteId !== "auto" && !UUID.test(quoteId))) redirect(`/${locale}/admin/rfqs`);
+  const back = (done: string) => redirect(`/${locale}/admin/rfqs/${rfqId}?done=${done}`);
+  if (quoteId === "auto") {
+    await supabase.from("rfq_line_choices").delete().eq("rfq_line_id", lineId);
+  } else {
+    const { data: q } = await supabase.from("quotes").select("id, status, dispatch:rfq_dispatches(rfq_id, rfq_line_id)").eq("id", quoteId).maybeSingle();
+    const d = one<{ rfq_id: string; rfq_line_id: string | null }>(q?.dispatch);
+    if (!q || d?.rfq_id !== rfqId || d.rfq_line_id !== lineId || !["submitted", "selected"].includes(q.status)) back("lineQuoteInvalid");
+    const { error } = await supabase.from("rfq_line_choices").upsert({ rfq_line_id: lineId, quote_id: quoteId, chosen_by: userId, chosen_at: new Date().toISOString() });
+    if (error) { console.error("Line quote choice failed:", error.message); back("autoError"); }
+  }
+  await supabase.from("audit_log").insert({ actor_profile_id: userId, action: "rfq.line_quote", entity: "rfq", entity_id: rfqId, payload: { line: lineId, quote: quoteId } });
+  back(quoteId === "auto" ? "lineQuoteAuto" : "lineQuoteChosen");
+}
+
+// Devis de producteurs utilises par les lignes d'une offre calculee.
+async function lineQuoteIds(supabase: Client, offerId: string) {
+  const { data } = await supabase.from("offer_lines").select("offer_line_margins(quote_id)").eq("offer_id", offerId);
+  return (data ?? []).map((l) => one<{ quote_id: string | null }>(l.offer_line_margins)?.quote_id).filter((q): q is string => !!q);
+}
+
 // Publier un brouillon, retirer une offre publiee (retour en brouillon) ou supprimer un brouillon.
 export async function changeOffer(formData: FormData) {
   const { locale, supabase, userId } = await adminContext(formData);
@@ -233,9 +261,13 @@ export async function changeOffer(formData: FormData) {
   if (op === "publish" && offer.status === "draft") {
     if (offer.valid_until && offer.valid_until < new Date().toISOString().slice(0, 10)) back("offerExpired");
     if (!(await publishOffer(supabase, id, offer.rfq_id, quoteId))) back("offerPending");
+    const used = await lineQuoteIds(supabase, id);
+    if (used.length) await supabase.from("quotes").update({ status: "selected" }).in("id", used).eq("status", "submitted");
   } else if (op === "withdraw" && offer.status === "published") {
     await supabase.from("offers").update({ status: "draft", published_at: null }).eq("id", id).eq("status", "published");
     if (quoteId) await supabase.from("quotes").update({ status: "submitted" }).eq("id", quoteId).eq("status", "selected");
+    const used = await lineQuoteIds(supabase, id);
+    if (used.length) await supabase.from("quotes").update({ status: "submitted" }).in("id", used).eq("status", "selected");
     const { count } = await supabase.from("offers").select("id", { count: "exact", head: true }).eq("rfq_id", offer.rfq_id).eq("status", "published");
     if (!count) await supabase.from("rfqs").update({ status: "dispatched" }).eq("id", offer.rfq_id).eq("status", "offered");
   } else if (op === "delete" && offer.status === "draft") {

@@ -898,7 +898,22 @@
     "autoRecreate": "إعادة حساب المسودات",
     "autoRecreateNote": "إعادة الحساب تستبدل المسودات المحسوبة لهذا الطلب.",
     "autoPublishedNote": "تم نشر عرض محسوب بالفعل: اسحبه لإعادة الحساب.",
-    "autoEmpty": "لا يمكن تسعير أي سطر حاليًا."
+    "autoEmpty": "لا يمكن تسعير أي سطر حاليًا.",
+    "rfqDone_lineDispatch": "تم إرسال ملخص السطر إلى {count, plural, one {منتج واحد} two {منتجَين} few {# منتجين} many {# منتجًا} other {# منتج}}.",
+    "rfqDone_lineQuoteChosen": "تم اعتماد العرض للسطر: يستخدمه الحساب الآن.",
+    "rfqDone_lineQuoteAuto": "العودة إلى أرخص عرض للسطر.",
+    "rfqDone_lineQuoteInvalid": "لا يمكن اعتماد هذا العرض لهذا السطر.",
+    "quoteLineLabel": "السطر {position}",
+    "quoteChosen": "معتمد",
+    "quoteUsed": "مستخدم في الحساب",
+    "quoteChoose": "اعتماد للسطر",
+    "quoteChooseAuto": "العودة إلى الأرخص",
+    "consultLineTitle": "استشارة المنتجين للسطر {position}",
+    "consultLineBack": "العودة إلى ملخص الطلب كاملًا",
+    "autoConsult": "استشارة المنتجين",
+    "autoQuotesUnusable": "{count, plural, one {عرض واحد مستلم، غير قابل للاستخدام (الصلاحية أو العملة أو نمط المنتج).} two {عرضان مستلمان، لا يصلح أي منهما (الصلاحية أو العملة أو نمط المنتج).} few {# عروض مستلمة، لا يصلح أي منها (الصلاحية أو العملة أو نمط المنتج).} many {# عرضًا مستلمًا، لا يصلح أي منها (الصلاحية أو العملة أو نمط المنتج).} other {# عرض مستلم، لا يصلح أي منها (الصلاحية أو العملة أو نمط المنتج).}}",
+    "autoFromQuote": "{count, plural, one {عرض استشارة} other {عرض استشارة · # مستلمة}}",
+    "autoWarn_quoteQuantityShort": "الكمية المعروضة غير كافية"
   },
   "phone": {
     "countryCode": "رمز البلد: {code}. تغيير البلد",

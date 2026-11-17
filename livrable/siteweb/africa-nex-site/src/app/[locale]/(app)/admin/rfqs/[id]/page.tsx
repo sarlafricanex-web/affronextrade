@@ -14,7 +14,7 @@ import { DispatchForm } from "@/components/admin/DispatchForm";
 import { AutoOfferPanel } from "@/components/admin/AutoOfferPanel";
 import { computeRfqAutoOffers } from "@/lib/data/auto-offer";
 import { closeRfq, qualifyRfq } from "../actions";
-import { changeOffer } from "../offer-actions";
+import { changeOffer, chooseLineQuote } from "../offer-actions";
 import { oneOf } from "@/lib/data/requests";
 
 export const instant = false;
@@ -29,13 +29,13 @@ export default async function AdminRfqPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ done?: string; count?: string }>;
+  searchParams: Promise<{ done?: string; count?: string; line?: string }>;
 }) {
   const { locale, id } = await params;
   const user = await getCurrentUser();
   if (!user) redirect(`/${locale}/login`);
   if (user.role !== "admin") redirect(`/${locale}/dashboard`);
-  const [t, tr, tc, ts, format, rfq, producers, { done, count }] = await Promise.all([
+  const [t, tr, tc, ts, format, rfq, producers, { done, count, line: lineParam }] = await Promise.all([
     getTranslations({ locale, namespace: "admin" }),
     getTranslations({ locale, namespace: "rfq" }),
     getTranslations({ locale, namespace: "catalog" }),
@@ -52,11 +52,20 @@ export default async function AdminRfqPage({
   const product = rfq.product as unknown as { product_name: string; hs_code: string | null } | null;
   const date = (d: string | null) => (d ? format.dateTime(new Date(`${d.slice(0, 10)}T12:00:00`), { dateStyle: "long" }) : null);
   const files = rfqAttachments(rfq);
-  const sentIds = new Set(rfq.dispatches.map((d) => (d.company as unknown as { id: string }).id));
-  const dispatchable = ["submitted", "qualified", "dispatched"].includes(rfq.status);
   const volume = volumeLabel(rfq, tr, tc, locale);
   // Brief prerempli SANS l'identite de l'acheteur : AFRICA NEX le relit avant l'envoi.
   const lines = (rfq.rfq_lines ?? []) as RfqLine[];
+  const linePosition = new Map(lines.map((l) => [l.id, l.position]));
+  // Lot 6d : brief d'une seule ligne (?line=...), possible tant que la demande est ouverte.
+  const consultLine = lineParam ? lines.find((l) => l.id === lineParam) ?? null : null;
+  const dispatchable = consultLine
+    ? ["submitted", "qualified", "dispatched", "offered"].includes(rfq.status)
+    : ["submitted", "qualified", "dispatched"].includes(rfq.status);
+  const sentIds = new Set(
+    rfq.dispatches
+      .filter((d) => (d.rfq_line_id ?? null) === (consultLine?.id ?? null))
+      .map((d) => (d.company as unknown as { id: string }).id),
+  );
   const lineText = (l: RfqLine) =>
     `${l.position}. ${l.description}${l.reference ? ` (${l.reference})` : ""}${l.quantity != null ? ` : ${Number(l.quantity).toLocaleString(locale)} ${l.unit ? tc(`unitShort_${l.unit}`) : ""}`.trimEnd() : ""}`;
   const specs = [
@@ -74,12 +83,20 @@ export default async function AdminRfqPage({
       return q && q.status !== "withdrawn" && q.status !== "draft" ? [{ d, q, company: d.company as unknown as Company }] : [];
     })
     .sort((a, b) => Number(a.q.unit_price_ht) - Number(b.q.unit_price_ht));
+  // Meilleur prix par devise, et par ligne pour les devis d'une ligne.
+  const bestKey = (d: { rfq_line_id: string | null }, currency: string) => `${d.rfq_line_id ?? ""}:${currency}`;
   const bestPrice = new Map<string, number>();
-  for (const { q } of quotes) if (!bestPrice.has(q.currency)) bestPrice.set(q.currency, Number(q.unit_price_ht));
+  for (const { d, q } of quotes) if (!bestPrice.has(bestKey(d, q.currency))) bestPrice.set(bestKey(d, q.currency), Number(q.unit_price_ht));
+  const peers = (d: { rfq_line_id: string | null }) => quotes.filter((x) => (x.d.rfq_line_id ?? null) === (d.rfq_line_id ?? null)).length;
   const offerByQuote = new Map(rfq.offers.map((o) => [oneOf(o.offer_margins)?.source_quote_id ?? "", o]));
   const canOffer = ["qualified", "dispatched", "offered"].includes(rfq.status);
-  // Lot 6c : offre calculee depuis les listes de prix (lignes rattachees a un produit du catalogue).
-  const autoResult = lines.some((l) => l.product_id) ? await computeRfqAutoOffers(user.supabase, rfq.id) : null;
+  // Lots 6c et 6d : offre calculee depuis les listes de prix et les devis recus par ligne.
+  const [autoResult, { data: choices }] = await Promise.all([
+    lines.length ? computeRfqAutoOffers(user.supabase, rfq.id) : Promise.resolve(null),
+    lines.length ? user.supabase.from("rfq_line_choices").select("rfq_line_id, quote_id").in("rfq_line_id", lines.map((l) => l.id)) : Promise.resolve({ data: [] }),
+  ]);
+  const chosenQuotes = new Set((choices ?? []).map((c) => c.quote_id));
+  const usedQuotes = new Set((autoResult?.offers ?? []).flatMap((o) => o.lines.map((l) => l.quoteId)).filter(Boolean));
   const autoOffers = rfq.offers.filter((o) => oneOf(o.offer_margins)?.auto);
   const canEnterQuote = (d: (typeof rfq.dispatches)[number]) => {
     const q = oneOf(d.quotes);
@@ -145,12 +162,14 @@ export default async function AdminRfqPage({
               </thead>
               <tbody>
                 {quotes.map(({ q, d, company }) => {
-                  const best = bestPrice.get(q.currency) === Number(q.unit_price_ht) && quotes.length > 1;
+                  const best = bestPrice.get(bestKey(d, q.currency)) === Number(q.unit_price_ht) && peers(d) > 1;
                   const offer = offerByQuote.get(q.id);
                   const expired = q.valid_until != null && q.valid_until < rfq.today;
+                  const lineId = d.rfq_line_id;
                   return (
                     <tr key={q.id} data-quote={q.id} style={{ borderTop: `1px solid ${HAIR}`, background: best ? "#f0fdf4" : undefined }}>
                       <td className="px-4 py-3">
+                        {lineId && <span className="mb-1 inline-block px-1.5 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, background: "#f5efe6" }} data-quote-line={linePosition.get(lineId)}>{t("quoteLineLabel", { position: linePosition.get(lineId) ?? "?" })}</span>}
                         <span className="block font-semibold">{company.company_name}</span>
                         <span className="block text-xs" style={{ color: "var(--muted)" }}>{[company.city, WILAYAS.find(([c]) => c === company.wilaya)?.[1]].filter(Boolean).join(", ")}</span>
                         {q.author_profile_id !== company.owner_profile_id && <span className="block text-xs font-semibold" style={{ color: "#c2410c" }}>{t("compareEnteredByUs")}</span>}
@@ -170,7 +189,23 @@ export default async function AdminRfqPage({
                         ))}
                       </td>
                       <td className="px-4 py-3">
-                        {offer ? (
+                        {lineId ? (
+                          <span className="flex flex-col items-start gap-1">
+                            {chosenQuotes.has(q.id) && <span className="px-2 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, background: "var(--ink)", color: "white" }} data-chosen="1">{t("quoteChosen")}</span>}
+                            {usedQuotes.has(q.id) && <span className="px-2 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, background: "#ecfdf5", color: "#065f46" }} data-used="1">{t("quoteUsed")}</span>}
+                            {canOffer && ["submitted", "selected"].includes(q.status) && (
+                              <form action={chooseLineQuote}>
+                                <input type="hidden" name="locale" value={locale} />
+                                <input type="hidden" name="rfqId" value={rfq.id} />
+                                <input type="hidden" name="lineId" value={lineId} />
+                                <input type="hidden" name="quote" value={chosenQuotes.has(q.id) ? "auto" : q.id} />
+                                <button type="submit" className="text-xs font-bold uppercase underline" style={caps} data-choose={chosenQuotes.has(q.id) ? "auto" : q.id}>
+                                  {chosenQuotes.has(q.id) ? t("quoteChooseAuto") : t("quoteChoose")}
+                                </button>
+                              </form>
+                            )}
+                          </span>
+                        ) : offer ? (
                           <Link href={`/admin/rfqs/${rfq.id}/offer?quote=${q.id}`} className="text-xs font-bold uppercase underline" style={caps}>{t("compareOfferLink", { label: offer.label })}</Link>
                         ) : canOffer ? (
                           <Link href={`/admin/rfqs/${rfq.id}/offer?quote=${q.id}`} className="inline-block px-3 py-2 text-xs font-bold uppercase" style={{ ...caps, background: "var(--ink)", color: "white" }}>{t("compareCompose")}</Link>
@@ -196,6 +231,7 @@ export default async function AdminRfqPage({
           locale={locale}
           result={autoResult}
           canCreate={canOffer}
+          canConsult={["submitted", "qualified", "dispatched", "offered"].includes(rfq.status)}
           hasAutoDraft={autoOffers.some((o) => o.status === "draft")}
           hasAutoPublished={autoOffers.some((o) => o.status !== "draft")}
         />
@@ -292,6 +328,7 @@ export default async function AdminRfqPage({
                   return (
                     <li key={d.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-sm" style={{ borderTop: `1px solid ${HAIR}` }}>
                       <span className="min-w-0">
+                        {d.rfq_line_id && <span className="mb-1 inline-block px-1.5 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, background: "#f5efe6" }}>{t("quoteLineLabel", { position: linePosition.get(d.rfq_line_id) ?? "?" })}</span>}
                         <span className="block font-semibold">{c.company_name}</span>
                         <span className="block text-xs" dir="ltr" style={{ color: "var(--muted)", textAlign: "start" }}>{d.reference} · {t("rfqRespondBy", { date: date(d.respond_by) ?? "-" })}</span>
                         {!c.owner_profile_id && <span className="block text-xs font-semibold" style={{ color: "#c2410c" }}>{t("rfqOffline")}</span>}
@@ -317,21 +354,34 @@ export default async function AdminRfqPage({
           )}
 
           {dispatchable && (
-            <section className="p-5" style={{ background: "white", border: `1px solid ${HAIR}` }}>
-              <h2 className="mb-4 font-extrabold" style={{ fontSize: "1.2rem" }}>{rfq.dispatches.length ? t("rfqDispatchMoreTitle") : t("rfqDispatchTitle")}</h2>
+            <section id="dispatch" className="p-5" style={{ background: "white", border: `1px solid ${HAIR}`, scrollMarginTop: 16 }} data-consult-line={consultLine?.position}>
+              <h2 className="mb-4 font-extrabold" style={{ fontSize: "1.2rem" }}>
+                {consultLine ? t("consultLineTitle", { position: consultLine.position }) : rfq.dispatches.length ? t("rfqDispatchMoreTitle") : t("rfqDispatchTitle")}
+              </h2>
+              {consultLine && (
+                <p className="mb-4 text-sm">
+                  <Link href={`/admin/rfqs/${rfq.id}`} className="font-semibold underline">{t("consultLineBack")}</Link>
+                </p>
+              )}
               <DispatchForm
+                key={consultLine?.id ?? "whole"}
                 rfqId={rfq.id}
+                lineId={consultLine?.id}
                 defaults={{
-                  briefTitle: rfq.title,
-                  briefSpecs: specs,
-                  quantity: rfq.quantity_mode === "units" && rfq.quantity != null ? String(rfq.quantity) : "",
-                  unit: rfq.unit ?? "",
+                  briefTitle: consultLine ? consultLine.description : rfq.title,
+                  briefSpecs: consultLine
+                    ? [consultLine.reference ? `${tr("lineReference")} : ${consultLine.reference}` : null, rfq.destination_port ? `${tr("port")} : ${rfq.destination_port}` : null].filter(Boolean).join("\n")
+                    : specs,
+                  quantity: consultLine
+                    ? (consultLine.quantity != null ? String(consultLine.quantity) : "")
+                    : rfq.quantity_mode === "units" && rfq.quantity != null ? String(rfq.quantity) : "",
+                  unit: consultLine ? (consultLine.unit ?? "") : (rfq.unit ?? ""),
                   country: rfq.destination_country ?? "",
                   incoterm: "FOB",
                   neededBy: rfq.needed_by ?? "",
                   respondBy: rfq.defaultRespondBy,
                 }}
-                preselected={source ? [source.id] : []}
+                preselected={source && !consultLine ? [source.id] : []}
                 producers={producers.map((p) => ({
                   id: p.id,
                   name: p.company_name,

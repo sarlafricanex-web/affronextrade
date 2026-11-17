@@ -1,6 +1,7 @@
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { AutoOffer, AutoResult } from "@/lib/offer-auto";
 import { createAutoOffers } from "@/app/[locale]/(app)/admin/rfqs/offer-actions";
+import { Link } from "@/i18n/navigation";
 
 const HAIR = "#d8cebb";
 const caps = { letterSpacing: "0.08em" } as const;
@@ -13,6 +14,7 @@ export async function AutoOfferPanel({
   locale,
   result,
   canCreate,
+  canConsult,
   hasAutoDraft,
   hasAutoPublished,
 }: {
@@ -20,6 +22,7 @@ export async function AutoOfferPanel({
   locale: string;
   result: AutoResult;
   canCreate: boolean;
+  canConsult: boolean;
   hasAutoDraft: boolean;
   hasAutoPublished: boolean;
 }) {
@@ -54,10 +57,18 @@ export async function AutoOfferPanel({
           <h3 className="text-xs font-bold uppercase" style={caps}>{t("autoSkippedTitle", { count: result.skipped.length })}</h3>
           <ul className="mt-2 flex flex-col gap-1 text-sm">
             {result.skipped.map((s) => (
-              <li key={s.row.line_id} data-issue={s.issue}>
-                <strong>{s.row.line_position}. {s.row.line_description}</strong>
-                {s.row.company_name ? <span style={{ color: PRIVATE }}> · {s.row.company_name}</span> : null}
-                <span style={{ color: "#b91c1c" }}> : {t(`autoIssue_${s.issue}`)}</span>
+              <li key={s.row.line_id} data-issue={s.issue} data-skipped-line={s.row.line_position} className="flex flex-wrap items-baseline justify-between gap-2 py-1">
+                <span className="min-w-0">
+                  <strong>{s.row.line_position}. {s.row.line_description}</strong>
+                  {s.row.company_name ? <span style={{ color: PRIVATE }}> · {s.row.company_name}</span> : null}
+                  <span style={{ color: "#b91c1c" }}> : {t(`autoIssue_${s.issue}`)}</span>
+                  {s.quotesReceived > 0 && <span className="block text-xs" style={{ color: "var(--muted)" }}>{t("autoQuotesUnusable", { count: s.quotesReceived })}</span>}
+                </span>
+                {canConsult && s.issue !== "noQuantity" && (
+                  <Link href={`/admin/rfqs/${rfqId}?line=${s.row.line_id}#dispatch`} className="shrink-0 px-3 py-1.5 text-[10px] font-bold uppercase" style={{ ...caps, border: "1px solid var(--ink)" }} data-consult={s.row.line_position}>
+                    {t("autoConsult")}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
@@ -114,7 +125,14 @@ function OfferBlock({ o, t, money, qty, unit, date }: { o: AutoOffer; t: T; mone
                     <span key={w} className="mt-1 me-1 inline-block px-1.5 py-0.5 text-[10px] font-bold" style={{ background: "#fef3c7", color: "#92400e" }}>{t(`autoWarn_${w}`)}</span>
                   ))}
                 </td>
-                <td className="px-3 py-2 text-xs font-semibold" style={{ color: PRIVATE }}>{l.row.company_name}</td>
+                <td className="px-3 py-2 text-xs font-semibold" style={{ color: PRIVATE }} data-source={l.source}>
+                  {l.supplierName}
+                  {l.source === "quote" && (
+                    <span className="mt-1 block text-[10px] font-bold uppercase" style={{ ...caps, color: "var(--muted)" }}>
+                      {t("autoFromQuote", { count: l.quotesUsable })}
+                    </span>
+                  )}
+                </td>
                 <td className="px-3 py-2" dir="ltr" style={{ textAlign: "start" }}>{qty(l.quantity)} {unit(l.row.line_unit ?? l.row.product_unit)}</td>
                 <td className="px-3 py-2" dir="ltr" style={{ textAlign: "start", color: PRIVATE }}>{money(l.supplierUnitPrice, l.supplierCurrency)}</td>
                 <td className="px-3 py-2 font-bold" dir="ltr" style={{ textAlign: "start" }} data-buyer-price={l.unitPrice}>{money(l.unitPrice, l.currency)}</td>

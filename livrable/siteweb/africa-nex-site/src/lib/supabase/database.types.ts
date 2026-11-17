@@ -597,6 +597,7 @@ export type Database = {
           max_discount_rate: number | null
           offer_line_id: string
           product_id: string | null
+          quote_id: string | null
           supplier_currency: string
           supplier_unit_price: number
           warnings: string[]
@@ -615,6 +616,7 @@ export type Database = {
           max_discount_rate?: number | null
           offer_line_id: string
           product_id?: string | null
+          quote_id?: string | null
           supplier_currency: string
           supplier_unit_price: number
           warnings?: string[]
@@ -633,6 +635,7 @@ export type Database = {
           max_discount_rate?: number | null
           offer_line_id?: string
           product_id?: string | null
+          quote_id?: string | null
           supplier_currency?: string
           supplier_unit_price?: number
           warnings?: string[]
@@ -678,6 +681,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offer_line_margins_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -1400,6 +1410,7 @@ export type Database = {
           requested_incoterm: string | null
           respond_by: string | null
           rfq_id: string
+          rfq_line_id: string | null
           status: string
           unit: string | null
           updated_at: string
@@ -1420,6 +1431,7 @@ export type Database = {
           requested_incoterm?: string | null
           respond_by?: string | null
           rfq_id: string
+          rfq_line_id?: string | null
           status?: string
           unit?: string | null
           updated_at?: string
@@ -1440,6 +1452,7 @@ export type Database = {
           requested_incoterm?: string | null
           respond_by?: string | null
           rfq_id?: string
+          rfq_line_id?: string | null
           status?: string
           unit?: string | null
           updated_at?: string
@@ -1475,10 +1488,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "rfq_dispatches_line_fkey"
+            columns: ["rfq_line_id", "rfq_id"]
+            isOneToOne: false
+            referencedRelation: "rfq_lines"
+            referencedColumns: ["id", "rfq_id"]
+          },
+          {
             foreignKeyName: "rfq_dispatches_rfq_id_fkey"
             columns: ["rfq_id"]
             isOneToOne: false
             referencedRelation: "rfqs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfq_line_choices: {
+        Row: {
+          chosen_at: string
+          chosen_by: string | null
+          quote_id: string
+          rfq_line_id: string
+        }
+        Insert: {
+          chosen_at?: string
+          chosen_by?: string | null
+          quote_id: string
+          rfq_line_id: string
+        }
+        Update: {
+          chosen_at?: string
+          chosen_by?: string | null
+          quote_id?: string
+          rfq_line_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_line_choices_chosen_by_fkey"
+            columns: ["chosen_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_line_choices_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_line_choices_rfq_line_id_fkey"
+            columns: ["rfq_line_id"]
+            isOneToOne: true
+            referencedRelation: "rfq_lines"
             referencedColumns: ["id"]
           },
         ]
@@ -1990,6 +2053,26 @@ export type Database = {
           stock_quantity: number
           subscription_tier: string
           unit_price_ht: number
+        }[]
+      }
+      offer_auto_quotes: {
+        Args: { p_rfq: string }
+        Returns: {
+          chosen: boolean
+          company_id: string
+          company_name: string
+          currency: string
+          export_mode: string
+          line_id: string
+          port_of_loading: string
+          price_basis: string
+          production_lead_days: number
+          quantity: number
+          quote_id: string
+          quote_status: string
+          subscription_tier: string
+          unit_price_ht: number
+          valid_until: string
         }[]
       }
       product_prices: {

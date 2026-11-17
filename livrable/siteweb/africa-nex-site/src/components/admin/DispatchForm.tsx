@@ -14,7 +14,8 @@ const box = { background: "var(--field-a)", border: "1px solid var(--field-b)", 
 const INCOTERMS = ["FOB", "FCA", "EXW", "CFR", "CIF", "DAP"] as const;
 
 // Brief anonymise et choix des producteurs (lot 5b). Le serveur refuse un brief qui identifie l'acheteur.
-export function DispatchForm({ rfqId, defaults, producers, preselected }: { rfqId: string; defaults: DispatchDefaults; producers: DispatchProducer[]; preselected: string[] }) {
+// Avec lineId (lot 6d), le brief ne porte que sur une ligne de la demande.
+export function DispatchForm({ rfqId, lineId, defaults, producers, preselected }: { rfqId: string; lineId?: string; defaults: DispatchDefaults; producers: DispatchProducer[]; preselected: string[] }) {
   const t = useTranslations("admin");
   const o = useTranslations("onboarding");
   const locale = useLocale();
@@ -33,6 +34,7 @@ export function DispatchForm({ rfqId, defaults, producers, preselected }: { rfqI
     <form key={state.attempt ?? 0} action={action} className="flex flex-col gap-5">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="id" value={rfqId} />
+      {lineId && <input type="hidden" name="rfqLineId" value={lineId} />}
       {state.formError && <Alert tone="error">{t(state.formError)}</Alert>}
       <p className="p-3 text-sm" style={{ background: "#fff7ed", borderInlineStart: "4px solid #f97316" }}>{t("rfqBriefWarning")}</p>
 
