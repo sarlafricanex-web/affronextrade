@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
-import { AuthNav } from "@/components/AuthNav";
+import { AuthNav, useSignedIn } from "@/components/AuthNav";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const NAV_KEYS = ["about", "opportunities", "services", "producers", "buyers", "pricing", "contact"] as const;
@@ -13,6 +13,7 @@ export function Header() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const startHref = useSignedIn() ? "/dashboard" : "/register";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -51,15 +52,16 @@ export function Header() {
         </div>
 
         <div className="hidden md:flex items-center gap-4">
-          <LanguageSwitcher />
           <AuthNav className="text-sm font-semibold whitespace-nowrap" />
+          {/* "Commencer" mene a l'inscription (ou a l'espace si deja connecte), plus a la page Contact. */}
           <Link
-            href="/contact"
-            className="text-sm font-semibold px-5 py-2 transition-colors"
+            href={startHref}
+            className="text-sm font-semibold px-5 py-2 transition-colors whitespace-nowrap"
             style={{ background: "var(--ink)", color: "var(--ground)" }}
           >
             {t("getStarted")}
           </Link>
+          <LanguageSwitcher />
         </div>
 
         <div className="md:hidden flex items-center gap-2">
@@ -122,7 +124,7 @@ export function Header() {
             onNavigate={() => setMenuOpen(false)}
           />
           <Link
-            href="/contact"
+            href={startHref}
             onClick={() => setMenuOpen(false)}
             className="block text-center text-sm font-semibold mt-4 py-3"
             style={{ background: "var(--ink)", color: "var(--ground)" }}

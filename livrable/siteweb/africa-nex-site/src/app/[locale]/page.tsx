@@ -488,7 +488,7 @@ export default async function HomePage({
                 {t("nav.getStarted")}
               </p>
               <Link
-                href="/contact"
+                href="/register"
                 className="cta-arrow flex items-center justify-center shrink-0"
                 style={{
                   width: "clamp(3rem, 5vw, 3.5rem)",
@@ -496,7 +496,7 @@ export default async function HomePage({
                   background: "white",
                   borderRadius: "50%",
                 }}
-                aria-label="Aller à la page contact"
+                aria-label={t("nav.getStarted")}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />

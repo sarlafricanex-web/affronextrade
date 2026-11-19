@@ -144,16 +144,16 @@ a[style*="border: 1px solid"]:hover {
   box-shadow: 0 1px 0 var(--field-b);
 }
 
-/* ── Selecteur de langue : bouton rond, menu deroulant anime ── */
+/* ── Selecteur de langue : bouton rond vert emeraude (couleur du logo), menu deroulant anime ── */
 .lang-switcher-button {
-  border: 1.5px solid var(--ink);
-  color: var(--ink);
+  border: 1.5px solid #10b981;
+  color: #059669;
   background: white;
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 .lang-switcher-button:hover,
 .lang-switcher[data-open] .lang-switcher-button {
-  background: var(--ink);
+  background: #10b981;
   color: white;
 }
 .lang-switcher-button:active { transform: scale(0.94); }

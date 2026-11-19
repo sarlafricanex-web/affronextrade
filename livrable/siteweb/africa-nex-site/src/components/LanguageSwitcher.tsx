@@ -43,12 +43,12 @@ export function LanguageSwitcher() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`Langue : ${current.name}`}
-        className="lang-switcher-button flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold"
+        className="lang-switcher-button flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold"
         data-lang-button={current.code}
       >
         {current.short}
       </button>
-      <div role="menu" aria-hidden={!open} className="lang-switcher-menu absolute end-0 top-11 flex flex-col p-1.5" data-lang-menu="">
+      <div role="menu" aria-hidden={!open} className="lang-switcher-menu absolute end-0 top-9 flex flex-col p-1.5" data-lang-menu="">
         {LANGUAGES.map((l, i) => (
           <button
             key={l.code}
@@ -61,7 +61,7 @@ export function LanguageSwitcher() {
             style={{ transitionDelay: open ? `${60 + i * 45}ms` : "0ms" }}
             data-lang={l.code}
           >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold" style={l.code === locale ? { background: "var(--ink)", color: "white" } : { border: "1px solid var(--field-b)" }}>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold" style={l.code === locale ? { background: "#10b981", color: "white" } : { border: "1px solid var(--field-b)" }}>
               {l.short}
             </span>
             {/* Meme alignement pour toutes les lignes ; seul le nom prend la langue et le sens. */}

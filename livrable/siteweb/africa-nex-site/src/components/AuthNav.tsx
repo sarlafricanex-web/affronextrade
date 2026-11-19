@@ -8,10 +8,9 @@ import { createClient } from "@/lib/supabase/client";
 const CONFIGURED = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
 
 // La session est lue dans le navigateur : les pages vitrine restent statiques.
-export function AuthNav({ className, onNavigate }: { className?: string; onNavigate?: () => void }) {
-  const t = useTranslations("auth");
+// null tant que la session n'est pas connue.
+export function useSignedIn() {
   const [signedIn, setSignedIn] = useState<boolean | null>(CONFIGURED ? null : false);
-
   useEffect(() => {
     if (!CONFIGURED) return;
     const supabase = createClient();
@@ -19,6 +18,12 @@ export function AuthNav({ className, onNavigate }: { className?: string; onNavig
     const { data } = supabase.auth.onAuthStateChange((_event, session) => setSignedIn(Boolean(session)));
     return () => data.subscription.unsubscribe();
   }, []);
+  return signedIn;
+}
+
+export function AuthNav({ className, onNavigate }: { className?: string; onNavigate?: () => void }) {
+  const t = useTranslations("auth");
+  const signedIn = useSignedIn();
 
   if (signedIn === null) {
     return <span className={className} aria-hidden="true" style={{ visibility: "hidden" }}>{t("signIn")}</span>;
