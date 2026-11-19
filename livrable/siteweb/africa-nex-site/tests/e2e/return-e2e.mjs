@@ -48,7 +48,7 @@ try {
   await send("Network.clearBrowserCookies");
   await go("/fr/claim/cevital", `return location.pathname === "/fr/login";`);
   report("Revendication sans compte : connexion avec adresse de retour", await run(`return location.search.includes("next=%2Ffr%2Fclaim%2Fcevital");`));
-  await run(`[...document.querySelectorAll("a")].find((a) => a.getAttribute("href")?.startsWith("/fr/register")).click(); return true;`);
+  await run(`[...document.querySelectorAll("a")].find((a) => !a.closest("header") && a.getAttribute("href")?.startsWith("/fr/register")).click(); return true;`);
   await waitFor(`return location.pathname === "/fr/register" && !!document.getElementById("register-name");`);
   report("Créer un compte : adresse de retour conservee", await run(`return new URLSearchParams(location.search).get("next") === "/fr/claim/cevital";`));
   report("Role Producteur preselectionne", /producteur/i.test(await run(pressedRole)), await run(pressedRole));
@@ -74,7 +74,7 @@ try {
   // 3. Avis : connexion depuis une fiche -> inscription proposee en acheteur
   await send("Network.clearBrowserCookies");
   await go("/fr/login?next=%2Ffr%2Fproducers%2Fcevital", `return !!document.getElementById("login-email");`);
-  report("Connexion depuis une fiche : lien d'inscription en acheteur", await run(`const h = [...document.querySelectorAll("a")].find((a) => a.getAttribute("href")?.startsWith("/fr/register"))?.getAttribute("href") ?? ""; return h.includes("role=buyer") && h.includes("next=%2Ffr%2Fproducers%2Fcevital");`));
+  report("Connexion depuis une fiche : lien d'inscription en acheteur", await run(`const h = [...document.querySelectorAll("a")].find((a) => !a.closest("header") && a.getAttribute("href")?.startsWith("/fr/register"))?.getAttribute("href") ?? ""; return h.includes("role=buyer") && h.includes("next=%2Ffr%2Fproducers%2Fcevital");`));
   ws.close();
 } catch (e) {
   report("Execution du test", false, e.message);
