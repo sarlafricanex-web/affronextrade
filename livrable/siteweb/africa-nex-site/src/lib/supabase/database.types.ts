@@ -2092,6 +2092,10 @@ export type Database = {
         Args: { p_offers: Json; p_rfq: string }
         Returns: number
       }
+      save_offer_pricing: {
+        Args: { p: Json; p_offer: string }
+        Returns: undefined
+      }
       try_uuid: { Args: { p: string }; Returns: string }
     }
     Enums: {

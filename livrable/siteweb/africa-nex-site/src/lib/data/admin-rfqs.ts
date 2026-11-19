@@ -38,7 +38,7 @@ export async function getAdminRfq(client: Client, id: string) {
       .select(`id, reference, status, respond_by, viewed_at, created_at, brief_title, unit, rfq_line_id, company:companies(id, company_name, slug, claim_status, owner_profile_id, wilaya, city), quotes(${QUOTE_COLUMNS})`)
       .eq("rfq_id", id)
       .order("created_at"),
-    client.from("offers").select(`${OFFER_COLUMNS}, offer_margins(${MARGIN_COLUMNS}), offer_lines(count)`).eq("rfq_id", id).order("label"),
+    client.from("offers").select(`${OFFER_COLUMNS}, freight_amount, offer_margins(${MARGIN_COLUMNS}), offer_lines(count)`).eq("rfq_id", id).order("label"),
   ]);
   // Date de reponse proposee par defaut aux producteurs : dans 7 jours.
   const now = Date.now();
@@ -72,6 +72,31 @@ export async function getOfferComposer(client: Client, rfqId: string, quoteId: s
   const today = new Date().toISOString().slice(0, 10);
   return { rfq, quote, dispatch, margin, offer, nextLabel, today };
 }
+
+// Lot 6e : offre calculee a completer (commission, marge, fret, conditions). Lignes avec leur
+// construction du prix et le fournisseur (AFRICA NEX seule, RLS admin).
+const LINE_MARGIN_COLUMNS =
+  "export_mode, supplier_unit_price, supplier_currency, base_amount, commission_rate, commission_amount, insurance_rate, insurance_amount, fx_margin_rate, fx_margin_amount, margin_amount, max_discount_rate, warnings, quote_id, company:companies(id, company_name)";
+
+export async function getAutoOfferEditor(client: Client, rfqId: string, offerId: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(rfqId) || !/^[0-9a-f-]{36}$/i.test(offerId)) return null;
+  const [{ data: rfq }, { data: offer }] = await Promise.all([
+    client.from("rfqs").select("id, reference, title, status, incoterm, currency, destination_country, destination_port").eq("id", rfqId).maybeSingle(),
+    client
+      .from("offers")
+      .select(`${OFFER_COLUMNS}, rfq_id, freight_amount, offer_margins(${MARGIN_COLUMNS}, fx_rate, fx_margin_rate, margin_rate, margin_amount), offer_lines(id, position, description, reference, quantity, unit, unit_price, total_amount, incoterm, incoterm_place, lead_time_days, availability, offer_line_margins(${LINE_MARGIN_COLUMNS}))`)
+      .eq("id", offerId)
+      .order("position", { referencedTable: "offer_lines" })
+      .maybeSingle(),
+  ]);
+  if (!rfq || !offer || offer.rfq_id !== rfqId) return null;
+  const margin = Array.isArray(offer.offer_margins) ? offer.offer_margins[0] : offer.offer_margins;
+  if (!margin?.auto) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  return { rfq, offer, margin, today };
+}
+
+export type AutoOfferEditor = NonNullable<Awaited<ReturnType<typeof getAutoOfferEditor>>>;
 
 // Saisie par AFRICA NEX du devis d'un producteur joint hors ligne.
 export async function getQuoteEntry(client: Client, rfqId: string, dispatchId: string) {

@@ -75,6 +75,17 @@ test("une offre consolidee pour plusieurs fournisseurs du meme mode et de la mem
   assert.equal(r.offers[0].lines.length, 2);
 });
 
+test("incoterms differents : une offre par incoterm, dans l'ordre des lignes (decision du 19 novembre)", () => {
+  // Starter en FOB (son incoterm) et Pro livre a l'incoterm demande (CIF) : deux offres.
+  const r = computeAutoOffers(ctx([row(), row({ subscription_tier: "pro" }), row({ price_basis: "FOB", price_place: "Oran" })]));
+  assert.equal(r.offers.length, 2);
+  assert.deepEqual(r.offers.map((o) => o.incoterm), ["FOB", "CIF"]);
+  assert.deepEqual(r.offers.map((o) => o.lines.length), [2, 1]);
+  assert.equal(r.offers[0].freightPending, false); // Starter seul : pas de fret a saisir
+  assert.equal(r.offers[1].freightPending, true);
+  assert.equal(r.commissionRate, 10); // palier toujours sur le total de la demande
+});
+
 test("export AFRICA NEX : devise de l'acheteur, taux de reference, change 2 %, assurance 1 %, marge a saisir", () => {
   const r = computeAutoOffers(ctx([row({ export_mode: "africanex", price_dzd_ht: 1500, line_quantity: 100 })]));
   const o = r.offers[0];

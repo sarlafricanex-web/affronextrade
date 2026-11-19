@@ -7,6 +7,9 @@ import { parseAmount } from "@/lib/onboarding/reference";
 import { readQuoteForm, storeQuoteFile, type QuoteState } from "@/lib/quote-input";
 import { priceOffer } from "@/lib/offer-pricing";
 import { autoOffersPayload, computeRfqAutoOffers } from "@/lib/data/auto-offer";
+import { getAutoOfferEditor } from "@/lib/data/admin-rfqs";
+import { OFFER_VALIDITY_DAYS } from "@/lib/offer-auto";
+import { repriceOffer, type MarginInput } from "@/lib/offer-reprice";
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -241,10 +244,134 @@ export async function chooseLineQuote(formData: FormData) {
   back(quoteId === "auto" ? "lineQuoteAuto" : "lineQuoteChosen");
 }
 
-// Devis de producteurs utilises par les lignes d'une offre calculee.
-async function lineQuoteIds(supabase: Client, offerId: string) {
+// Devis de producteurs utilises par les lignes d'une offre calculee : retenus a la publication,
+// de nouveau en attente au retrait.
+async function markLineQuotes(supabase: Client, offerId: string, status: "selected" | "submitted") {
   const { data } = await supabase.from("offer_lines").select("offer_line_margins(quote_id)").eq("offer_id", offerId);
-  return (data ?? []).map((l) => one<{ quote_id: string | null }>(l.offer_line_margins)?.quote_id).filter((q): q is string => !!q);
+  const ids = (data ?? []).map((l) => one<{ quote_id: string | null }>(l.offer_line_margins)?.quote_id).filter((q): q is string => !!q);
+  if (ids.length) await supabase.from("quotes").update({ status }).in("id", ids).eq("status", status === "selected" ? "submitted" : "selected");
+}
+
+// Lot 6e : AFRICA NEX complete une offre calculee en brouillon. Commission (intermediation, modifiable
+// offre par offre), marge negociee (export AFRICA NEX, en % ou en montant, secrete), fret (ligne
+// separee, si AFRICA NEX le gere) et conditions presentees a l'acheteur. Les prix des lignes sont
+// recalcules ici (l'apercu de l'ecran n'est qu'indicatif). Marge ou fret laisses vides restent
+// "a saisir" : le brouillon s'enregistre, la publication est refusee.
+export type AutoOfferField = "commissionRate" | "margin" | "freight" | "incotermPlace" | "validUntil" | "paymentTerms" | "notes";
+export type AutoOfferState = { errors: Partial<Record<AutoOfferField, string>>; formError?: string; values?: Record<string, string>; attempt?: number };
+const AUTO_KEYS = ["commissionRate", "marginKind", "margin", "freight", "incotermPlace", "validUntil", "paymentTerms", "notes"] as const;
+
+export async function saveAutoOffer(_prev: AutoOfferState, formData: FormData): Promise<AutoOfferState> {
+  const { locale, supabase, userId } = await adminContext(formData);
+  const rfqId = text(formData, "rfqId");
+  const offerId = text(formData, "offerId");
+  if (!UUID.test(rfqId) || !UUID.test(offerId)) redirect(`/${locale}/admin/rfqs`);
+  const publish = text(formData, "intent") === "publish";
+  const v = Object.fromEntries(AUTO_KEYS.map((k) => [k, text(formData, k)])) as Record<(typeof AUTO_KEYS)[number], string>;
+  const fail = (s: Omit<AutoOfferState, "values" | "attempt">): AutoOfferState => ({ ...s, values: v, attempt: Date.now() });
+
+  const data = await getAutoOfferEditor(supabase, rfqId, offerId);
+  if (!data) redirect(`/${locale}/admin/rfqs/${rfqId}`);
+  const { offer, margin: m, today } = data;
+  if (offer.status !== "draft") return fail({ errors: {}, formError: "offerErrorNotDraft" });
+  if (!["qualified", "dispatched", "offered"].includes(data.rfq.status)) return fail({ errors: {}, formError: "offerErrorRfqClosed" });
+  const mode = m.export_mode === "africanex" ? "africanex" : "self";
+  const freightManaged = m.freight_pending || m.freight_cost != null;
+
+  const errors: AutoOfferState["errors"] = {};
+  let commissionRate = 0;
+  if (mode === "self") {
+    const r = parseAmount(v.commissionRate);
+    if (r === null || r < 0 || r > 100) errors.commissionRate = "offerErrorRate";
+    else commissionRate = r;
+  }
+  let marginInput: MarginInput = null;
+  if (mode === "africanex" && v.margin) {
+    const n = parseAmount(v.margin);
+    const kind = v.marginKind === "amount" ? "amount" : "rate";
+    if (n === null || n < 0 || (kind === "rate" && n > 1000)) errors.margin = kind === "rate" ? "autoEditErrorMarginRate" : "autoEditErrorMarginAmount";
+    else marginInput = { kind, value: n };
+  }
+  let freight: number | null = null;
+  if (freightManaged && v.freight) {
+    const n = parseAmount(v.freight);
+    if (n === null || n < 0) errors.freight = "offerErrorFreight";
+    else if (n === 0 && WITH_FREIGHT.includes(offer.incoterm ?? "")) errors.freight = "offerErrorFreightNeeded";
+    else freight = n;
+  }
+  if (publish && mode === "africanex" && !marginInput && !errors.margin) errors.margin = "autoEditMarginNeeded";
+  if (publish && freightManaged && freight === null && !errors.freight) errors.freight = "autoEditFreightNeeded";
+  const maxValid = new Date(Date.parse(`${today}T12:00:00Z`) + OFFER_VALIDITY_DAYS * 864e5).toISOString().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v.validUntil) || v.validUntil < today || v.validUntil > maxValid) errors.validUntil = "autoEditErrorValidity";
+  if (v.incotermPlace.length > 200) errors.incotermPlace = "rfqErrorTooLong";
+  if (v.paymentTerms.length > 500) errors.paymentTerms = "rfqErrorTooLong";
+  if (v.notes.length > 5000) errors.notes = "rfqErrorTooLong";
+  if (Object.keys(errors).length) return fail({ errors });
+
+  // Garde-fou d'anonymat : aucun fournisseur de l'offre ne doit etre nomme.
+  type LineMargin = { base_amount: number; insurance_rate: number; fx_margin_rate: number; commission_rate: number; max_discount_rate: number | null; company: { company_name: string } | { company_name: string }[] | null };
+  const lines = (offer.offer_lines ?? []).map((l) => ({ ...l, lm: one<LineMargin>(l.offer_line_margins) }));
+  const publicText = [v.incotermPlace, v.paymentTerms, v.notes].join("\n").toLowerCase();
+  const names = lines.map((l) => one<{ company_name: string }>(l.lm?.company)?.company_name ?? "").filter((n) => n.length >= 3);
+  if (names.some((n) => publicText.includes(n.toLowerCase()))) return fail({ errors: { notes: "offerErrorLeak" } });
+  if (lines.some((l) => !l.lm)) return fail({ errors: {}, formError: "rfqErrorGeneric" });
+
+  const p = repriceOffer({
+    mode,
+    commissionRate,
+    margin: marginInput,
+    freight,
+    lines: lines.map((l) => ({ quantity: Number(l.quantity), base: Number(l.lm!.base_amount), insuranceRate: Number(l.lm!.insurance_rate), fxMarginRate: Number(l.lm!.fx_margin_rate), maxDiscountRate: l.lm!.max_discount_rate })),
+  });
+  const { error } = await supabase.rpc("save_offer_pricing", {
+    p_offer: offerId,
+    p: {
+      total_amount: p.total,
+      freight_amount: freightManaged ? freight : null,
+      incoterm_place: v.incotermPlace,
+      valid_until: v.validUntil,
+      payment_terms: v.paymentTerms,
+      notes: v.notes,
+      commission_rate: mode === "self" ? commissionRate : 0,
+      commission_amount: p.commission,
+      margin_rate: marginInput?.kind === "rate" ? marginInput.value : null,
+      // Montant saisi tel quel (il se retrouve a l'identique a la modification) ; en %, montant calcule.
+      // La marge reellement encaissee, ligne par ligne, est dans offer_line_margins.
+      margin_amount: marginInput ? (marginInput.kind === "amount" ? marginInput.value : p.margin) : null,
+      margin_pending: mode === "africanex" && !marginInput,
+      freight_cost: freight,
+      freight_pending: freightManaged && freight === null,
+      lines: lines.map((l, i) => ({
+        id: l.id,
+        unit_price: p.lines[i].unitPrice,
+        total_amount: p.lines[i].total,
+        commission_rate: mode === "self" ? commissionRate : 0,
+        commission_amount: p.lines[i].commission,
+        fx_margin_amount: p.lines[i].fxMargin,
+        margin_amount: p.lines[i].margin,
+      })),
+    },
+  });
+  if (error) {
+    if (/offer not draft/.test(error.message)) return fail({ errors: {}, formError: "offerErrorNotDraft" });
+    if (/rfq closed/.test(error.message)) return fail({ errors: {}, formError: "offerErrorRfqClosed" });
+    console.error("Auto offer pricing failed:", error.code, error.message);
+    return fail({ errors: {}, formError: "rfqErrorGeneric" });
+  }
+
+  await supabase.from("audit_log").insert({
+    actor_profile_id: userId,
+    action: "offer.pricing",
+    entity: "offer",
+    entity_id: offerId,
+    payload: { rfq: rfqId, mode, commission_rate: mode === "self" ? commissionRate : null, margin: marginInput, freight, total: p.total },
+  });
+  if (publish) {
+    if (!(await publishOffer(supabase, offerId, rfqId, null))) redirect(`/${locale}/admin/rfqs/${rfqId}?done=offerPending`);
+    await markLineQuotes(supabase, offerId, "selected");
+    await supabase.from("audit_log").insert({ actor_profile_id: userId, action: "offer.publish", entity: "offer", entity_id: offerId, payload: { rfq: rfqId } });
+  }
+  redirect(`/${locale}/admin/rfqs/${rfqId}?done=${publish ? "offerPublished" : "offerSaved"}`);
 }
 
 // Publier un brouillon, retirer une offre publiee (retour en brouillon) ou supprimer un brouillon.
@@ -261,13 +388,11 @@ export async function changeOffer(formData: FormData) {
   if (op === "publish" && offer.status === "draft") {
     if (offer.valid_until && offer.valid_until < new Date().toISOString().slice(0, 10)) back("offerExpired");
     if (!(await publishOffer(supabase, id, offer.rfq_id, quoteId))) back("offerPending");
-    const used = await lineQuoteIds(supabase, id);
-    if (used.length) await supabase.from("quotes").update({ status: "selected" }).in("id", used).eq("status", "submitted");
+    await markLineQuotes(supabase, id, "selected");
   } else if (op === "withdraw" && offer.status === "published") {
     await supabase.from("offers").update({ status: "draft", published_at: null }).eq("id", id).eq("status", "published");
     if (quoteId) await supabase.from("quotes").update({ status: "submitted" }).eq("id", quoteId).eq("status", "selected");
-    const used = await lineQuoteIds(supabase, id);
-    if (used.length) await supabase.from("quotes").update({ status: "submitted" }).in("id", used).eq("status", "selected");
+    await markLineQuotes(supabase, id, "submitted");
     const { count } = await supabase.from("offers").select("id", { count: "exact", head: true }).eq("rfq_id", offer.rfq_id).eq("status", "published");
     if (!count) await supabase.from("rfqs").update({ status: "dispatched" }).eq("id", offer.rfq_id).eq("status", "offered");
   } else if (op === "delete" && offer.status === "draft") {

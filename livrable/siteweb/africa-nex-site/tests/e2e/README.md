@@ -14,7 +14,7 @@ Les comptes créés sont tous en `test-...@example.com`. Le compte de démonstra
 
 ## Tests hors ligne
 
-- `npm run test:unit` : calcul automatique de l'offre (fonction pure, sans base ni serveur).
+- `npm run test:unit` : calcul automatique de l'offre et saisie de la marge, du fret et de la commission (fonctions pures, sans base ni serveur).
 - `npm run test:rls` : règles d'accès en base (PostgreSQL en local via PGlite).
 
 ## Lancer les tests
@@ -48,7 +48,7 @@ Chrome doit être installé. Autre emplacement : variable `CHROME_PATH`.
 | `rfq-buyer` | Demande de devis côté acheteur : en unités ou en conteneurs, pièce jointe, liste, compteur, annulation, isolement |
 | `rfq-producer` | Demandes reçues côté producteur : liste, compteur, devis (refus, envoi, mise à jour), déclin, verrouillage, cloisonnement |
 | `rfq-offer` | Comparatif des devis, saisie hors ligne, composition de l'offre (grille de commission, assurance, fret), garde-fou d'anonymat, publication, retrait |
-| `rfq-auto-offer` | Offre calculée depuis les listes de prix : une offre par mode et par devise, palier de commission sur le total de la demande, assurance et change, ligne hors catalogue signalée, remise maximale visible, brouillons, publication bloquée tant que marge ou fret restent à saisir, recalcul, confidentialité, arabe et téléphone |
+| `rfq-auto-offer` | Offre calculée depuis les listes de prix : une offre par mode, par devise et par incoterm, palier de commission sur le total de la demande, assurance et change, ligne hors catalogue signalée, remise maximale visible, brouillons, publication bloquée tant que marge ou fret restent à saisir, recalcul ; écran de saisie (marge en %, fret en ligne séparée, commission modifiée, validité de 30 jours au plus, garde-fou d'anonymat, publication), confidentialité, arabe et téléphone |
 | `rfq-line-quote` | Consultation par ligne : brief prérempli pour une ligne sans prix, devis des producteurs, le moins cher entre dans le calcul, devis retenu par AFRICA NEX, devis suivi à la publication et au retrait, confidentialité |
 | `price-list` | Liste de prix fournisseur : modèle Excel selon le forfait (Starter ou Pro), import avec aperçu, erreurs ligne par ligne, conditionnement 4 niveaux, prix FCA calculé, confidentialité des coûts |
 | `admin-settings` | Réglages admin : taux de référence EUR et USD, mode d'affaire de chaque fournisseur (confidentiel) |

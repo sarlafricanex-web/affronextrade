@@ -96,14 +96,15 @@ try {
   // Apercu du calcul
   await loginAs(boss);
   await go(page, `return !!document.querySelector("[data-auto-offers]");`);
-  report("Apercu : 2 offres (intermediation EUR, export AFRICA NEX EUR)", await run(`return document.querySelector("[data-auto-offers]").dataset.autoOffers === "2" && !!document.querySelector('[data-auto-offer="self-EUR"]') && !!document.querySelector('[data-auto-offer="africanex-EUR"]');`));
+  const blocks = await run(`return document.querySelector("[data-auto-offers]").dataset.autoOffers + " " + [...document.querySelectorAll("[data-auto-offer]")].map((e) => e.dataset.autoOffer + ":" + e.dataset.incoterm).join();`);
+  report("Apercu : 3 offres (intermediation FOB, intermediation CIF, export AFRICA NEX CIF)", blocks === "3 self-EUR:FOB,self-EUR:CIF,africanex-EUR:CIF", blocks);
   report("Palier sur le total de la demande (4 000 EUR) : 10 %", await run(`return document.querySelector("[data-commission-rate]").dataset.commissionRate === "10";`));
   const prices = await run(`return [...document.querySelectorAll("[data-buyer-price]")].map((e) => Number(e.dataset.buyerPrice));`);
   report("Prix acheteur : Starter 11, Pro 22,20 (+ assurance), export 20,60 (+ assurance et change)", JSON.stringify(prices) === JSON.stringify([11, 22.2, 20.6]), JSON.stringify(prices));
   report("Ligne hors catalogue signalee", await run(`const s = document.querySelector("[data-auto-skipped]"); return s?.dataset.autoSkipped === "1" && !!s.querySelector('[data-issue="noProduct"]');`));
   report("Stock insuffisant : delai de production affiche", await run(`return document.querySelector('[data-auto-line="2"]').innerText.includes("À produire · 30 j");`));
   report("Remise maximale du fournisseur visible (4 %)", await run(`return document.querySelector('[data-auto-line="2"]').innerText.includes("4 %");`));
-  report("Fret et marge signales a saisir", await run(`return !!document.querySelector('[data-auto-offer="self-EUR"] [data-pending="freight"]') && !!document.querySelector('[data-auto-offer="africanex-EUR"] [data-pending="margin"]') && !document.querySelector('[data-auto-offer="self-EUR"] [data-pending="margin"]');`));
+  report("Fret et marge signales a saisir (rien pour le Starter en FOB)", await run(`const b = [...document.querySelectorAll("[data-auto-offer]")]; return !b[0].querySelector("[data-pending]") && !!b[1].querySelector('[data-pending="freight"]') && !b[1].querySelector('[data-pending="margin"]') && !!b[2].querySelector('[data-pending="margin"]') && !!b[2].querySelector('[data-pending="freight"]');`));
   await shot("auto-offer-preview");
 
   // Telephone : pas de debordement de la page
@@ -116,17 +117,18 @@ try {
 
   // Creation des brouillons
   await run(`[...document.querySelectorAll("button[type=submit]")].find((b) => b.textContent.includes("Créer les brouillons")).click(); return true;`);
-  report("Brouillons crees : message", await waitFor(`return location.search.includes("done=autoCreated") && document.body.innerText.includes("2 offres calculées créées en brouillon");`));
-  const offersOf = async () => (await admin.from("offers").select("id, label, status, currency, total_amount, unit_price, offer_margins(auto, export_mode, margin_pending, freight_pending, commission_rate), offer_lines(id, position, unit_price, offer_line_margins(company_id, supplier_unit_price, supplier_currency, max_discount_rate))").eq("rfq_id", rfqId).order("label")).data ?? [];
+  report("Brouillons crees : message", await waitFor(`return location.search.includes("done=autoCreated") && document.body.innerText.includes("3 offres calculées créées en brouillon");`));
+  const offersOf = async () => (await admin.from("offers").select("id, label, status, currency, incoterm, incoterm_place, valid_until, payment_terms, total_amount, freight_amount, unit_price, offer_margins(auto, export_mode, margin_pending, freight_pending, commission_rate, commission_amount, margin_rate, margin_amount, freight_cost), offer_lines(id, position, unit_price, total_amount, offer_line_margins(company_id, supplier_unit_price, supplier_currency, max_discount_rate, margin_amount, commission_amount))").eq("rfq_id", rfqId).order("label")).data ?? [];
   let offers = await offersOf();
   const m = (o) => (Array.isArray(o.offer_margins) ? o.offer_margins[0] : o.offer_margins);
-  const [oa, ob] = offers;
-  report("En base : offre A intermediation, 2 lignes, total 3 320 EUR, commission 10 %", offers.length === 2 && oa.label === "A" && m(oa).export_mode === "self" && oa.offer_lines.length === 2 && Number(oa.total_amount) === 3320 && Number(m(oa).commission_rate) === 10 && oa.unit_price === null, JSON.stringify(oa));
-  report("En base : offre B export AFRICA NEX, marge a saisir", ob?.label === "B" && m(ob).export_mode === "africanex" && m(ob).margin_pending && Number(ob.total_amount) === 1030, JSON.stringify(ob));
-  const lm = ob?.offer_lines?.[0]?.offer_line_margins;
+  const [oa, ob, oc] = offers;
+  report("En base : offre A intermediation FOB, 1 ligne, 1 100 EUR, commission 10 %, rien a saisir", offers.length === 3 && oa.label === "A" && oa.incoterm === "FOB" && m(oa).export_mode === "self" && oa.offer_lines.length === 1 && Number(oa.total_amount) === 1100 && Number(m(oa).commission_rate) === 10 && !m(oa).freight_pending && oa.unit_price === null, JSON.stringify(oa));
+  report("En base : offre B intermediation CIF (Pro), 2 220 EUR, fret a saisir", ob?.label === "B" && ob.incoterm === "CIF" && m(ob).export_mode === "self" && Number(ob.total_amount) === 2220 && m(ob).freight_pending, JSON.stringify(ob));
+  report("En base : offre C export AFRICA NEX, marge a saisir", oc?.label === "C" && m(oc).export_mode === "africanex" && m(oc).margin_pending && Number(oc.total_amount) === 1030, JSON.stringify(oc));
+  const lm = oc?.offer_lines?.[0]?.offer_line_margins;
   const lineMargin = Array.isArray(lm) ? lm[0] : lm;
   report("En base : prix fournisseur en dinars conserve (3 000 DZD)", Number(lineMargin?.supplier_unit_price) === 3000 && lineMargin.supplier_currency === "DZD");
-  report("Liste des offres : badges a saisir", await run(`return !!document.querySelector('[data-offer="A"] [data-pending="freight"]') && !!document.querySelector('[data-offer="B"] [data-pending="margin"]');`));
+  report("Liste des offres : badges a saisir", await run(`return !document.querySelector('[data-offer="A"] [data-pending]') && !!document.querySelector('[data-offer="B"] [data-pending="freight"]') && !!document.querySelector('[data-offer="C"] [data-pending="margin"]');`));
 
   // Confidentialite
   const { data: buyerLines } = await buyer.client.from("offer_lines").select("id");
@@ -137,7 +139,7 @@ try {
   report("Producteur : ni lignes, ni donnees du calcul", prodLines?.length === 0 && !!prodRpc);
 
   // Publication bloquee
-  await run(`document.querySelector('[data-offer="B"] form button[type=submit]').click(); return true;`);
+  await run(`document.querySelector('[data-offer="C"] form button[type=submit]').click(); return true;`);
   report("Publication refusee tant que la marge est a saisir", await waitFor(`return location.search.includes("done=offerPending");`));
   offers = await offersOf();
   const { data: rfqAfter } = await admin.from("rfqs").select("status").eq("id", rfqId).single();
@@ -148,7 +150,66 @@ try {
   await run(`[...document.querySelectorAll("button[type=submit]")].find((b) => b.textContent.includes("Recalculer les brouillons")).click(); return true;`);
   await waitFor(`return location.search.includes("done=autoCreated");`);
   offers = await offersOf();
-  report("Recalcul : toujours 2 offres (A et B), nouveaux identifiants", offers.length === 2 && offers.map((o) => o.label).join() === "A,B" && offers[0].id !== oa.id);
+  report("Recalcul : toujours 3 offres (A, B, C), nouveaux identifiants", offers.length === 3 && offers.map((o) => o.label).join() === "A,B,C" && offers[0].id !== oa.id);
+
+  // Lot 6e : AFRICA NEX complete les offres calculees (marge, fret, commission, conditions)
+  const SET = `const setV = (el, v) => { const p = el.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(p, "value").set.call(el, v); el.dispatchEvent(new Event("input", { bubbles: true })); el.dispatchEvent(new Event("change", { bubbles: true })); };`;
+  const fill = (values) => run(`${SET} for (const [sel, v] of Object.entries(${JSON.stringify(values)})) setV(document.querySelector(sel), v); return true;`);
+  const press = (label) => run(`[...document.querySelectorAll("button[type=submit]")].find((b) => b.textContent.includes(${JSON.stringify(label)})).click(); return true;`);
+  const [, offB, offC] = offers;
+  const editor = (o) => `/fr/admin/rfqs/${rfqId}/offers/${o.id}`;
+
+  await go(page, `return !!document.querySelector("[data-offers], [data-offer]");`);
+  report("Liste des offres : bouton Completer sur les offres calculees", await run(`return !!document.querySelector('[data-complete="B"]') && !!document.querySelector('[data-complete="C"]');`));
+
+  await go(editor(offC), `return !!document.querySelector("[data-calc]");`);
+  report("Ecran de saisie : fournisseur et cout visibles (AFRICA NEX seule)", await run(`return document.querySelector('[data-edit-line="1"]').innerText.includes("export ${TAG}") && !!document.querySelector("#a-margin") && !!document.querySelector("#a-freight") && !document.querySelector("#a-commission");`));
+  await fill({ "#a-margin": "8", "#a-freight": "120" });
+  report("Apercu : marge 8 % + change 2 % + assurance 1 % = 22,20 EUR, total avec fret 1 230 EUR", await waitFor(`return document.querySelector("[data-edit-price]").dataset.editPrice === "22.2" && document.querySelector("[data-edit-total]").dataset.editTotal === "1230";`, 10));
+  await fill({ "#a-valid": day(45) });
+  await press("Enregistrer et publier");
+  report("Validite au-dela de 30 jours refusee", await waitFor(`return !!document.querySelector('[data-error="validUntil"]');`));
+  await fill({ "#a-valid": day(20), "#a-notes": `Fabrique par export ${TAG}` });
+  await press("Enregistrer et publier");
+  report("Garde-fou d'anonymat : un fournisseur nomme est refuse", await waitFor(`return !!document.querySelector('[data-error="notes"]');`));
+  await fill({ "#a-notes": "Livraison groupée", "#a-pay": "30 % à la commande", "#a-place": "Abidjan" });
+  await press("Enregistrer et publier");
+  report("Offre C completee et publiee", await waitFor(`return location.search.includes("done=offerPublished");`));
+  offers = await offersOf();
+  const c2 = offers.find((o) => o.label === "C");
+  const cl = c2.offer_lines[0], clm = Array.isArray(cl.offer_line_margins) ? cl.offer_line_margins[0] : cl.offer_line_margins;
+  report("En base : C publiee, prix 22,20, fret 120 en ligne separee, total 1 230, marge 8 % (80 EUR)", c2.status === "published" && Number(cl.unit_price) === 22.2 && Number(cl.total_amount) === 1110 && Number(c2.freight_amount) === 120 && Number(c2.total_amount) === 1230 && Number(m(c2).margin_rate) === 8 && Number(m(c2).margin_amount) === 80 && Number(clm.margin_amount) === 80 && !m(c2).margin_pending && !m(c2).freight_pending && c2.incoterm_place === "Abidjan" && c2.payment_terms === "30 % à la commande", JSON.stringify(c2));
+  const { data: rfqOffered } = await admin.from("rfqs").select("status").eq("id", rfqId).single();
+  report("La demande passe en offres pretes", rfqOffered.status === "offered", rfqOffered.status);
+
+  await go(editor(offB), `return !!document.querySelector("[data-calc]");`);
+  report("Offre B (intermediation) : commission de la grille proposee, pas de marge", await run(`return document.querySelector("#a-commission").value === "10" && !document.querySelector("#a-margin");`));
+  await fill({ "#a-commission": "5" });
+  report("Apercu : commission 5 % + assurance 1 % = 21,20 EUR", await waitFor(`return document.querySelector("[data-edit-price]").dataset.editPrice === "21.2";`, 10));
+  await press("Enregistrer et publier");
+  report("Publication refusee sans fret : message sous le champ", await waitFor(`return !!document.querySelector('[data-error="freight"]');`));
+  await press("Enregistrer en brouillon");
+  report("Brouillon enregistre sans fret", await waitFor(`return location.search.includes("done=offerSaved");`));
+  offers = await offersOf();
+  const b2 = offers.find((o) => o.label === "B");
+  report("En base : B en brouillon, commission 5 % (100 EUR), total 2 120, fret toujours a saisir", b2.status === "draft" && Number(m(b2).commission_rate) === 5 && Number(m(b2).commission_amount) === 100 && Number(b2.total_amount) === 2120 && m(b2).freight_pending && b2.freight_amount === null, JSON.stringify(b2));
+  await go(editor(offB), `return !!document.querySelector("[data-calc]");`);
+  report("La commission saisie est conservee a la reouverture", await run(`return document.querySelector("#a-commission").value === "5";`));
+
+  const { data: buyerOffers } = await buyer.client.from("offers").select("label, total_amount, freight_amount");
+  const { data: buyerLines2 } = await buyer.client.from("offer_lines").select("unit_price");
+  const { data: buyerLm } = await buyer.client.from("offer_line_margins").select("margin_amount");
+  const { data: buyerM } = await buyer.client.from("offer_margins").select("margin_amount");
+  report("Acheteur : voit l'offre C (lignes et fret), jamais la marge ni le brouillon B", buyerOffers?.length === 1 && buyerOffers[0].label === "C" && Number(buyerOffers[0].freight_amount) === 120 && buyerLines2?.length === 1 && Number(buyerLines2[0].unit_price) === 22.2 && !buyerLm?.length && !buyerM?.length, JSON.stringify({ buyerOffers, buyerLines2, buyerLm, buyerM }));
+
+  await go(editor(offC), `return !!document.querySelector("h1");`);
+  report("Offre publiee : consultation seule", await run(`return !document.querySelector("[data-calc]") && document.body.innerText.includes("Cette offre est publiée");`));
+  await shot("auto-offer-edit-locked");
+  await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 900, deviceScaleFactor: 1, mobile: true });
+  await go(editor(offB), `return !!document.querySelector("[data-calc]");`);
+  report("Telephone : l'ecran de saisie ne deborde pas", await run(`return document.documentElement.scrollWidth <= window.innerWidth + 1;`), await run(`return document.documentElement.scrollWidth + " / " + window.innerWidth;`));
+  await shot("auto-offer-edit-mobile");
+  await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 1300, deviceScaleFactor: 1, mobile: false });
 
   // Arabe (RTL) : le panneau s'affiche
   await go(`/ar/admin/rfqs/${rfqId}`, `return !!document.querySelector("[data-auto-offers]");`);

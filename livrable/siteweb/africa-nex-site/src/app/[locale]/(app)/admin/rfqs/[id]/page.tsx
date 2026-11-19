@@ -257,7 +257,9 @@ export default async function AdminRfqPage({
                     </p>
                     <p className="mt-1 font-bold" dir="ltr" style={{ textAlign: "start" }}>
                       {o.unit_price == null
-                        ? `${o.incoterm ?? ""} · ${t("offerLinesTotal", { count: lineCount, total })}`
+                        ? `${o.incoterm ?? ""} · ${o.freight_amount != null
+                          ? t("offerLinesTotalFreight", { count: lineCount, total, freight: `${Number(o.freight_amount).toLocaleString(locale, { minimumFractionDigits: 2 })} ${o.currency}` })
+                          : t("offerLinesTotal", { count: lineCount, total })}`
                         : `${Number(o.unit_price).toLocaleString(locale, { minimumFractionDigits: 2 })} ${o.currency} · ${o.incoterm} ${o.incoterm_place ?? ""} · ${t("offerTotal", { total })}`}
                     </p>
                     {m && !m.auto && (
@@ -273,6 +275,11 @@ export default async function AdminRfqPage({
                     <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>{t("offerValidLine", { date: date(o.valid_until) ?? "-" })}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    {m?.auto && (
+                      <Link href={`/admin/rfqs/${rfq.id}/offers/${o.id}`} className="px-3 py-2 text-xs font-bold uppercase" style={{ ...caps, border: "1px solid var(--ink)", ...(o.status === "draft" && (m.margin_pending || m.freight_pending) ? { background: "var(--ink)", color: "white" } : {}) }} data-complete={o.label}>
+                        {o.status === "draft" ? t("autoEditLink") : t("autoViewLink")}
+                      </Link>
+                    )}
                     {o.status === "draft" && m?.source_quote_id && (
                       <Link href={`/admin/rfqs/${rfq.id}/offer?quote=${m.source_quote_id}`} className="px-3 py-2 text-xs font-bold uppercase" style={{ ...caps, border: "1px solid var(--ink)" }}>{t("offerEdit")}</Link>
                     )}

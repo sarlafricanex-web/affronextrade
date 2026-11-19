@@ -49,7 +49,7 @@ export async function AutoOfferPanel({
       </div>
 
       {result.offers.map((o) => (
-        <OfferBlock key={`${o.mode}-${o.currency}`} o={o} t={t as unknown as T} money={money} qty={qty} unit={unit} date={date} />
+        <OfferBlock key={`${o.mode}-${o.currency}-${o.incoterm ?? ""}`} o={o} t={t as unknown as T} money={money} qty={qty} unit={unit} date={date} />
       ))}
 
       {result.skipped.length > 0 && (
@@ -99,10 +99,10 @@ type T = (key: string, values?: Record<string, string | number>) => string;
 
 function OfferBlock({ o, t, money, qty, unit, date }: { o: AutoOffer; t: T; money: (n: number, c: string) => string; qty: (n: number) => string; unit: (u: string | null) => string; date: (d: string) => string }) {
   return (
-    <div className="flex flex-col gap-3 px-5 py-4" style={{ borderTop: `1px solid ${HAIR}` }} data-auto-offer={`${o.mode}-${o.currency}`}>
+    <div className="flex flex-col gap-3 px-5 py-4" style={{ borderTop: `1px solid ${HAIR}` }} data-auto-offer={`${o.mode}-${o.currency}`} data-incoterm={o.incoterm ?? ""}>
       <p className="flex flex-wrap items-center gap-2">
         <span className="px-2 py-0.5 text-xs font-bold" style={{ background: o.mode === "self" ? "var(--ink)" : "#059669", color: "white" }}>{t(`autoMode_${o.mode}`)}</span>
-        <span className="font-bold" dir="ltr">{o.currency}</span>
+        <span className="font-bold" dir="ltr">{o.currency}{o.incoterm ? ` · ${o.incoterm}` : ""}</span>
         {o.fxRate && <span className="text-xs" style={{ color: PRIVATE }} dir="ltr">{t("autoFxRate", { currency: o.currency, rate: o.fxRate.toLocaleString() })}</span>}
       </p>
 
@@ -167,8 +167,6 @@ function OfferBlock({ o, t, money, qty, unit, date }: { o: AutoOffer; t: T; mone
       </p>
       {o.maxDiscountAmount > 0 && <p className="text-xs font-semibold" style={{ color: PRIVATE }}>{t("autoSumDiscount", { amount: money(o.maxDiscountAmount, o.currency) })}</p>}
       {o.marginPending && <p className="px-3 py-2 text-xs font-semibold" style={{ background: "#fff7ed", borderInlineStart: `3px solid ${PRIVATE}` }} data-pending="margin">{t("autoMarginPending")}</p>}
-      {o.freightPending && <p className="px-3 py-2 text-xs font-semibold" style={{ background: "#fff7ed", borderInlineStart: `3px solid ${PRIVATE}` }} data-pending="freight">{t("autoFreightPending")}</p>}
-      {o.mixedIncoterms && <p className="text-xs font-semibold" style={{ color: "#92400e" }}>{t("autoMixedIncoterms")}</p>}
-    </div>
+      {o.freightPending && <p className="px-3 py-2 text-xs font-semibold" style={{ background: "#fff7ed", borderInlineStart: `3px solid ${PRIVATE}` }} data-pending="freight">{t("autoFreightPending")}</p>}    </div>
   );
 }

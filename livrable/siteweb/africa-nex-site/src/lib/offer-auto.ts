@@ -1,7 +1,8 @@
 // Lots 6c et 6d : calcul automatique de l'offre depuis la liste de prix des fournisseurs et les
 // devis recus par ligne. Fonction pure (aucun acces a la base), partagee par l'apercu de la console
 // et l'action serveur qui cree les brouillons. Regles d'Adlene (14 au 17 novembre 2026) :
-//   - une offre par couple (mode d'affaire, devise) : jamais deux modes ni deux devises ;
+//   - une offre par mode d'affaire, devise et incoterm : jamais deux modes, deux devises ni deux
+//     incoterms dans une offre (incoterms separes : decision d'Adlene du 19 novembre 2026) ;
 //   - intermediation : offre dans la devise du fournisseur, commission de la grille calculee
 //     sur le total de TOUTE la demande ; assurance 1 % et fret si forfait Pro ou Enterprise ;
 //   - export par AFRICA NEX : offre dans la devise de l'acheteur, prix en dinars converti au
@@ -130,7 +131,6 @@ export type AutoOffer = {
   fxMarginRate: number;
   fxRate: number | null;
   incoterm: string | null;
-  mixedIncoterms: boolean;
   leadDays: number | null;
   validUntil: string;
   marginPending: boolean;
@@ -357,9 +357,10 @@ export function computeAutoOffers(ctx: AutoContext): AutoResult {
     };
   });
 
+  // Une offre par (mode, devise, incoterm). Les lignes sont deja dans l'ordre de la demande.
   const groups = new Map<string, PricedLine[]>();
   for (const l of priced) {
-    const key = `${l.mode}:${l.currency}`;
+    const key = `${l.mode}:${l.currency}:${l.incoterm ?? ""}`;
     groups.set(key, [...(groups.get(key) ?? []), l]);
   }
   const maxValid = addDays(ctx.today, OFFER_VALIDITY_DAYS);
@@ -367,7 +368,6 @@ export function computeAutoOffers(ctx: AutoContext): AutoResult {
     .map((lines) => {
       const first = lines[0];
       const sum = (f: (l: PricedLine) => number) => round2(lines.reduce((s, l) => s + f(l), 0));
-      const incoterms = new Set(lines.map((l) => l.incoterm ?? ""));
       const freightPending = lines.some((l) => l.africanexFreight);
       const validities = eligible
         .filter((e) => lines.some((l) => l.row.line_id === e.row.line_id))
@@ -388,8 +388,7 @@ export function computeAutoOffers(ctx: AutoContext): AutoResult {
         insuranceRate: lines.some((l) => l.insuranceRate > 0) ? DEFAULT_INSURANCE_RATE : 0,
         fxMarginRate: first.fxMarginRate,
         fxRate: first.fxRate,
-        incoterm: freightPending ? (ctx.requestedIncoterm ?? first.incoterm) : incoterms.size === 1 ? first.incoterm : null,
-        mixedIncoterms: incoterms.size > 1,
+        incoterm: first.incoterm,
         leadDays: leads.length ? Math.max(...leads) : null,
         validUntil: validities.length && validities[0] < maxValid ? validities[0] : maxValid,
         marginPending: first.mode === "africanex",
@@ -397,7 +396,11 @@ export function computeAutoOffers(ctx: AutoContext): AutoResult {
         maxDiscountAmount: sum((l) => (l.maxDiscountRate ? (l.base * l.maxDiscountRate) / 100 : 0)),
       };
     })
-    .sort((a, b) => (a.mode === b.mode ? a.currency.localeCompare(b.currency) : a.mode === "self" ? -1 : 1));
+    // Intermediation d'abord, puis par devise, puis dans l'ordre des lignes de la demande.
+    .sort((a, b) =>
+      a.mode !== b.mode ? (a.mode === "self" ? -1 : 1)
+      : a.currency !== b.currency ? a.currency.localeCompare(b.currency)
+      : a.lines[0].row.line_position - b.lines[0].row.line_position);
 
   return { offers, skipped, demandTotalRef, commissionRate };
 }

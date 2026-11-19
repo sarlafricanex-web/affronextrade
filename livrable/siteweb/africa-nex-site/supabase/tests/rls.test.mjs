@@ -86,7 +86,7 @@ function expect(condition, message) {
 
 // Un refus doit venir d'une regle de securite, pas d'une faute dans le SQL du test.
 const SECURITY_ERROR =
-  /row-level security|permission denied|protected .* fields|role cannot be changed|onboarding cannot|only the dispatch status|invalid dispatch status|violates check constraint|offer not available|forbidden|pending margin or freight|auto offer already published/;
+  /row-level security|permission denied|protected .* fields|role cannot be changed|onboarding cannot|only the dispatch status|invalid dispatch status|violates check constraint|offer not available|forbidden|pending margin or freight|auto offer already published|line mismatch|offer not draft/;
 const verbose = process.argv.includes("--verbose");
 
 async function expectError(promise) {
@@ -339,10 +339,35 @@ await check("Lot 6c : l'acheteur ne voit pas les lignes d'un brouillon", async (
 await check("Lot 6c : une offre avec marge a saisir ne peut pas etre publiee", () =>
   expectError(as(U.admin, () => rows("update public.offers set status = 'published', published_at = now() where id = $1", [autoOffer]))));
 
-await as(U.admin, async () => {
-  await rows("update public.offer_margins set margin_pending = false where offer_id = $1", [autoOffer]);
-  await rows("update public.offers set status = 'published', published_at = now() where id = $1", [autoOffer]);
+// Lot 6e : saisie d'AFRICA NEX sur l'offre calculee (commission, marge, fret, conditions)
+const [{ id: autoLine }] = await rows("select id from public.offer_lines where offer_id = $1", [autoOffer]);
+const pricing = (lines, over = {}) => JSON.stringify({
+  total_amount: 1350, freight_amount: 250, incoterm_place: "Abidjan", valid_until: "2099-12-01", payment_terms: "30 % a la commande", notes: "",
+  commission_rate: 10, commission_amount: 100, margin_rate: null, margin_amount: null, margin_pending: false, freight_cost: 250, freight_pending: false,
+  lines, ...over,
 });
+const pricedLine = { id: autoLine, unit_price: 11, total_amount: 1100, commission_rate: 10, commission_amount: 100, fx_margin_amount: 0, margin_amount: 0 };
+
+for (const [who, user] of [["l'acheteur", U.buyer], ["un producteur", U.prodA]]) {
+  await check(`Lot 6e : ${who} ne peut pas completer une offre calculee`, () =>
+    expectError(as(user, () => rows("select public.save_offer_pricing($1, $2::jsonb)", [autoOffer, pricing([pricedLine])]))));
+}
+
+await check("Lot 6e : les lignes doivent etre exactement celles de l'offre", () =>
+  expectError(as(U.admin, () => rows("select public.save_offer_pricing($1, $2::jsonb)", [autoOffer, pricing([])]))));
+
+await check("Lot 6e : l'admin enregistre marge, fret et conditions ; le fret s'ajoute au total", async () => {
+  await as(U.admin, () => rows("select public.save_offer_pricing($1, $2::jsonb)", [autoOffer, pricing([pricedLine])]));
+  const [r] = await rows(
+    `select o.total_amount, o.freight_amount, o.incoterm_place, o.payment_terms, m.margin_pending, m.freight_cost, l.total_amount as line_total
+       from public.offers o join public.offer_margins m on m.offer_id = o.id join public.offer_lines l on l.offer_id = o.id where o.id = $1`, [autoOffer]);
+  expect(Number(r.total_amount) === 1350 && Number(r.freight_amount) === 250 && Number(r.line_total) === 1100 && r.incoterm_place === "Abidjan" && !r.margin_pending, JSON.stringify(r));
+});
+
+await as(U.admin, () => rows("update public.offers set status = 'published', published_at = now() where id = $1", [autoOffer]));
+
+await check("Lot 6e : une offre publiee ne se modifie plus", () =>
+  expectError(as(U.admin, () => rows("select public.save_offer_pricing($1, $2::jsonb)", [autoOffer, pricing([pricedLine])]))));
 
 await check("Lot 6c : l'acheteur voit les lignes publiees, jamais la construction du prix", async () => {
   const lines = await as(U.buyer, () => rows("select unit_price from public.offer_lines"));
