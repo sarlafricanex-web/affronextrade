@@ -2,20 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 import { AuthNav } from "@/components/AuthNav";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const NAV_KEYS = ["about", "opportunities", "services", "producers", "buyers", "pricing", "contact"] as const;
-const LOCALES = [
-  { code: "fr", label: "FR" },
-  { code: "en", label: "EN" },
-  { code: "ar", label: "AR" },
-] as const;
 
 export function Header() {
   const t = useTranslations("nav");
   const pathname = usePathname();
-  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -25,10 +20,6 @@ export function Header() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  function switchLocale(locale: string) {
-    router.replace(pathname, { locale });
-  }
 
   return (
     <header className={`site-header fixed top-0 left-0 right-0 z-50 bg-white${scrolled ? " scrolled" : ""}`} style={{ background: "white" }}>
@@ -60,19 +51,8 @@ export function Header() {
         </div>
 
         <div className="hidden md:flex items-center gap-4">
-          <div className="flex gap-1">
-            {LOCALES.map((l) => (
-              <button
-                key={l.code}
-                onClick={() => switchLocale(l.code)}
-                className="text-xs font-medium px-2 py-1"
-                style={{ color: "var(--muted)" }}
-              >
-                {l.label}
-              </button>
-            ))}
-          </div>
-          <AuthNav className="text-sm font-semibold" />
+          <LanguageSwitcher />
+          <AuthNav className="text-sm font-semibold whitespace-nowrap" />
           <Link
             href="/contact"
             className="text-sm font-semibold px-5 py-2 transition-colors"
@@ -82,8 +62,10 @@ export function Header() {
           </Link>
         </div>
 
+        <div className="md:hidden flex items-center gap-2">
+        <LanguageSwitcher />
         <button
-          className="md:hidden p-2"
+          className="p-2"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label={menuOpen ? "Close menu" : "Open menu"}
         >
@@ -111,6 +93,7 @@ export function Header() {
             />
           </div>
         </button>
+        </div>
       </nav>
 
       {menuOpen && (
@@ -132,18 +115,6 @@ export function Header() {
               >
                 {t(key)}
               </Link>
-            ))}
-          </div>
-          <div className="flex gap-2 mt-4 pt-4" style={{ borderTop: "1px solid var(--field-b)" }}>
-            {LOCALES.map((l) => (
-              <button
-                key={l.code}
-                onClick={() => { switchLocale(l.code); setMenuOpen(false); }}
-                className="text-sm font-medium px-3 py-1"
-                style={{ color: "var(--muted)" }}
-              >
-                {l.label}
-              </button>
             ))}
           </div>
           <AuthNav

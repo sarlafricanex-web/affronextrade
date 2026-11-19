@@ -144,6 +144,52 @@ a[style*="border: 1px solid"]:hover {
   box-shadow: 0 1px 0 var(--field-b);
 }
 
+/* ── Selecteur de langue : bouton rond, menu deroulant anime ── */
+.lang-switcher-button {
+  border: 1.5px solid var(--ink);
+  color: var(--ink);
+  background: white;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+.lang-switcher-button:hover,
+.lang-switcher[data-open] .lang-switcher-button {
+  background: var(--ink);
+  color: white;
+}
+.lang-switcher-button:active { transform: scale(0.94); }
+.lang-switcher-menu {
+  min-width: 11rem;
+  background: white;
+  border: 1px solid var(--field-b);
+  z-index: 60;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px) scale(0.96);
+  transform-origin: top right;
+  transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 0.22s;
+}
+[dir="rtl"] .lang-switcher-menu { transform-origin: top left; }
+.lang-switcher[data-open] .lang-switcher-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s;
+}
+.lang-switcher-item {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.18s ease, transform 0.18s ease, background 0.15s ease;
+}
+.lang-switcher[data-open] .lang-switcher-item { opacity: 1; transform: none; }
+.lang-switcher-item:hover,
+.lang-switcher-item:focus-visible { background: var(--ground); outline: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lang-switcher-menu,
+  .lang-switcher-item,
+  .lang-switcher-button { transition: none; transform: none; }
+}
+
 /* ── Nav link underline animation ── */
 nav a[href]:not([style*="background"]) {
   position: relative;
