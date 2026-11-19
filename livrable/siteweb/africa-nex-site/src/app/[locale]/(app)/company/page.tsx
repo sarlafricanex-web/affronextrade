@@ -3,6 +3,7 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { countRecentViews, getMyCompany } from "@/lib/data/company";
+import { companyChecks } from "@/lib/company-completion";
 import { WILAYAS } from "@/lib/onboarding/reference";
 import { IdentityForm } from "@/components/onboarding/IdentityForm";
 import { PresentationForm } from "@/components/onboarding/PresentationForm";
@@ -72,17 +73,7 @@ export default async function CompanyPage({
   const wilaya = WILAYAS.find(([code]) => code === company.wilaya)?.[1];
 
   // Completion calculee sur les vrais champs de la fiche, rien d'autre.
-  const checks = [
-    { key: "checkIdentity", ok: Boolean(company.private?.tax_id && company.private?.nis && company.private?.tax_article && company.private?.rc_number) },
-    { key: "checkDescriptionFr", ok: Boolean(company.description_fr) },
-    { key: "checkDescriptionEn", ok: Boolean(company.description_en) },
-    { key: "checkDescriptionAr", ok: Boolean(company.description_ar) },
-    { key: "checkLogo", ok: Boolean(company.logo_url) },
-    { key: "checkWebsite", ok: Boolean(company.website) },
-    { key: "checkProduct", ok: (productCount ?? 0) > 0 },
-    { key: "checkRegistration", ok: (registrationCount ?? 0) > 0 },
-  ];
-  const percent = Math.round((checks.filter((c) => c.ok).length / checks.length) * 100);
+  const { checks, percent } = companyChecks({ company, productCount: productCount ?? 0, registrationCount: registrationCount ?? 0 });
   const published = company.visibility === "published";
 
   const HAIR = "#d8cebb";

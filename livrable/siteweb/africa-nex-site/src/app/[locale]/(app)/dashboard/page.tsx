@@ -2,6 +2,9 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getMyCompany } from "@/lib/data/company";
+import { getBuyerDashboard, getProducerDashboard } from "@/lib/data/dashboard";
+import { ProducerDashboard } from "@/components/dashboard/ProducerDashboard";
+import { BuyerDashboard } from "@/components/dashboard/BuyerDashboard";
 
 export const instant = false;
 
@@ -34,12 +37,32 @@ export default async function DashboardPage({
       getMyCompany(user.supabase, user.userId),
       user.supabase.from("profiles").select("onboarding_completed").eq("id", user.userId).single(),
     ]);
-    if (profile?.onboarding_completed) action = { href: "/company", key: "navCompany" };
-    else if (company) action = { href: company.description_fr ? "/onboarding?step=3" : "/onboarding?step=2", key: "continueOnboarding" };
+    // Semaine 6 : configuration terminee, tableau de bord producteur.
+    if (profile?.onboarding_completed && company) {
+      const data = await getProducerDashboard(user.supabase, company);
+      return (
+        <>
+          {configured && <p role="status" className="mb-6 p-4 font-semibold" style={{ background: "white", borderInlineStart: "4px solid var(--accent)" }}>{t("configuredNotice")}</p>}
+          <ProducerDashboard locale={locale} firstName={firstName} companyName={company.company_name} published={company.visibility === "published"} data={data} />
+        </>
+      );
+    }
+    if (company) action = { href: company.description_fr ? "/onboarding?step=3" : "/onboarding?step=2", key: "continueOnboarding" };
   } else if (user.role === "buyer") {
     // Acheteur : profil d'entreprise a remplir avant de demander des devis.
     const { data: profile } = await user.supabase.from("profiles").select("onboarding_completed").eq("id", user.userId).single();
     if (!profile?.onboarding_completed) action = { href: "/onboarding", key: "startBuyerOnboarding" };
+    else {
+      // Semaine 6 : profil rempli, tableau de bord acheteur.
+      const company = await getMyCompany(user.supabase, user.userId);
+      const data = await getBuyerDashboard(user.supabase, user.userId, (company?.interests ?? []) as string[]);
+      return (
+        <>
+          {configured && <p role="status" className="mb-6 p-4 font-semibold" style={{ background: "white", borderInlineStart: "4px solid var(--accent)" }}>{t("buyerConfiguredNotice")}</p>}
+          <BuyerDashboard locale={locale} firstName={firstName} data={data} />
+        </>
+      );
+    }
   }
   const nextStep = user.role === "buyer" && action.href === "/onboarding" ? "nextBuyerSetup" : NEXT_STEP[user.role];
 

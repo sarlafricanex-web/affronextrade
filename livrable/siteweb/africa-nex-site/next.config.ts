@@ -27,6 +27,14 @@ const nextConfig: NextConfig = {
           { key: "Cache-Control", value: "no-store, no-cache, must-revalidate" },
         ],
       },
+      {
+        // Semaine 6 : fichiers et donnees privees (pieces jointes, documents, liste de prix). Chaque
+        // route envoie deja no-store ; cette regle couvre aussi une route future qui l'oublierait.
+        source: "/api/(rfq-files|documents|catalog)/(.*)",
+        headers: [
+          { key: "Cache-Control", value: "no-store" },
+        ],
+      },
     ];
   },
   turbopack: {

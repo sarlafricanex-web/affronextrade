@@ -11,6 +11,7 @@ const LINKS = {
     { href: "/requests", key: "navRequests" },
     { href: "/company", key: "navCompany" },
     { href: "/catalog", key: "navCatalog" },
+    { href: "/subscription", key: "navSubscription" },
   ],
   buyer: [
     { href: "/dashboard", key: "navDashboard" },

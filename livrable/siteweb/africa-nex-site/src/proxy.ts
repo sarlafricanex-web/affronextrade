@@ -8,7 +8,7 @@ import { safeNextPath } from "./lib/auth/next-path";
 const handleI18nRouting = createMiddleware(routing);
 
 // Confort de navigation seulement : la vraie securite est dans les regles RLS de la base.
-const PROTECTED = ["/dashboard", "/onboarding", "/company", "/catalog", "/claim", "/admin", "/rfq", "/requests"];
+const PROTECTED = ["/dashboard", "/onboarding", "/company", "/catalog", "/claim", "/admin", "/rfq", "/requests", "/subscription"];
 const AUTH_PAGES = ["/login", "/register", "/forgot-password"];
 
 const isUnder = (path: string, prefix: string) => path === prefix || path.startsWith(`${prefix}/`);

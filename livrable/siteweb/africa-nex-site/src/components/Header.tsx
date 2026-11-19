@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { AuthNav } from "@/components/AuthNav";
 
-const NAV_KEYS = ["about", "opportunities", "services", "producers", "buyers", "contact"] as const;
+const NAV_KEYS = ["about", "opportunities", "services", "producers", "buyers", "pricing", "contact"] as const;
 const LOCALES = [
   { code: "fr", label: "FR" },
   { code: "en", label: "EN" },
