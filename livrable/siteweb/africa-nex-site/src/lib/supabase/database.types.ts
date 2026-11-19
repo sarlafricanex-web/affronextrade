@@ -2045,6 +2045,10 @@ export type Database = {
       is_member_of: { Args: { target_company: string }; Returns: boolean }
       is_owner_of: { Args: { target_company: string }; Returns: boolean }
       is_privileged: { Args: never; Returns: boolean }
+      mark_messages_read: {
+        Args: { p_dispatch: string; p_rfq: string }
+        Returns: number
+      }
       my_role: { Args: never; Returns: string }
       offer_auto_inputs: {
         Args: { p_rfq: string }

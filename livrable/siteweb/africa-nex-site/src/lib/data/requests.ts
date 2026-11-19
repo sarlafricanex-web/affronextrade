@@ -9,7 +9,7 @@ type Client = SupabaseClient<Database>;
 // (table rfqs) lui reste invisible.
 
 const DISPATCH_COLUMNS =
-  "id, reference, brief_title, brief_specs, quantity, unit, destination_country, requested_incoterm, needed_by, respond_by, status, viewed_at, created_at";
+  "id, rfq_id, reference, brief_title, brief_specs, quantity, unit, destination_country, requested_incoterm, needed_by, respond_by, status, viewed_at, created_at";
 const QUOTE_COLUMNS =
   "id, status, unit_price_ht, currency, price_basis, port_of_loading, quantity, production_lead_days, available_at_port_on, payment_terms, valid_until, notes, attachments, created_at, updated_at";
 
@@ -27,7 +27,7 @@ function deadline(respondBy: string | null) {
 export async function listMyRequests(client: Client, companyId: string) {
   const { data, error } = await client
     .from("rfq_dispatches")
-    .select(`${DISPATCH_COLUMNS}, quotes(${QUOTE_COLUMNS})`)
+    .select(`${DISPATCH_COLUMNS}, quotes(${QUOTE_COLUMNS}), messages(sender_role, read_at)`)
     .eq("company_id", companyId)
     .order("created_at", { ascending: false });
   if (error) throw error;

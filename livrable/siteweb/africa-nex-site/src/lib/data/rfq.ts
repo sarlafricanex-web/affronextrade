@@ -23,7 +23,7 @@ const RFQ_COLUMNS =
 export async function listMyRfqs(client: Client, userId: string) {
   const { data, error } = await client
     .from("rfqs")
-    .select(`${RFQ_COLUMNS}, offers(id, status)`)
+    .select(`${RFQ_COLUMNS}, offers(id, status), messages(sender_role, read_at)`)
     .eq("buyer_profile_id", userId)
     .order("created_at", { ascending: false });
   if (error) throw error;

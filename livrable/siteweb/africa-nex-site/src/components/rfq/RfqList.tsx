@@ -15,6 +15,7 @@ export type RfqRow = {
   destination: string;
   date: string;
   offers: number;
+  unread: number; // messages d'AFRICA NEX non lus (lot 5f)
 };
 
 const HAIR = "#d8cebb";
@@ -28,6 +29,10 @@ export function StatusBadge({ status, label }: { status: string; label: string }
     : status === "cancelled" ? { background: "#fef2f2", border: "1px solid #fca5a5", color: "#991b1b" }
     : { background: "#f5efe6", border: `1px solid ${HAIR}`, color: "var(--muted)" };
   return <span className="inline-block px-2 py-1 text-[10px] font-bold uppercase" style={{ ...caps, ...tone }}>{label}</span>;
+}
+
+function Unread({ n, label }: { n: number; label: string }) {
+  return n > 0 ? <span className="inline-block px-2 py-1 text-[10px] font-bold uppercase" style={{ ...caps, background: "#f97316", color: "white" }} data-unread={n}>{label}</span> : null;
 }
 
 export function Progress({ stage, label }: { stage: number; label: string }) {
@@ -94,6 +99,7 @@ export function RfqList({ rows }: { rows: RfqRow[] }) {
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="px-2 py-0.5 text-[11px] font-bold" dir="ltr" style={{ background: "#f5efe6", border: `1px solid ${HAIR}` }}>{r.reference}</span>
                       <StatusBadge status={r.status} label={t(`status_${r.status}`)} />
+                      <Unread n={r.unread} label={t("unreadMessages", { count: r.unread })} />
                     </div>
                     <p className="mt-2 font-bold">{r.title}</p>
                   </td>
@@ -114,6 +120,7 @@ export function RfqList({ rows }: { rows: RfqRow[] }) {
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="px-2 py-0.5 text-[11px] font-bold" dir="ltr" style={{ background: "#f5efe6", border: `1px solid ${HAIR}` }}>{r.reference}</span>
                   <StatusBadge status={r.status} label={t(`status_${r.status}`)} />
+                  <Unread n={r.unread} label={t("unreadMessages", { count: r.unread })} />
                 </div>
                 <p className="font-bold">{r.title}</p>
                 <p className="text-sm"><strong>{r.volume}</strong> <span style={{ color: "var(--muted)" }}>· {[r.destination, r.incoterm].filter(Boolean).join(" · ")} · {r.date}</span></p>

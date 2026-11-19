@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { listMyRfqs, stageOf } from "@/lib/data/rfq";
 import { destinationLabel, volumeLabel } from "@/lib/rfq-display";
 import { RfqList, type RfqRow } from "@/components/rfq/RfqList";
+import { unreadOf } from "@/lib/data/messages";
 
 export const instant = false;
 
@@ -35,6 +36,7 @@ export default async function MyRfqsPage({ params }: { params: Promise<{ locale:
     destination: destinationLabel(r, locale),
     date: format.dateTime(new Date(r.created_at), { dateStyle: "medium" }),
     offers: (r.offers ?? []).filter((o) => o.status === "published").length,
+    unread: unreadOf(r.messages, "buyer"),
   }));
 
   return (

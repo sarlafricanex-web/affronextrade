@@ -6,6 +6,7 @@ import { listAdminRfqs } from "@/lib/data/admin-rfqs";
 import { destinationLabel, volumeLabel } from "@/lib/rfq-display";
 import { countryName } from "@/lib/countries";
 import { StatusBadge } from "@/components/rfq/RfqList";
+import { unreadOf } from "@/lib/data/messages";
 
 export const instant = false;
 
@@ -69,6 +70,7 @@ export default async function AdminRfqsPage({ params, searchParams }: { params: 
                   <StatusBadge status={r.status} label={tr(`status_${r.status}`)} />
                 </span>
                 <span className="font-bold" style={{ color: "#059669" }}>{r.title}</span>
+                {unreadOf(r.messages, "admin") > 0 && <span className="w-fit px-2 py-0.5 text-[10px] font-bold uppercase" style={{ letterSpacing: "0.08em", background: "#f97316", color: "white" }} data-unread={unreadOf(r.messages, "admin")}>{t("rfqUnread", { count: unreadOf(r.messages, "admin") })}</span>}
                 {currencyAsked(r) && <span className="w-fit px-2 py-0.5 text-[10px] font-bold uppercase" style={{ letterSpacing: "0.08em", background: "#fff7ed", color: "#c2410c" }} data-currency-asked="">{t("rfqCurrencyAsked")}</span>}
                 <span className="text-sm">{[buyer?.company_name, buyer?.country ? countryName(buyer.country, locale) : null].filter(Boolean).join(" · ")}</span>
                 <span className="text-sm" style={{ color: "var(--muted)" }}>
@@ -121,6 +123,7 @@ export default async function AdminRfqsPage({ params, searchParams }: { params: 
                   <td className={`${cell} whitespace-nowrap`}>{format.dateTime(new Date(r.created_at), { dateStyle: "medium" })}</td>
                   <td className={cell}>
                     <StatusBadge status={r.status} label={tr(`status_${r.status}`)} />
+                    {unreadOf(r.messages, "admin") > 0 && <span className="mt-1 block w-fit px-2 py-0.5 text-[10px] font-bold uppercase" style={{ letterSpacing: "0.08em", background: "#f97316", color: "white" }} data-unread={unreadOf(r.messages, "admin")}>{t("rfqUnread", { count: unreadOf(r.messages, "admin") })}</span>}
                     {currencyAsked(r) && <span className="mt-1 block w-fit px-2 py-0.5 text-[10px] font-bold uppercase" style={{ letterSpacing: "0.08em", background: "#fff7ed", color: "#c2410c" }} data-currency-asked="">{t("rfqCurrencyAsked")}</span>}
                   </td>
                   <td className={`${cell} whitespace-nowrap`}>{dispatches.length ? t("rfqDispatchCount", { sent: dispatches.length, quoted }) : "-"}</td>

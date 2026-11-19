@@ -5,6 +5,10 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { getMyRfq, listMyOffers, rfqAttachments, stageOf, type RfqLine } from "@/lib/data/rfq";
 import { RfqLinesTable } from "@/components/rfq/RfqLinesTable";
 import { BuyerOffers } from "@/components/rfq/BuyerOffers";
+import { after } from "next/server";
+import { listThread, markThreadRead } from "@/lib/data/messages";
+import { MessageThread } from "@/components/messages/MessageThread";
+import { MessageForm } from "@/components/messages/MessageForm";
 import { destinationLabel, volumeLabel } from "@/lib/rfq-display";
 import { StatusBadge } from "@/components/rfq/RfqList";
 import { cancelRfq } from "../actions";
@@ -21,14 +25,15 @@ export default async function RfqDetailPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ sent?: string; cancelled?: string; offer?: string }>;
+  searchParams: Promise<{ sent?: string; cancelled?: string; offer?: string; about?: string }>;
 }) {
   const { locale, id } = await params;
   const user = await getCurrentUser();
   if (!user) redirect(`/${locale}/login`);
   if (user.role !== "buyer") redirect(`/${locale}/dashboard`);
-  const [t, tc, format, rfq, { offers, today }, { sent, cancelled, offer: offerDone }] = await Promise.all([
+  const [t, tm, tc, format, rfq, { offers, today }, { sent, cancelled, offer: offerDone, about }] = await Promise.all([
     getTranslations({ locale, namespace: "rfq" }),
+    getTranslations({ locale, namespace: "thread" }),
     getTranslations({ locale, namespace: "catalog" }),
     getFormatter({ locale }),
     getMyRfq(user.supabase, user.userId, id),
@@ -36,6 +41,13 @@ export default async function RfqDetailPage({
     searchParams,
   ]);
   if (!rfq) notFound();
+  // Lot 5f : fil avec AFRICA NEX ; les messages recus passent lus apres l'affichage.
+  const thread = await listThread(user.supabase, rfq.id, null);
+  if (thread.some((m) => m.sender_role === "admin" && !m.read_at)) {
+    const supabase = user.supabase;
+    after(() => markThreadRead(supabase, rfq.id, null));
+  }
+  const aboutOffer = about && offers.some((o) => o.label === about) ? about : null;
   const lines = (rfq.rfq_lines ?? []) as RfqLine[];
   const OFFER_NOTICES = ["accepted", "declined", "currencyRequested", "currencyInvalid", "unavailable"];
 
@@ -134,6 +146,27 @@ export default async function RfqDetailPage({
             <button type="submit" className="px-4 py-2.5 text-xs font-bold uppercase" style={{ ...caps, border: "1px solid #dc2626", color: "#dc2626", background: "white" }}>{t("cancel")}</button>
           </form>
         )}
+      </section>
+
+      {/* Lot 5f : fil avec AFRICA NEX (maquette 14) */}
+      <section id="messages" style={{ background: "white", border: `1px solid ${HAIR}`, scrollMarginTop: 16 }} aria-labelledby="messages-title">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4" style={{ background: "#f5efe6", borderBottom: `1px solid ${HAIR}` }}>
+          <div>
+            <h2 id="messages-title" className="flex items-center gap-2 font-extrabold" style={{ fontSize: "1.1rem" }}>
+              <span aria-hidden="true" className="inline-block h-3 w-3" style={{ background: "var(--ink)" }} />
+              {tm("buyerTitle")}
+            </h2>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>{tm("buyerIntro")}</p>
+          </div>
+        </div>
+        <MessageThread messages={thread} mine="buyer" otherName={tm("africanex")} otherInitials="AN" locale={locale} emptyText={tm("buyerEmpty")} />
+        <MessageForm
+          key={aboutOffer ?? "free"}
+          rfqId={rfq.id}
+          placeholder={tm("buyerPlaceholder")}
+          initial={aboutOffer ? tm("aboutOffer", { label: aboutOffer }) : undefined}
+          closed={["closed", "cancelled"].includes(rfq.status)}
+        />
       </section>
     </div>
   );

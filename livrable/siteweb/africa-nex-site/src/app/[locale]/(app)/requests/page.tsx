@@ -5,6 +5,7 @@ import { getMyCompanyId } from "@/lib/data/company";
 import { listMyRequests } from "@/lib/data/requests";
 import { countryName } from "@/lib/countries";
 import { RequestList, type RequestRow } from "@/components/requests/RequestList";
+import { unreadOf } from "@/lib/data/messages";
 
 export const instant = false;
 
@@ -35,6 +36,7 @@ export default async function RequestsPage({ params }: { params: Promise<{ local
     incoterm: r.requested_incoterm,
     group: r.status === "quoted" || r.quote ? "quoted" : r.status === "declined" ? "declined" : r.status === "expired" || r.overdue ? "expired" : "todo",
     isNew: r.status === "sent",
+    unread: unreadOf(r.messages, "producer"),
     respondBy: r.respond_by ? format.dateTime(new Date(`${r.respond_by}T12:00:00`), { dateStyle: "medium" }) : null,
     hoursLeft: r.hoursLeft,
   }));

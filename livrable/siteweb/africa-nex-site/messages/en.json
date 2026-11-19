@@ -943,7 +943,8 @@
     "offerDecidedOn": "buyer's decision on {date}",
     "offerCurrencyRequest": "The buyer asks to pay in {currency}: prepare a new offer, then withdraw this one.",
     "offerDeclineReasonAdmin": "Buyer's reason: {reason}",
-    "rfqCurrencyAsked": "Currency requested"
+    "rfqCurrencyAsked": "Currency requested",
+    "rfqUnread": "{count, plural, one {# unread message} other {# unread messages}}"
   },
   "phone": {
     "countryCode": "Country code: {code}. Change country",
@@ -1988,7 +1989,9 @@
     "offerNotice_declined": "Offer declined. Thank you for your answer.",
     "offerNotice_currencyRequested": "Currency change request sent to AFRICA NEX.",
     "offerNotice_currencyInvalid": "Choose a currency different from the offer's.",
-    "offerNotice_unavailable": "This offer is no longer available (already decided, withdrawn or expired)."
+    "offerNotice_unavailable": "This offer is no longer available (already decided, withdrawn or expired).",
+    "unreadMessages": "{count, plural, one {New message} other {# new messages}}",
+    "offerAsk": "Ask AFRICA NEX about this offer"
   },
   "requests": {
     "eyebrow": "Producer space",
@@ -2088,6 +2091,46 @@
     "errorFileSize": "File too large (4 MB max).",
     "errorFileType": "Format refused: PDF, JPEG or PNG only.",
     "errorLocked": "This quote can no longer be changed.",
-    "errorGeneric": "Sending failed. Try again shortly."
+    "errorGeneric": "Sending failed. Try again shortly.",
+    "unreadMessages": "{count, plural, one {New message} other {# new messages}}"
+  },
+  "thread": {
+    "africanex": "AFRICA NEX team",
+    "buyer": "Buyer",
+    "you": "You",
+    "youInitials": "YOU",
+    "read": "Read",
+    "unread": "Unread",
+    "send": "Send to AFRICA NEX",
+    "sending": "Sending...",
+    "formHint": "Your message goes to the AFRICA NEX team.",
+    "closed": "This request is closed: the thread no longer accepts messages.",
+    "errorEmpty": "Write your message.",
+    "errorTooLong": "Message too long (5,000 characters at most).",
+    "errorLeakBuyer": "The message names the buyer (company, name, email or phone): remove it before sending to the producer.",
+    "errorLeakProducer": "The message names a producer: remove the name before sending to the buyer.",
+    "errorClosed": "Message not sent: this thread is closed.",
+    "buyerTitle": "Messages with AFRICA NEX",
+    "buyerIntro": "Your questions about the request and the offers. Only the AFRICA NEX team reads this thread; your identity is never shared with producers.",
+    "buyerEmpty": "No messages yet. Ask your question below.",
+    "buyerPlaceholder": "Write a message to AFRICA NEX (technical questions, logistics, payment)...",
+    "aboutOffer": "About offer {label}: ",
+    "producerTitle": "Messages with AFRICA NEX",
+    "producerIntro": "Your questions about this brief. Only the AFRICA NEX team reads this thread; the buyer's identity remains confidential.",
+    "producerEmpty": "No messages yet.",
+    "producerPlaceholder": "Write a message to AFRICA NEX (specifications, lead time, packaging)...",
+    "adminTitle": "Messages",
+    "adminIntro": "One thread with the buyer, one per consulted producer. Never name the buyer to a producer, nor a producer to the buyer.",
+    "adminBuyerThread": "Buyer · {name}",
+    "adminProducerThread": "Producer · {name}",
+    "adminEmpty": "No messages in this thread.",
+    "adminPlaceholderBuyer": "Reply to the buyer...",
+    "adminPlaceholderProducer": "Write to the producer...",
+    "unreadCount": "{count, plural, one {# unread} other {# unread}}",
+    "messageCount": "{count, plural, =0 {no messages} one {# message} other {# messages}}",
+    "send_buyer": "Send to the buyer",
+    "send_producer": "Send to the producer",
+    "formHint_buyer": "Visible to the buyer only.",
+    "formHint_producer": "Visible to this producer only."
   }
 }

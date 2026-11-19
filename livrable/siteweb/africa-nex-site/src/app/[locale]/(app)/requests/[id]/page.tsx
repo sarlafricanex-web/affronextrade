@@ -8,6 +8,9 @@ import { getMyRequest } from "@/lib/data/requests";
 import { countryName } from "@/lib/countries";
 import { QuoteForm } from "@/components/requests/QuoteForm";
 import { declineRequest } from "../actions";
+import { listThread, markThreadRead } from "@/lib/data/messages";
+import { MessageThread } from "@/components/messages/MessageThread";
+import { MessageForm } from "@/components/messages/MessageForm";
 
 export const instant = false;
 
@@ -28,8 +31,9 @@ export default async function RequestPage({
   if (user.role !== "producer") redirect(`/${locale}/dashboard`);
   const companyId = await getMyCompanyId(user.supabase, user.userId);
   if (!companyId) redirect(`/${locale}/onboarding`);
-  const [t, to, tc, format, req, { sent, declined }] = await Promise.all([
+  const [t, tm, to, tc, format, req, { sent, declined }] = await Promise.all([
     getTranslations({ locale, namespace: "requests" }),
+    getTranslations({ locale, namespace: "thread" }),
     getTranslations({ locale, namespace: "onboarding" }),
     getTranslations({ locale, namespace: "catalog" }),
     getFormatter({ locale }),
@@ -44,6 +48,12 @@ export default async function RequestPage({
     after(async () => {
       await supabase.from("rfq_dispatches").update({ status: "viewed", viewed_at: new Date().toISOString() }).eq("id", id).eq("status", "sent");
     });
+  }
+  // Lot 5f : fil avec AFRICA NEX pour cet envoi ; les messages recus passent lus apres l'affichage.
+  const thread = await listThread(user.supabase, req.rfq_id, req.id);
+  if (thread.some((m) => m.sender_role === "admin" && !m.read_at)) {
+    const supabase = user.supabase;
+    after(() => markThreadRead(supabase, req.rfq_id, req.id));
   }
 
   const date = (d: string | null) => (d ? format.dateTime(new Date(`${d.slice(0, 10)}T12:00:00`), { dateStyle: "long" }) : null);
@@ -157,6 +167,16 @@ export default async function RequestPage({
           )}
         </section>
       )}
+
+      {/* Lot 5f : fil avec AFRICA NEX (maquette 16) */}
+      <section id="messages" style={{ background: "white", border: `1px solid ${HAIR}`, scrollMarginTop: 16 }} aria-labelledby="messages-title">
+        <div className="px-5 py-4" style={{ background: "#f5efe6", borderBottom: `1px solid ${HAIR}` }}>
+          <h2 id="messages-title" className="font-extrabold" style={{ fontSize: "1.1rem" }}>{tm("producerTitle")}</h2>
+          <p className="text-xs" style={{ color: "var(--muted)" }}>{tm("producerIntro")}</p>
+        </div>
+        <MessageThread messages={thread} mine="producer" otherName={tm("africanex")} otherInitials="AN" locale={locale} emptyText={tm("producerEmpty")} />
+        <MessageForm rfqId={req.rfq_id} dispatchId={req.id} placeholder={tm("producerPlaceholder")} />
+      </section>
     </div>
   );
 }

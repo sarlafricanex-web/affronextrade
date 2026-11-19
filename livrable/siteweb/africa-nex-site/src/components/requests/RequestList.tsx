@@ -14,6 +14,7 @@ export type RequestRow = {
   incoterm: string | null;
   group: "todo" | "quoted" | "declined" | "expired";
   isNew: boolean;
+  unread: number; // messages d'AFRICA NEX non lus (lot 5f)
   respondBy: string | null;
   hoursLeft: number | null;
 };
@@ -81,6 +82,7 @@ export function RequestList({ rows }: { rows: RequestRow[] }) {
                   <td className="px-4 py-4 align-top">
                     <Link href={`/requests/${r.id}`} className="font-bold hover:underline" dir="ltr">{r.reference}</Link>
                     {r.isNew && <span className="ms-2 px-1.5 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, background: "#ecfdf5", border: "1px solid #10b981", color: "#065f46" }}>{t("new")}</span>}
+                    {r.unread > 0 && <span className="ms-2 px-1.5 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, background: "#f97316", color: "white" }} data-unread={r.unread}>{t("unreadMessages", { count: r.unread })}</span>}
                   </td>
                   <td className="px-4 py-4 align-top">
                     <Link href={`/requests/${r.id}`} className="font-bold hover:underline">{r.title}</Link>
@@ -98,7 +100,7 @@ export function RequestList({ rows }: { rows: RequestRow[] }) {
             {shown.map((r) => (
               <li key={r.id} style={{ borderTop: `1px solid ${HAIR}` }}>
                 <Link href={`/requests/${r.id}`} className="flex flex-col gap-1 p-4">
-                  <span className="text-xs font-bold" dir="ltr" style={{ color: "var(--muted)", textAlign: "start" }}>{r.reference}{r.isNew ? ` · ${t("new")}` : ""}</span>
+                  <span className="text-xs font-bold" dir="ltr" style={{ color: "var(--muted)", textAlign: "start" }}>{r.reference}{r.isNew ? ` · ${t("new")}` : ""}{r.unread > 0 ? ` · ${t("unreadMessages", { count: r.unread })}` : ""}</span>
                   <span className="font-bold">{r.title}</span>
                   <span className="text-sm"><strong>{r.volume}</strong>{r.destination ? ` · ${r.destination}` : ""}{r.incoterm ? ` · ${r.incoterm}` : ""}</span>
                   <span className="text-sm">{due(r)}</span>

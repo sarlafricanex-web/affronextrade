@@ -1,6 +1,7 @@
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { BuyerOffer, RfqLine } from "@/lib/data/rfq";
 import { decideOffer } from "@/app/[locale]/(app)/rfq/actions";
+import { Link } from "@/i18n/navigation";
 
 const HAIR = "#d8cebb";
 const caps = { letterSpacing: "0.08em" } as const;
@@ -222,6 +223,11 @@ export async function BuyerOffers({
                     )}
                   </div>
                 </div>
+              )}
+              {!["closed", "cancelled"].includes(rfqStatus) && (
+                <Link href={`/rfq/${rfqId}?about=${encodeURIComponent(o.label)}#messages`} className={`${open(o) ? "" : "mt-auto "}mx-5 mb-4 block px-4 py-2.5 text-center text-xs font-semibold`} style={{ border: `1px solid ${HAIR}`, background: "white" }} data-ask={o.label}>
+                  {t("offerAsk")}
+                </Link>
               )}
             </article>
           );

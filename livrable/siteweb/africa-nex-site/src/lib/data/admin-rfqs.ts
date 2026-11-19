@@ -14,7 +14,7 @@ const RFQ_COLUMNS =
 export async function listAdminRfqs(client: Client) {
   const { data, error } = await client
     .from("rfqs")
-    .select(`${RFQ_COLUMNS}, buyer:companies!rfqs_buyer_company_id_fkey(company_name, country), source:companies!rfqs_source_company_id_fkey(company_name), rfq_dispatches(id, status), offers(status, currency_change_to)`)
+    .select(`${RFQ_COLUMNS}, buyer:companies!rfqs_buyer_company_id_fkey(company_name, country), source:companies!rfqs_source_company_id_fkey(company_name), rfq_dispatches(id, status), offers(status, currency_change_to), messages(sender_role, read_at)`)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data;

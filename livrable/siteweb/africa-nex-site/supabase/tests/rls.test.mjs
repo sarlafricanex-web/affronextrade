@@ -538,6 +538,34 @@ await check("Chaque partie ne lit que son propre fil", async () => {
     `acheteur ${buyerSees.length}, A ${prodASees.length}, B ${prodBSees.length}`);
 });
 
+// Lot 5f : messages lus, marques seulement par leur destinataire
+await as(U.admin, async () => {
+  await rows("insert into public.messages (rfq_id, sender_profile_id, sender_role, body) values ($1, $2, 'admin', 'Reponse a l''acheteur')", [rfq, U.admin]);
+  await rows("insert into public.messages (rfq_id, dispatch_id, sender_profile_id, sender_role, body) values ($1, $2, $3, 'admin', 'Reponse au producteur A')", [rfq, dispatchOf.A, U.admin]);
+});
+const readOf = async (body) => (await rows("select read_at from public.messages where body = $1", [body]))[0].read_at;
+
+await check("Lot 5f : l'acheteur ne modifie pas directement l'etat lu", async () => {
+  await as(U.buyer, () => rows("update public.messages set read_at = now()"));
+  expect(!(await readOf("Reponse a l'acheteur")), "message marque lu par une mise a jour directe");
+});
+
+await check("Lot 5f : un autre producteur ne marque pas le fil de A", async () => {
+  const [{ n }] = await as(U.prodB, () => rows("select public.mark_messages_read($1, $2) as n", [rfq, dispatchOf.A]));
+  expect(n === 0 && !(await readOf("Reponse au producteur A")), `${n} message(s) marque(s)`);
+});
+
+await check("Lot 5f : l'acheteur marque lus les messages d'AFRICA NEX, pas les siens", async () => {
+  const [{ n }] = await as(U.buyer, () => rows("select public.mark_messages_read($1, null) as n", [rfq]));
+  expect(n === 1 && !!(await readOf("Reponse a l'acheteur")) && !(await readOf("Question acheteur")) && !(await readOf("Reponse au producteur A")), `${n} message(s)`);
+});
+
+await check("Lot 5f : le producteur A et l'admin marquent chacun leurs messages recus", async () => {
+  const [{ n: a }] = await as(U.prodA, () => rows("select public.mark_messages_read($1, $2) as n", [rfq, dispatchOf.A]));
+  const [{ n: adm }] = await as(U.admin, () => rows("select public.mark_messages_read($1, null) as n", [rfq]));
+  expect(a === 1 && adm === 1 && !!(await readOf("Reponse au producteur A")) && !!(await readOf("Question acheteur")) && !(await readOf("Question producteur")), `A ${a}, admin ${adm}`);
+});
+
 // Profils
 await check("Test 6 : un acheteur ne peut pas se donner le role admin", () =>
   expectError(as(U.buyer, () => rows("update public.profiles set role = 'admin' where id = $1", [U.buyer]))));

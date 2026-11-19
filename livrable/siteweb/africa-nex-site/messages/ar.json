@@ -943,7 +943,8 @@
     "offerDecidedOn": "قرار المشتري بتاريخ {date}",
     "offerCurrencyRequest": "يطلب المشتري الدفع بعملة {currency}: أعدّ عرضًا جديدًا ثم اسحب هذا العرض.",
     "offerDeclineReasonAdmin": "سبب المشتري: {reason}",
-    "rfqCurrencyAsked": "عملة مطلوبة"
+    "rfqCurrencyAsked": "عملة مطلوبة",
+    "rfqUnread": "{count, plural, one {رسالة غير مقروءة} two {رسالتان غير مقروءتين} few {# رسائل غير مقروءة} many {# رسالة غير مقروءة} other {# رسالة غير مقروءة}}"
   },
   "phone": {
     "countryCode": "رمز البلد: {code}. تغيير البلد",
@@ -1988,7 +1989,9 @@
     "offerNotice_declined": "لم يُعتمد العرض. شكرًا على ردّك.",
     "offerNotice_currencyRequested": "أُرسل طلب تغيير العملة إلى AFRICA NEX.",
     "offerNotice_currencyInvalid": "اختر عملة مختلفة عن عملة العرض.",
-    "offerNotice_unavailable": "هذا العرض لم يعد متاحًا (تم البتّ فيه أو سُحب أو انتهت صلاحيته)."
+    "offerNotice_unavailable": "هذا العرض لم يعد متاحًا (تم البتّ فيه أو سُحب أو انتهت صلاحيته).",
+    "unreadMessages": "{count, plural, one {رسالة جديدة} two {رسالتان جديدتان} few {# رسائل جديدة} many {# رسالة جديدة} other {# رسالة جديدة}}",
+    "offerAsk": "اطرح سؤالًا على AFRICA NEX حول هذا العرض"
   },
   "requests": {
     "eyebrow": "فضاء المنتج",
@@ -2088,6 +2091,46 @@
     "errorFileSize": "الملف كبير جدًا (4 ميغابايت كحد أقصى).",
     "errorFileType": "صيغة مرفوضة: PDF أو JPEG أو PNG فقط.",
     "errorLocked": "لم يعد بالإمكان تعديل هذا العرض.",
-    "errorGeneric": "فشل الإرسال. أعد المحاولة بعد قليل."
+    "errorGeneric": "فشل الإرسال. أعد المحاولة بعد قليل.",
+    "unreadMessages": "{count, plural, one {رسالة جديدة} two {رسالتان جديدتان} few {# رسائل جديدة} many {# رسالة جديدة} other {# رسالة جديدة}}"
+  },
+  "thread": {
+    "africanex": "فريق AFRICA NEX",
+    "buyer": "المشتري",
+    "you": "أنت",
+    "youInitials": "أنت",
+    "read": "مقروءة",
+    "unread": "غير مقروءة",
+    "send": "إرسال إلى AFRICA NEX",
+    "sending": "جارٍ الإرسال...",
+    "formHint": "تُرسل رسالتك إلى فريق AFRICA NEX.",
+    "closed": "هذا الطلب مغلق: لم يعد السجل يقبل رسائل.",
+    "errorEmpty": "اكتب رسالتك.",
+    "errorTooLong": "الرسالة طويلة جدًا (5000 حرف على الأكثر).",
+    "errorLeakBuyer": "الرسالة تذكر المشتري (الشركة أو الاسم أو البريد أو الهاتف): احذف ذلك قبل الإرسال إلى المنتج.",
+    "errorLeakProducer": "الرسالة تذكر منتجًا: احذف اسمه قبل الإرسال إلى المشتري.",
+    "errorClosed": "لم تُرسل الرسالة: هذا السجل مغلق.",
+    "buyerTitle": "المراسلات مع AFRICA NEX",
+    "buyerIntro": "أسئلتك حول الطلب والعروض. لا يقرأ هذا السجل إلا فريق AFRICA NEX، ولا تُنقل هويتك إلى المنتجين أبدًا.",
+    "buyerEmpty": "لا توجد رسائل بعد. اطرح سؤالك أدناه.",
+    "buyerPlaceholder": "اكتب رسالة إلى AFRICA NEX (أسئلة تقنية، لوجستيك، دفع)...",
+    "aboutOffer": "بخصوص العرض {label}: ",
+    "producerTitle": "المراسلات مع AFRICA NEX",
+    "producerIntro": "أسئلتك حول هذا الملخص. لا يقرأ هذا السجل إلا فريق AFRICA NEX، وتبقى هوية المشتري سرية.",
+    "producerEmpty": "لا توجد رسائل بعد.",
+    "producerPlaceholder": "اكتب رسالة إلى AFRICA NEX (دفتر الشروط، المدة، التغليف)...",
+    "adminTitle": "المراسلات",
+    "adminIntro": "سجل مع المشتري، وسجل لكل منتج تمت استشارته. لا تذكر المشتري لمنتج أبدًا، ولا منتجًا للمشتري.",
+    "adminBuyerThread": "المشتري · {name}",
+    "adminProducerThread": "المنتج · {name}",
+    "adminEmpty": "لا توجد رسائل في هذا السجل.",
+    "adminPlaceholderBuyer": "الرد على المشتري...",
+    "adminPlaceholderProducer": "الكتابة إلى المنتج...",
+    "unreadCount": "{count, plural, one {رسالة غير مقروءة} two {رسالتان غير مقروءتين} few {# رسائل غير مقروءة} many {# رسالة غير مقروءة} other {# رسالة غير مقروءة}}",
+    "messageCount": "{count, plural, =0 {لا رسائل} one {رسالة واحدة} two {رسالتان} few {# رسائل} many {# رسالة} other {# رسالة}}",
+    "send_buyer": "إرسال إلى المشتري",
+    "send_producer": "إرسال إلى المنتج",
+    "formHint_buyer": "مرئية للمشتري وحده.",
+    "formHint_producer": "مرئية لهذا المنتج وحده."
   }
 }

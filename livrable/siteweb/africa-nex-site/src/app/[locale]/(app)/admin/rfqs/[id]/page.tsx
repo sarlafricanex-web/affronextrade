@@ -16,6 +16,10 @@ import { computeRfqAutoOffers } from "@/lib/data/auto-offer";
 import { closeRfq, qualifyRfq } from "../actions";
 import { changeOffer, chooseLineQuote } from "../offer-actions";
 import { oneOf } from "@/lib/data/requests";
+import { after } from "next/server";
+import { listRfqMessages, markThreadRead } from "@/lib/data/messages";
+import { MessageThread } from "@/components/messages/MessageThread";
+import { MessageForm } from "@/components/messages/MessageForm";
 
 export const instant = false;
 
@@ -29,14 +33,15 @@ export default async function AdminRfqPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ done?: string; count?: string; line?: string }>;
+  searchParams: Promise<{ done?: string; count?: string; line?: string; thread?: string }>;
 }) {
   const { locale, id } = await params;
   const user = await getCurrentUser();
   if (!user) redirect(`/${locale}/login`);
   if (user.role !== "admin") redirect(`/${locale}/dashboard`);
-  const [t, tr, tc, ts, format, rfq, producers, { done, count, line: lineParam }] = await Promise.all([
+  const [t, tm, tr, tc, ts, format, rfq, producers, { done, count, line: lineParam, thread: threadParam }] = await Promise.all([
     getTranslations({ locale, namespace: "admin" }),
+    getTranslations({ locale, namespace: "thread" }),
     getTranslations({ locale, namespace: "rfq" }),
     getTranslations({ locale, namespace: "catalog" }),
     getTranslations({ locale, namespace: "sectors" }),
@@ -103,6 +108,18 @@ export default async function AdminRfqPage({
     return d.status !== "expired" && (!q || q.status === "submitted" || q.status === "draft") && ["dispatched", "offered", "qualified"].includes(rfq.status);
   };
   const q0Notes = quotes.filter(({ q }) => q.notes).map(({ q, company }) => ({ id: q.id, name: company.company_name, notes: q.notes }));
+
+  // Lot 5f : fils de la demande (acheteur, puis un fil par envoi a un producteur). Les fils avec des
+  // messages non lus s'ouvrent d'office et passent lus apres l'affichage.
+  const allMessages = await listRfqMessages(user.supabase, rfq.id);
+  const threadOf = (dispatchId: string | null) => allMessages.filter((m) => (m.dispatch_id ?? null) === dispatchId);
+  const unreadIn = (dispatchId: string | null) => threadOf(dispatchId).filter((m) => m.sender_role !== "admin" && !m.read_at).length;
+  const toMark = [null, ...rfq.dispatches.map((d) => d.id)].filter((d) => unreadIn(d) > 0);
+  if (toMark.length) {
+    const supabase = user.supabase;
+    after(async () => { for (const d of toMark) await markThreadRead(supabase, rfq.id, d); });
+  }
+  const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("") || "P";
 
   const rows = [
     { label: tr("specQuantity"), value: volume },
@@ -312,6 +329,40 @@ export default async function AdminRfqPage({
           </ul>
         </section>
       )}
+
+      {/* Lot 5f : echanges. Jamais de fil entre l'acheteur et un producteur. */}
+      <section id="messages" style={{ background: "white", border: `1px solid ${HAIR}`, scrollMarginTop: 16 }} aria-labelledby="messages-title" data-unread-threads={toMark.length}>
+        <div className="px-5 py-3" style={{ background: "#f5efe6", borderBottom: `1px solid ${HAIR}` }}>
+          <h2 id="messages-title" className="text-xs font-bold uppercase" style={caps}>{tm("adminTitle")}</h2>
+          <p className="mt-1 text-xs" style={{ color: "#c2410c" }}>{tm("adminIntro")}</p>
+        </div>
+        {[{ id: null as string | null, name: buyer?.company_name ?? tm("buyer"), label: tm("adminBuyerThread", { name: buyer?.company_name ?? tm("buyer") }), sub: null as string | null },
+          ...rfq.dispatches.map((d) => {
+            const c = d.company as unknown as { company_name: string };
+            return { id: d.id as string | null, name: c.company_name, label: tm("adminProducerThread", { name: c.company_name }), sub: `${d.reference}${d.rfq_line_id ? ` · ${t("quoteLineLabel", { position: linePosition.get(d.rfq_line_id) ?? "?" })}` : ""}` };
+          }),
+        ].map((th) => {
+          const msgs = threadOf(th.id);
+          const unread = unreadIn(th.id);
+          const open = th.id === null || unread > 0 || threadParam === th.id;
+          return (
+            <details key={th.id ?? "buyer"} open={open} style={{ borderTop: `1px solid ${HAIR}` }} data-thread={th.id ?? "buyer"}>
+              <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-5 py-3 [&::-webkit-details-marker]:hidden">
+                <span className="min-w-0">
+                  <span className="block font-semibold">{th.label}</span>
+                  {th.sub && <span className="block text-xs" dir="ltr" style={{ color: "var(--muted)", textAlign: "start" }}>{th.sub}</span>}
+                </span>
+                <span className="flex items-center gap-2 text-xs">
+                  {unread > 0 && <span className="px-2 py-0.5 font-bold" style={{ background: "#f97316", color: "white" }} data-thread-unread={unread}>{tm("unreadCount", { count: unread })}</span>}
+                  <span style={{ color: "var(--muted)" }}>{tm("messageCount", { count: msgs.length })}</span>
+                </span>
+              </summary>
+              <MessageThread messages={msgs} mine="admin" otherName={th.name} otherInitials={initials(th.name)} locale={locale} emptyText={tm("adminEmpty")} />
+              <MessageForm rfqId={rfq.id} dispatchId={th.id} to={th.id ? "producer" : "buyer"} placeholder={th.id ? tm("adminPlaceholderProducer") : tm("adminPlaceholderBuyer")} />
+            </details>
+          );
+        })}
+      </section>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex flex-col gap-6" style={{ minWidth: 0 }}>
