@@ -14,7 +14,7 @@ const RFQ_COLUMNS =
 export async function listAdminRfqs(client: Client) {
   const { data, error } = await client
     .from("rfqs")
-    .select(`${RFQ_COLUMNS}, buyer:companies!rfqs_buyer_company_id_fkey(company_name, country), source:companies!rfqs_source_company_id_fkey(company_name), rfq_dispatches(id, status)`)
+    .select(`${RFQ_COLUMNS}, buyer:companies!rfqs_buyer_company_id_fkey(company_name, country), source:companies!rfqs_source_company_id_fkey(company_name), rfq_dispatches(id, status), offers(status, currency_change_to)`)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data;
@@ -50,7 +50,7 @@ export async function getAdminRfq(client: Client, id: string) {
 const QUOTE_COLUMNS =
   "id, unit_price_ht, currency, price_basis, port_of_loading, quantity, production_lead_days, available_at_port_on, payment_terms, valid_until, notes, attachments, status, author_profile_id, created_at, updated_at";
 const OFFER_COLUMNS =
-  "id, label, unit_price, currency, incoterm, incoterm_place, quantity, total_amount, lead_time_days, origin_region, packaging, certifications, payment_terms, cagex_insured, valid_until, notes, status, published_at";
+  "id, label, unit_price, currency, incoterm, incoterm_place, quantity, total_amount, lead_time_days, origin_region, packaging, certifications, payment_terms, cagex_insured, valid_until, notes, status, published_at, decided_at, decline_reason, currency_change_to, currency_change_note";
 const MARGIN_COLUMNS = "source_quote_id, producer_unit_price, producer_currency, freight_cost, insurance_rate, insurance_cost, commission_rate, commission_amount, auto, export_mode, margin_pending, freight_pending";
 
 // Composeur d'offre : la demande, le devis source (et son producteur, jamais montre a

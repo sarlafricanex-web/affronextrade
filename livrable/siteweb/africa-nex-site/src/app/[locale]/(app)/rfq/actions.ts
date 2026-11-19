@@ -159,3 +159,38 @@ export async function cancelRfq(formData: FormData) {
   if (error) console.error("RFQ cancel failed:", error.message);
   redirect(`/${locale}/rfq/${id}?cancelled=1`);
 }
+
+// Lot 5e : decision de l'acheteur sur une offre AFRICA NEX, offre par offre. Les fonctions en base
+// verifient que l'offre est publiee, encore valable, et qu'elle appartient a une demande de l'acheteur.
+//   accept   : l'offre est acceptee, ses alternatives (memes produits) sont ecartees ;
+//   decline  : l'offre n'est pas retenue (motif facultatif) ;
+//   currency : demande d'une autre devise, traitee par AFRICA NEX (l'offre reste publiee).
+export async function decideOffer(formData: FormData) {
+  const locale = resolveLocale(text(formData, "locale"));
+  const user = await getCurrentUser();
+  if (!user) redirect(`/${locale}/login`);
+  if (user.role !== "buyer") redirect(`/${locale}/dashboard`);
+  const rfqId = text(formData, "rfqId");
+  const offerId = text(formData, "offerId");
+  const op = text(formData, "op");
+  const uuid = /^[0-9a-f-]{36}$/i;
+  if (!uuid.test(rfqId) || !uuid.test(offerId) || !["accept", "decline", "currency"].includes(op)) redirect(`/${locale}/rfq`);
+  const back = (done: string) => redirect(`/${locale}/rfq/${rfqId}?offer=${done}#offers`);
+
+  let error: { message: string } | null = null;
+  if (op === "accept") {
+    ({ error } = await user.supabase.rpc("accept_offer", { p_offer_id: offerId }));
+  } else if (op === "decline") {
+    ({ error } = await user.supabase.rpc("decline_offer", { p_offer_id: offerId, p_reason: text(formData, "reason").slice(0, 500) }));
+  } else {
+    const currency = text(formData, "currency");
+    if (!(CURRENCIES as readonly string[]).includes(currency)) back("currencyInvalid");
+    ({ error } = await user.supabase.rpc("request_offer_currency", { p_offer_id: offerId, p_currency: currency, p_note: text(formData, "note").slice(0, 500) }));
+  }
+  if (error) {
+    if (/invalid currency/.test(error.message)) back("currencyInvalid");
+    if (!/offer not available/.test(error.message)) console.error("Offer decision failed:", op, error.message);
+    back("unavailable");
+  }
+  back(op === "accept" ? "accepted" : op === "decline" ? "declined" : "currencyRequested");
+}

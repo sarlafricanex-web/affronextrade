@@ -2,8 +2,9 @@ import { notFound, redirect } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { getMyRfq, rfqAttachments, stageOf, type RfqLine } from "@/lib/data/rfq";
+import { getMyRfq, listMyOffers, rfqAttachments, stageOf, type RfqLine } from "@/lib/data/rfq";
 import { RfqLinesTable } from "@/components/rfq/RfqLinesTable";
+import { BuyerOffers } from "@/components/rfq/BuyerOffers";
 import { destinationLabel, volumeLabel } from "@/lib/rfq-display";
 import { StatusBadge } from "@/components/rfq/RfqList";
 import { cancelRfq } from "../actions";
@@ -14,26 +15,29 @@ const HAIR = "#d8cebb";
 const caps = { letterSpacing: "0.08em" } as const;
 const STAGE_KEYS = ["submitted", "qualified", "dispatched", "offered", "accepted"] as const;
 
-// Detail d'une demande (maquette 14). Les offres et le fil de messages arrivent aux lots 5e et 5f.
+// Detail d'une demande (maquette 14) et offres AFRICA NEX (lot 5e). Le fil de messages arrive au lot 5f.
 export default async function RfqDetailPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ sent?: string; cancelled?: string }>;
+  searchParams: Promise<{ sent?: string; cancelled?: string; offer?: string }>;
 }) {
   const { locale, id } = await params;
   const user = await getCurrentUser();
   if (!user) redirect(`/${locale}/login`);
   if (user.role !== "buyer") redirect(`/${locale}/dashboard`);
-  const [t, tc, format, rfq, { sent, cancelled }] = await Promise.all([
+  const [t, tc, format, rfq, { offers, today }, { sent, cancelled, offer: offerDone }] = await Promise.all([
     getTranslations({ locale, namespace: "rfq" }),
     getTranslations({ locale, namespace: "catalog" }),
     getFormatter({ locale }),
     getMyRfq(user.supabase, user.userId, id),
+    listMyOffers(user.supabase, id),
     searchParams,
   ]);
   if (!rfq) notFound();
+  const lines = (rfq.rfq_lines ?? []) as RfqLine[];
+  const OFFER_NOTICES = ["accepted", "declined", "currencyRequested", "currencyInvalid", "unavailable"];
 
   const stage = stageOf(rfq.status);
   const date = (d: string | null) => (d ? format.dateTime(new Date(`${d.slice(0, 10)}T12:00:00`), { dateStyle: "long" }) : null);
@@ -50,6 +54,11 @@ export default async function RfqDetailPage({
     <div className="flex flex-col gap-6">
       {sent && <p role="status" className="p-4 font-semibold" style={{ background: "white", borderInlineStart: "4px solid #10b981" }}>{t("sentNotice")}</p>}
       {cancelled && <p role="status" className="p-4 font-semibold" style={{ background: "white", borderInlineStart: "4px solid #f97316" }}>{t("cancelledNotice")}</p>}
+      {offerDone && OFFER_NOTICES.includes(offerDone) && (
+        <p role="status" className="p-4 font-semibold" style={{ background: "white", borderInlineStart: `4px solid ${["currencyInvalid", "unavailable"].includes(offerDone) ? "#dc2626" : "#10b981"}` }} data-offer-notice={offerDone}>
+          {t(`offerNotice_${offerDone}`)}
+        </p>
+      )}
 
       <header className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div className="min-w-0">
@@ -89,7 +98,7 @@ export default async function RfqDetailPage({
       )}
 
       {/* Produits demandes (une ligne par produit) */}
-      <RfqLinesTable lines={(rfq.rfq_lines ?? []) as RfqLine[]} locale={locale} currency={rfq.currency} />
+      <RfqLinesTable lines={lines} locale={locale} currency={rfq.currency} />
 
       {/* Cahier des charges */}
       <section style={{ background: "white", border: `1px solid ${HAIR}` }}>
@@ -112,7 +121,9 @@ export default async function RfqDetailPage({
         )}
       </section>
 
-      {/* Etat actuel et suite : les offres AFRICA NEX s'afficheront ici (lot 5e). */}
+      {offers.length > 0 && <BuyerOffers rfqId={rfq.id} rfqStatus={rfq.status} locale={locale} offers={offers} lines={lines} today={today} />}
+
+      {/* Etat actuel et suite */}
       <section className="flex flex-col gap-3 p-5" style={{ background: "#fff8f3", border: `1px solid ${HAIR}` }}>
         <h2 className="font-bold">{t(`next_${rfq.status}_title`)}</h2>
         <p className="text-sm" style={{ color: "var(--muted)" }}>{t(`next_${rfq.status}_text`)}</p>

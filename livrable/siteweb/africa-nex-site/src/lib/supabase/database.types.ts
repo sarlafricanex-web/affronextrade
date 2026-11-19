@@ -849,6 +849,11 @@ export type Database = {
           created_at: string
           created_by: string | null
           currency: string
+          currency_change_at: string | null
+          currency_change_note: string | null
+          currency_change_to: string | null
+          decided_at: string | null
+          decline_reason: string | null
           freight_amount: number | null
           id: string
           incoterm: string | null
@@ -874,6 +879,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency: string
+          currency_change_at?: string | null
+          currency_change_note?: string | null
+          currency_change_to?: string | null
+          decided_at?: string | null
+          decline_reason?: string | null
           freight_amount?: number | null
           id?: string
           incoterm?: string | null
@@ -899,6 +909,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          currency_change_at?: string | null
+          currency_change_note?: string | null
+          currency_change_to?: string | null
+          decided_at?: string | null
+          decline_reason?: string | null
           freight_amount?: number | null
           id?: string
           incoterm?: string | null
@@ -2021,6 +2036,11 @@ export type Database = {
     Functions: {
       accept_offer: { Args: { p_offer_id: string }; Returns: undefined }
       approve_claim: { Args: { p_claim: string }; Returns: undefined }
+      buyer_open_offer: { Args: { p_offer: string }; Returns: string }
+      decline_offer: {
+        Args: { p_offer_id: string; p_reason: string }
+        Returns: undefined
+      }
       is_admin: { Args: never; Returns: boolean }
       is_member_of: { Args: { target_company: string }; Returns: boolean }
       is_owner_of: { Args: { target_company: string }; Returns: boolean }
@@ -2075,6 +2095,7 @@ export type Database = {
           valid_until: string
         }[]
       }
+      offers_overlap: { Args: { a: string; b: string }; Returns: boolean }
       product_prices: {
         Args: { p_company: string }
         Returns: {
@@ -2088,6 +2109,11 @@ export type Database = {
         }[]
       }
       reject_claim: { Args: { p_claim: string }; Returns: undefined }
+      request_offer_currency: {
+        Args: { p_currency: string; p_note: string; p_offer_id: string }
+        Returns: undefined
+      }
+      rfq_settle_offers: { Args: { p_rfq: string }; Returns: undefined }
       save_auto_offers: {
         Args: { p_offers: Json; p_rfq: string }
         Returns: number

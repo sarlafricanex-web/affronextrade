@@ -272,7 +272,19 @@ export default async function AdminRfqPage({
                         })}
                       </p>
                     )}
-                    <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>{t("offerValidLine", { date: date(o.valid_until) ?? "-" })}</p>
+                    <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>
+                      {t("offerValidLine", { date: date(o.valid_until) ?? "-" })}
+                      {o.decided_at ? ` · ${t("offerDecidedOn", { date: date(o.decided_at) ?? "-" })}` : ""}
+                    </p>
+                    {o.currency_change_to && o.status === "published" && (
+                      <p className="mt-2 px-3 py-2 text-xs font-semibold" style={{ background: "#fff7ed", borderInlineStart: "3px solid #f97316" }} data-currency-request={o.currency_change_to}>
+                        {t("offerCurrencyRequest", { currency: o.currency_change_to })}
+                        {o.currency_change_note ? <span className="block font-normal">« {o.currency_change_note} »</span> : null}
+                      </p>
+                    )}
+                    {o.status === "declined" && o.decline_reason && (
+                      <p className="mt-1 text-xs" data-decline-reason="">{t("offerDeclineReasonAdmin", { reason: o.decline_reason })}</p>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {m?.auto && (

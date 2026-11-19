@@ -86,7 +86,7 @@ function expect(condition, message) {
 
 // Un refus doit venir d'une regle de securite, pas d'une faute dans le SQL du test.
 const SECURITY_ERROR =
-  /row-level security|permission denied|protected .* fields|role cannot be changed|onboarding cannot|only the dispatch status|invalid dispatch status|violates check constraint|offer not available|forbidden|pending margin or freight|auto offer already published|line mismatch|offer not draft/;
+  /row-level security|permission denied|protected .* fields|role cannot be changed|onboarding cannot|only the dispatch status|invalid dispatch status|violates check constraint|offer not available|forbidden|pending margin or freight|auto offer already published|line mismatch|offer not draft|invalid currency/;
 const verbose = process.argv.includes("--verbose");
 
 async function expectError(promise) {
@@ -450,6 +450,69 @@ for (const [who, user] of [["l'acheteur", U.buyer], ["le producteur", U.prodA]])
     await expectError(as(user, () => rows("insert into public.rfq_line_choices (rfq_line_id, quote_id) values ($1, $2)", [lineAuto, lineQuote])));
   });
 }
+
+// Lot 5e : decisions de l'acheteur offre par offre (panier multi-lignes)
+const [{ id: rfqBasket }] = await rows("insert into public.rfqs (buyer_profile_id, title, currency, status) values ($1, 'Panier', 'EUR', 'offered') returning id", [U.buyer]);
+const basketLine = async (position, description) =>
+  (await rows("insert into public.rfq_lines (rfq_id, position, description, quantity, unit) values ($1, $2, $3, 100, 'carton') returning id", [rfqBasket, position, description]))[0].id;
+const bl1 = await basketLine(1, "Huile");
+const bl2 = await basketLine(2, "Dattes");
+async function basketOffer(rfqId, label, currency, lineIds) {
+  const [{ id }] = await rows(
+    "insert into public.offers (rfq_id, label, currency, total_amount, status, published_at, valid_until) values ($1, $2, $3, 100, 'published', now(), '2099-12-31') returning id",
+    [rfqId, label, currency]);
+  let p = 1;
+  for (const l of lineIds) await rows("insert into public.offer_lines (offer_id, rfq_line_id, position, description, quantity, unit_price, total_amount) values ($1, $2, $3, 'x', 1, 100, 100)", [id, l, p++]);
+  return id;
+}
+const oA = await basketOffer(rfqBasket, "A", "EUR", [bl1]);
+const oA2 = await basketOffer(rfqBasket, "A2", "USD", [bl1]);
+const oB = await basketOffer(rfqBasket, "B", "EUR", [bl2]);
+const statusOf = async (id) => (await rows("select status from public.offers where id = $1", [id]))[0].status;
+
+await check("Lot 5e : un autre acheteur ne peut ni refuser ni demander une devise", async () => {
+  await expectError(as(U.buyer2, () => rows("select public.decline_offer($1, 'x')", [oB])));
+  await expectError(as(U.buyer2, () => rows("select public.request_offer_currency($1, 'USD', null)", [oB])));
+});
+
+await check("Lot 5e : l'acheteur demande un changement de devise, l'offre reste publiee", async () => {
+  await as(U.buyer, () => rows("select public.request_offer_currency($1, 'USD', 'Paiement en dollars')", [oB]));
+  const [r] = await rows("select status, currency_change_to, currency_change_note from public.offers where id = $1", [oB]);
+  expect(r.status === "published" && r.currency_change_to === "USD" && r.currency_change_note === "Paiement en dollars", JSON.stringify(r));
+});
+
+await check("Lot 5e : demander la devise deja utilisee est refuse", () =>
+  expectError(as(U.buyer, () => rows("select public.request_offer_currency($1, 'EUR', null)", [oB]))));
+
+await check("Lot 5e : accepter A ecarte son alternative (meme ligne), pas l'offre complementaire", async () => {
+  await as(U.buyer, () => rows("select public.accept_offer($1)", [oA]));
+  const [{ status: rfqStatus }] = await rows("select status from public.rfqs where id = $1", [rfqBasket]);
+  const s = [await statusOf(oA), await statusOf(oA2), await statusOf(oB)];
+  expect(s.join() === "accepted,declined,published" && rfqStatus === "offered", `${s.join()} / ${rfqStatus}`);
+});
+
+await check("Lot 5e : une offre ecartee ne peut plus etre acceptee", () =>
+  expectError(as(U.buyer, () => rows("select public.accept_offer($1)", [oA2]))));
+
+await check("Lot 5e : refus avec motif ; plus rien a decider, la demande passe acceptee", async () => {
+  await as(U.buyer, () => rows("select public.decline_offer($1, '  Trop cher  ')", [oB]));
+  const [o] = await rows("select status, decline_reason, decided_at from public.offers where id = $1", [oB]);
+  const [{ status: rfqStatus }] = await rows("select status from public.rfqs where id = $1", [rfqBasket]);
+  expect(o.status === "declined" && o.decline_reason === "Trop cher" && o.decided_at && rfqStatus === "accepted", `${JSON.stringify(o)} / ${rfqStatus}`);
+});
+
+await check("Lot 5e : toutes les offres refusees, la demande revient en consultation", async () => {
+  const [{ id: rfqAlone }] = await rows("insert into public.rfqs (buyer_profile_id, title, currency, status) values ($1, 'Seule', 'EUR', 'offered') returning id", [U.buyer]);
+  const oAlone = await basketOffer(rfqAlone, "A", "EUR", []);
+  await as(U.buyer, () => rows("select public.decline_offer($1, null)", [oAlone]));
+  const [{ status }] = await rows("select status from public.rfqs where id = $1", [rfqAlone]);
+  expect(status === "dispatched", status);
+});
+
+await check("Lot 5e : l'acheteur n'appelle pas les fonctions internes", async () => {
+  await expectError(as(U.buyer, () => rows("select public.rfq_settle_offers($1)", [rfqBasket])));
+  await expectError(as(U.buyer, () => rows("select public.offers_overlap($1, $2)", [oA, oB])));
+});
 
 // Messages : deux fils, jamais acheteur avec producteur
 await as(U.buyer, () => rows(

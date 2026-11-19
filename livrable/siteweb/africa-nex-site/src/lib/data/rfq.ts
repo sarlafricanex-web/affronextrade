@@ -43,6 +43,28 @@ export async function getMyRfq(client: Client, userId: string, id: string) {
   return data;
 }
 
+// Lot 5e : offres AFRICA NEX d'une demande, avec leurs lignes. La RLS ne renvoie a l'acheteur que
+// les offres non brouillon de ses demandes ; aucune donnee du calcul (fournisseur, cout, marge).
+const BUYER_OFFER_COLUMNS =
+  "id, label, status, currency, incoterm, incoterm_place, quantity, unit_price, total_amount, freight_amount, lead_time_days, origin_region, packaging, certifications, payment_terms, cagex_insured, valid_until, notes, published_at, decided_at, decline_reason, currency_change_to, currency_change_note, currency_change_at";
+const BUYER_OFFER_LINE_COLUMNS = "id, rfq_line_id, position, description, reference, quantity, unit, unit_price, total_amount, incoterm, incoterm_place, lead_time_days, availability";
+
+export async function listMyOffers(client: Client, rfqId: string) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (!/^[0-9a-f-]{36}$/i.test(rfqId)) return { offers: [], today };
+  const { data, error } = await client
+    .from("offers")
+    .select(`${BUYER_OFFER_COLUMNS}, offer_lines(${BUYER_OFFER_LINE_COLUMNS})`)
+    .eq("rfq_id", rfqId)
+    .neq("status", "draft")
+    .order("label")
+    .order("position", { referencedTable: "offer_lines" });
+  if (error) throw error;
+  return { offers: data ?? [], today };
+}
+
+export type BuyerOffer = Awaited<ReturnType<typeof listMyOffers>>["offers"][number];
+
 // Lignes d'une demande (produits demandes), dans l'ordre de saisie.
 export const RFQ_LINE_COLUMNS = "id, position, product_id, reference, description, quantity, unit";
 export type RfqLine = { id: string; position: number; product_id: string | null; reference: string | null; description: string; quantity: number | null; unit: string | null };

@@ -29,6 +29,8 @@ export default async function AdminRfqsPage({ params, searchParams }: { params: 
   const filter: Filter = f && f in FILTERS ? (f as Filter) : "all";
   const inFilter = (status: string, key: Filter) => key === "all" || (FILTERS[key] as readonly string[]).includes(status);
   const shown = rfqs.filter((r) => inFilter(r.status, filter));
+  // Lot 5e : l'acheteur a demande une autre devise sur une offre publiee (a traiter par AFRICA NEX).
+  const currencyAsked = (r: (typeof rfqs)[number]) => ((r.offers ?? []) as { status: string; currency_change_to: string | null }[]).some((o) => o.status === "published" && o.currency_change_to);
   const cell = "py-3 px-4 align-top";
   const head = "text-start py-3 px-4 font-semibold whitespace-nowrap";
 
@@ -67,6 +69,7 @@ export default async function AdminRfqsPage({ params, searchParams }: { params: 
                   <StatusBadge status={r.status} label={tr(`status_${r.status}`)} />
                 </span>
                 <span className="font-bold" style={{ color: "#059669" }}>{r.title}</span>
+                {currencyAsked(r) && <span className="w-fit px-2 py-0.5 text-[10px] font-bold uppercase" style={{ letterSpacing: "0.08em", background: "#fff7ed", color: "#c2410c" }} data-currency-asked="">{t("rfqCurrencyAsked")}</span>}
                 <span className="text-sm">{[buyer?.company_name, buyer?.country ? countryName(buyer.country, locale) : null].filter(Boolean).join(" · ")}</span>
                 <span className="text-sm" style={{ color: "var(--muted)" }}>
                   {[volumeLabel(r, tr, tc, locale), destinationLabel(r, locale), r.incoterm].filter(Boolean).join(" · ")}
@@ -116,7 +119,10 @@ export default async function AdminRfqsPage({ params, searchParams }: { params: 
                     <span className="block text-xs" style={{ color: "var(--muted)" }}>{[destinationLabel(r, locale), r.incoterm].filter(Boolean).join(" · ")}</span>
                   </td>
                   <td className={`${cell} whitespace-nowrap`}>{format.dateTime(new Date(r.created_at), { dateStyle: "medium" })}</td>
-                  <td className={cell}><StatusBadge status={r.status} label={tr(`status_${r.status}`)} /></td>
+                  <td className={cell}>
+                    <StatusBadge status={r.status} label={tr(`status_${r.status}`)} />
+                    {currencyAsked(r) && <span className="mt-1 block w-fit px-2 py-0.5 text-[10px] font-bold uppercase" style={{ letterSpacing: "0.08em", background: "#fff7ed", color: "#c2410c" }} data-currency-asked="">{t("rfqCurrencyAsked")}</span>}
+                  </td>
                   <td className={`${cell} whitespace-nowrap`}>{dispatches.length ? t("rfqDispatchCount", { sent: dispatches.length, quoted }) : "-"}</td>
                 </tr>
               );
