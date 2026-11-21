@@ -103,6 +103,11 @@ try {
   await run(`${SET} setV(document.getElementById("rfq-qty"), "0"); setV(document.getElementById("rfq-unit"), "t"); ${submit} return true;`);
   report("Quantite nulle, pays et incoterm manquants : refuses par le serveur", await waitFor(`return document.body.innerText.includes("Indiquez une quantité supérieure à zéro.") && document.body.innerText.includes("Faites un choix.");`));
   report("Devise obligatoire, sans valeur par defaut", await run(`const s = document.getElementById("rfq-currency"); return s.required && s.value === "";`));
+  report("Transport a choisir d'abord : aucun incoterm propose", await run(`return !document.querySelector("input[name=incoterm]") && document.querySelectorAll("input[name=logistics]").length === 2;`));
+  await run(`document.querySelector("input[name=logistics][value=buyer]").click(); return true;`);
+  report("Je m'occupe du transport : EXW, FCA, FAS, FOB", await waitFor(`return [...document.querySelectorAll("input[name=incoterm]")].map((i) => i.value).join() === "EXW,FCA,FAS,FOB";`, 10));
+  await run(`document.querySelector("input[name=logistics][value=africanex]").click(); return true;`);
+  report("Livre par AFRICA NEX : CFR, CIF, CPT, CIP, DAP, DPU, DDP", await waitFor(`return [...document.querySelectorAll("input[name=incoterm]")].map((i) => i.value).join() === "CFR,CIF,CPT,CIP,DAP,DPU,DDP";`, 10));
   await run(`${SET} setV(document.getElementById("rfq-qty"), "20 000"); setV(document.getElementById("rfq-unit"), "t"); setV(document.getElementById("rfq-currency"), "USD"); document.querySelector("input[name=incoterm][value=CIF]").click(); setV(document.getElementById("rfq-port"), "Abidjan"); setV(document.getElementById("rfq-desc"), "Sacs de 50 kg, certificat d'origine."); return true;`);
   // Deuxieme produit dans la meme demande.
   await run(`[...document.querySelectorAll("main button")].find((b) => /ajouter un produit/i.test(b.textContent)).click(); return true;`);
@@ -116,7 +121,7 @@ try {
   report("Envoi : detail de la demande avec message", await waitFor(`return /\\/fr\\/rfq\\/[0-9a-f-]{36}$/.test(location.pathname) && document.body.innerText.includes("Demande envoyée.");`));
   const rfq1Id = await run(`return location.pathname.split("/").pop();`);
   const { data: rfq1 } = await admin.from("rfqs").select("*").eq("id", rfq1Id).single();
-  report("En base : acheteur, entreprise, produit, producteur d'origine, CIF, CI, USD", rfq1?.buyer_profile_id === buyer.id && rfq1.buyer_company_id && rfq1.product_id === product.id && rfq1.source_company_id === product.companies.id && rfq1.incoterm === "CIF" && rfq1.destination_country === "CI" && rfq1.currency === "USD" && rfq1.status === "submitted" && rfq1.title.endsWith("(+1)"), JSON.stringify({ c: rfq1?.destination_country, cur: rfq1?.currency, s: rfq1?.status, t: rfq1?.title }));
+  report("En base : acheteur, entreprise, produit, producteur d'origine, livre par AFRICA NEX en CIF, CI, USD", rfq1?.buyer_profile_id === buyer.id && rfq1.buyer_company_id && rfq1.product_id === product.id && rfq1.source_company_id === product.companies.id && rfq1.incoterm === "CIF" && rfq1.logistics === "africanex" && rfq1.destination_country === "CI" && rfq1.currency === "USD" && rfq1.status === "submitted" && rfq1.title.endsWith("(+1)"), JSON.stringify({ c: rfq1?.destination_country, cur: rfq1?.currency, s: rfq1?.status, t: rfq1?.title }));
   const newRfqMails = await waitEmails(admin, { rfq_id: rfq1Id, kind: "admin_new_rfq" });
   report("Email a AFRICA NEX : nouvelle demande journalisee, en francais", newRfqMails.length === 1 && delivered(newRfqMails) && newRfqMails[0].locale === "fr" && newRfqMails[0].subject.includes(rfq1?.reference) && !newRfqMails[0].recipient_profile_id, JSON.stringify(newRfqMails.map((m) => `${m.status} ${m.subject}`)));
   const { data: lines1 } = await admin.from("rfq_lines").select("position, description, reference, quantity, unit, product_id").eq("rfq_id", rfq1Id).order("position");
@@ -124,7 +129,7 @@ try {
   const { data: otherLines } = await otherBuyer.client.from("rfq_lines").select("id").eq("rfq_id", rfq1Id);
   report("Autre acheteur : lignes invisibles", otherLines?.length === 0);
   report("Piece jointe rangee sous buyer/<demande>/", Array.isArray(rfq1?.attachments) && rfq1.attachments[0]?.path?.startsWith(`buyer/${rfq1Id}/`));
-  report("Detail : produits demandes, cahier des charges et jalons", await run(`const t = document.body.innerText.replace(/\\s/g, " "); return t.includes("20 000 t") && t.includes("Sucre roux en vrac") && t.includes("SR-50") && /devise souhaitée : USD/i.test(t) && t.includes("Abidjan") && t.includes("CIF") && t.includes("Demande envoyée") && t.includes("Qualification AFRICA NEX");`));
+  report("Detail : produits demandes, cahier des charges et jalons", await run(`const t = document.body.innerText.replace(/\\s/g, " "); return t.includes("20 000 t") && t.includes("Sucre roux en vrac") && t.includes("SR-50") && /devise souhaitée : USD/i.test(t) && t.includes("Abidjan") && t.includes("CIF") && t.includes("Livré par AFRICA NEX") && t.includes("Demande envoyée") && t.includes("Qualification AFRICA NEX");`));
   const fileStatus = await run(`const r = await fetch("/api/rfq-files/${rfq1Id}?i=0", { redirect: "manual" }); return r.status || r.type;`);
   report("Piece jointe : lien signe pour l'acheteur", fileStatus === 303 || fileStatus === "opaqueredirect", String(fileStatus));
   await shot("rfq-detail");
@@ -133,13 +138,15 @@ try {
   await go(`/fr/rfq/new?producer=ifri`, `return !!document.getElementById("rfq-title");`);
   await run(`${SET} setV(document.getElementById("rfq-title"), "Eau minérale 1,5 L, packs de 6"); [...document.querySelectorAll("button[role=radio]")].find((b) => b.textContent.includes("conteneurs")).click(); return true;`);
   await sleep(300);
-  await run(`${SET} setV(document.getElementById("rfq-count"), "2"); setV(document.getElementById("rfq-currency"), "EUR"); document.querySelector("input[name=containerSize][value='40']").click(); document.querySelector("input[name=incoterm][value=FOB]").click(); return true;`);
+  await run(`${SET} setV(document.getElementById("rfq-count"), "2"); setV(document.getElementById("rfq-currency"), "EUR"); document.querySelector("input[name=containerSize][value='40']").click(); document.querySelector("input[name=logistics][value=buyer]").click(); return true;`);
+  await waitFor(`return !!document.querySelector("input[name=incoterm][value=FOB]");`, 10);
+  await run(`document.querySelector("input[name=incoterm][value=FOB]").click(); return true;`);
   await pickCountry("Sénégal");
   await run(`${submit} return true;`);
   report("Demande en conteneurs envoyee", await waitFor(`return /\\/fr\\/rfq\\/[0-9a-f-]{36}$/.test(location.pathname) && document.body.innerText.includes("2 × 40 pieds");`));
   const rfq2Id = await run(`return location.pathname.split("/").pop();`);
-  const { data: rfq2 } = await admin.from("rfqs").select("quantity_mode, container_count, container_size, container_reefer, source_company_id, product_id, quantity").eq("id", rfq2Id).single();
-  report("En base : 2 x 40 pieds, Ifri, sans produit", rfq2?.quantity_mode === "containers" && rfq2.container_count === 2 && rfq2.container_size === "40" && rfq2.source_company_id === ifri.id && !rfq2.product_id && rfq2.quantity === null, JSON.stringify(rfq2));
+  const { data: rfq2 } = await admin.from("rfqs").select("quantity_mode, container_count, container_size, container_reefer, source_company_id, product_id, quantity, logistics, incoterm").eq("id", rfq2Id).single();
+  report("En base : 2 x 40 pieds, Ifri, sans produit, transport par l'acheteur en FOB", rfq2?.logistics === "buyer" && rfq2.incoterm === "FOB" && rfq2.quantity_mode === "containers" && rfq2.container_count === 2 && rfq2.container_size === "40" && rfq2.source_company_id === ifri.id && !rfq2.product_id && rfq2.quantity === null, JSON.stringify(rfq2));
 
   // Liste, filtres, compteur dans le menu
   await go("/fr/rfq", `return !!document.querySelector("main table, main ul");`);

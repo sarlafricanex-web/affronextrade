@@ -20,6 +20,7 @@ import { after } from "next/server";
 import { listRfqMessages, markThreadRead } from "@/lib/data/messages";
 import { MessageThread } from "@/components/messages/MessageThread";
 import { MessageForm } from "@/components/messages/MessageForm";
+import { logisticsOf } from "@/lib/offer-auto";
 
 export const instant = false;
 
@@ -124,6 +125,7 @@ export default async function AdminRfqPage({
   const rows = [
     { label: tr("specQuantity"), value: volume },
     { label: tr("specDestination"), value: destinationLabel(rfq, locale) || null },
+    { label: tr("specLogistics"), value: tr(`logistics_${logisticsOf(rfq.logistics, rfq.incoterm)}`) },
     { label: tr("specIncoterm"), value: rfq.incoterm },
     { label: tr("specNeededBy"), value: date(rfq.needed_by) },
     { label: tr("specTargetPrice"), value: rfq.target_unit_price != null ? `${Number(rfq.target_unit_price).toLocaleString(locale)} ${rfq.currency ?? ""}`.trim() : null },

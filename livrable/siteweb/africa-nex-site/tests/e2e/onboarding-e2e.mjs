@@ -100,13 +100,15 @@ try {
   const { data: none } = await admin.from("companies").select("id").eq("owner_profile_id", producer.id);
   report("Aucune entreprise creee apres le refus", none.length === 0, `${none.length}`);
 
-  await run(`${HELP} await fill("${NIF}"); [...document.querySelectorAll("button[type=submit]")].find((b) => b.value === "continue").click(); return true;`);
+  report("Accord export AFRICA NEX : case facultative, non cochee par defaut", await run(`const c = document.querySelector("input[name=exportConsent]"); return !!c && !c.checked && !c.required;`));
+  await run(`${HELP} await fill("${NIF}"); document.querySelector("input[name=exportConsent]").click(); [...document.querySelectorAll("button[type=submit]")].find((b) => b.value === "continue").click(); return true;`);
   const t0 = Date.now(); for (let i = 0; i < 60; i++) { await sleep(500); if (await run(`return location.search === "?step=2";`)) break; } console.log(`   (redirection apres ${Date.now() - t0} ms, adresse : ${await run("return location.pathname + location.search;")})`);
   report("Etape 1 validee : passage a l'etape 2", await run(`return location.pathname === "/fr/onboarding" && location.search === "?step=2";`));
   await shoot("onboarding-step2");
 
-  const { data: company } = await admin.from("companies").select("id, company_name, kind, legal_form, sector, wilaya, city, visibility, verified, claim_status, owner_profile_id, slug").eq("owner_profile_id", producer.id).maybeSingle();
+  const { data: company } = await admin.from("companies").select("id, company_name, kind, legal_form, sector, wilaya, city, visibility, verified, claim_status, owner_profile_id, slug, africanex_export_consent, africanex_export_consent_at").eq("owner_profile_id", producer.id).maybeSingle();
   report("Entreprise creee : brouillon, sans badge, au bon proprietaire", company && company.kind === "producer" && company.visibility === "draft" && company.verified === false && company.legal_form === "SARL" && company.wilaya === "06" && company.sector === "C10", JSON.stringify(company));
+  report("Accord export AFRICA NEX enregistre et date", company?.africanex_export_consent === true && !!company.africanex_export_consent_at, JSON.stringify({ c: company?.africanex_export_consent, at: company?.africanex_export_consent_at }));
   const { data: priv } = await admin.from("company_private").select("tax_id, rc_number, address, contact_phone, contact_whatsapp").eq("company_id", company?.id).maybeSingle();
   report("Partie privee : NIF, RC, adresse et numeros internationaux", priv?.tax_id === NIF && priv?.contact_phone === "+21334351280" && priv?.contact_whatsapp === "+213551234567", JSON.stringify(priv));
   const { data: prof } = await admin.from("profiles").select("phone, whatsapp").eq("id", producer.id).single();

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { updateTag } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { resolveLocale } from "@/lib/auth/next-path";
-import { getCompanyTier, getMyCompanyId, listProducts } from "@/lib/data/company";
+import { getMyCompanyId, listProducts } from "@/lib/data/company";
 import { UNITS } from "@/lib/onboarding/reference";
 import { PACK_FIELDS, PRICE_FIELDS, packagingValues, readPackagingInput, readPriceInput, todayIso, type PackField, type PriceField } from "@/lib/catalog/price-list";
 import { readPriceListWorkbook } from "@/lib/catalog/price-list-excel";
@@ -55,7 +55,7 @@ export async function importPriceList(_prev: ImportState, formData: FormData): P
   if (file.size > MAX_BYTES) return fail("importErrorSize");
   if (!/\.xlsx$/i.test(file.name)) return fail("importErrorFormat");
 
-  const [labels, products, tier] = await Promise.all([packLabelMaps(), listProducts(supabase, companyId), getCompanyTier(supabase, companyId)]);
+  const [labels, products] = await Promise.all([packLabelMaps(), listProducts(supabase, companyId)]);
   let sheets: Awaited<ReturnType<typeof readPriceListWorkbook>>;
   try {
     sheets = await readPriceListWorkbook(await file.arrayBuffer(), labels);
@@ -84,7 +84,7 @@ export async function importPriceList(_prev: ImportState, formData: FormData): P
     const unit = values.unit || existing?.unit || "";
     if (!(UNITS as readonly string[]).includes(unit)) fieldErrors.push({ field: "unit", error: "errorChoose" });
     const input = Object.fromEntries(PRICE_FIELDS.map((k) => [k, values[k] ?? ""])) as Record<PriceField, string>;
-    const priced = readPriceInput(input, tier, today, existing?.status === "published");
+    const priced = readPriceInput(input, today, existing?.status === "published");
     for (const [field, error] of Object.entries(priced.errors)) fieldErrors.push({ field, error: error! });
     if (fieldErrors.length) { issues.push({ row, sheet: "prices", ref, fields: fieldErrors }); continue; }
 

@@ -5,13 +5,13 @@ import { useLocale, useTranslations } from "next-intl";
 import { dispatchRfq, type DispatchField, type DispatchState } from "@/app/[locale]/(app)/admin/rfqs/actions";
 import { Alert, Field, TextInput } from "@/components/auth/fields";
 import { UNITS } from "@/lib/onboarding/reference";
+import { INCOTERMS } from "@/lib/incoterms";
 
 export type DispatchProducer = { id: string; name: string; place: string; sector: string; claimed: boolean; online: boolean; sent: boolean };
 export type DispatchDefaults = { briefTitle: string; briefSpecs: string; quantity: string; unit: string; country: string; incoterm: string; neededBy: string; respondBy: string };
 
 const HAIR = "#d8cebb";
 const box = { background: "var(--field-a)", border: "1px solid var(--field-b)", outline: "none" } as const;
-const INCOTERMS = ["FOB", "FCA", "EXW", "CFR", "CIF", "DAP"] as const;
 
 // Brief anonymise et choix des producteurs (lot 5b). Le serveur refuse un brief qui identifie l'acheteur.
 // Avec lineId (lot 6d), le brief ne porte que sur une ligne de la demande.

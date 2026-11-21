@@ -9,7 +9,7 @@ type Client = SupabaseClient<Database>;
 // (politiques *_admin) verifie le role une seconde fois.
 
 const RFQ_COLUMNS =
-  "id, reference, title, description, quantity, unit, quantity_mode, container_size, container_reefer, container_count, incoterm, destination_country, destination_port, target_unit_price, currency, needed_by, attachments, status, created_at, product_id, buyer_profile_id";
+  "id, reference, title, description, quantity, unit, quantity_mode, container_size, container_reefer, container_count, incoterm, logistics, destination_country, destination_port, target_unit_price, currency, needed_by, attachments, status, created_at, product_id, buyer_profile_id";
 
 export async function listAdminRfqs(client: Client) {
   const { data, error } = await client

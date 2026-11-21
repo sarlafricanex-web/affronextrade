@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { updateTag } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { resolveLocale } from "@/lib/auth/next-path";
-import { getCompanyTier, getMyCompanyId, getProduct, productImages, type ProductImage } from "@/lib/data/company";
+import { getMyCompanyId, getProduct, productImages, type ProductImage } from "@/lib/data/company";
 import { contentTypeOf, readImage } from "@/lib/images";
 import { UNITS, normalizeHsCode } from "@/lib/onboarding/reference";
 import { PACK_FIELDS, PRICE_FIELDS, TIER_FIELDS, readDiscountTiers, readPackagingInput, readPriceInput, type PackField, type PriceField, type TierField } from "@/lib/catalog/price-list";
@@ -53,7 +53,6 @@ export async function saveProduct(_prev: CatalogState, formData: FormData): Prom
   const existing = productId ? await getProduct(supabase, companyId, productId) : null;
   if (productId && !existing) redirect(`/${locale}/catalog`);
 
-  const tier = await getCompanyTier(supabase, companyId);
   const v = {
     productName: text(formData, "productName"),
     hsCode: normalizeHsCode(text(formData, "hsCode")),
@@ -71,11 +70,10 @@ export async function saveProduct(_prev: CatalogState, formData: FormData): Prom
   for (const k of ["descriptionFr", "descriptionEn", "descriptionAr"] as const) if (v[k].length > 2000) errors[k] = "errorTooLong";
   if (!(UNITS as readonly string[]).includes(v.unit)) errors.unit = "errorChoose";
   if (v.packaging.length > 200) errors.packaging = "errorTooLong";
-  // Liste de prix (selon le forfait) et conditionnement : regles communes avec l'import Excel.
+  // Liste de prix et conditionnement : regles communes avec l'import Excel.
   const today = new Date().toISOString().slice(0, 10);
   const priced = readPriceInput(
     Object.fromEntries(PRICE_FIELDS.map((k) => [k, text(formData, k)])) as Record<PriceField, string>,
-    tier,
     today,
     v.status === "published",
   );

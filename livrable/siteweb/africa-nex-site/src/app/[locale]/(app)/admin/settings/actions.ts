@@ -46,7 +46,7 @@ export async function saveFxRates(_prev: RatesState, formData: FormData): Promis
 }
 
 // Mode d'affaire des fournisseurs (fixe par AFRICA NEX seul) : "self" = le fournisseur exporte,
-// "africanex" = AFRICA NEX exporte ; vide = a definir.
+// "africanex" = AFRICA NEX exporte, seulement avec l'accord du fournisseur ; vide = a definir.
 export async function saveSupplierModes(formData: FormData) {
   const { locale, supabase, userId } = await adminContext(formData);
   const changes: { company_id: string; export_mode: string | null }[] = [];
@@ -57,6 +57,14 @@ export async function saveSupplierModes(formData: FormData) {
     if (String(formData.get(`was_${m[1]}`) ?? "") === mode) continue;
     if (mode === "" || mode === "self" || mode === "africanex") changes.push({ company_id: m[1], export_mode: mode || null });
   }
+  // Export par AFRICA NEX sans l'accord du fournisseur : refuse (la base le refuse aussi).
+  const wanted = changes.filter((c) => c.export_mode === "africanex").map((c) => c.company_id);
+  const { data: consenting } = wanted.length
+    ? await supabase.from("companies").select("id").in("id", wanted).eq("africanex_export_consent", true)
+    : { data: [] };
+  const allowed = new Set((consenting ?? []).map((c) => c.id));
+  const refused = wanted.filter((id) => !allowed.has(id)).length;
+  for (let i = changes.length - 1; i >= 0; i--) if (changes[i].export_mode === "africanex" && !allowed.has(changes[i].company_id)) changes.splice(i, 1);
   const set = changes.filter((c) => c.export_mode).map((c) => ({ company_id: c.company_id, export_mode: c.export_mode!, updated_at: new Date().toISOString(), updated_by: userId }));
   const unset = changes.filter((c) => !c.export_mode).map((c) => c.company_id);
   if (set.length) {
@@ -65,5 +73,5 @@ export async function saveSupplierModes(formData: FormData) {
   }
   if (unset.length) await supabase.from("supplier_settings").delete().in("company_id", unset);
   if (changes.length) await supabase.from("audit_log").insert({ actor_profile_id: userId, action: "settings.supplier_modes", entity: "supplier_settings", payload: { changes } });
-  redirect(`/${locale}/admin/settings?saved=modes&count=${changes.length}`);
+  redirect(`/${locale}/admin/settings?saved=modes&count=${changes.length}${refused ? `&refused=${refused}` : ""}`);
 }

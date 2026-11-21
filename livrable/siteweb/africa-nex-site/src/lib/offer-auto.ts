@@ -4,16 +4,20 @@
 //   - une offre par mode d'affaire, devise et incoterm : jamais deux modes, deux devises ni deux
 //     incoterms dans une offre (incoterms separes : decision d'Adlene du 19 novembre 2026) ;
 //   - intermediation : offre dans la devise du fournisseur, commission de la grille calculee
-//     sur le total de TOUTE la demande ; assurance 1 % et fret si forfait Pro ou Enterprise ;
+//     sur le total de TOUTE la demande ;
 //   - export par AFRICA NEX : offre dans la devise de l'acheteur, prix en dinars converti au
-//     taux de reference, marge de change 2 %, assurance 1 % toujours, fret gere par AFRICA NEX ;
-//     la marge negociee reste secrete et se saisit au cas par cas (aucune valeur par defaut) ;
+//     taux de reference, marge de change 2 % ; la marge negociee reste secrete et se saisit au cas
+//     par cas (aucune valeur par defaut) ;
+//   - assurance export 1 % sur TOUTES les offres, quel que soit le forfait (21 novembre 2026) ;
+//   - logistique : service choisi par l'acheteur (plus le forfait du fournisseur). "Livre par
+//     AFRICA NEX" : offre a l'incoterm demande, fret a saisir ; sinon, prix a l'incoterm du fournisseur ;
 //   - un stock insuffisant n'exclut pas un prix : le delai de production est signale ;
 //   - la remise maximale du fournisseur est montree a AFRICA NEX, jamais appliquee d'office ;
 //   - ligne sans prix : consultation des producteurs pour cette ligne ; le devis valide le moins
 //     cher entre dans le calcul, sauf si AFRICA NEX en retient un autre.
 import { DEFAULT_INSURANCE_RATE, DZD_PER_USD, commissionRateFor, round2 } from "./offer-pricing";
 import { reachedTier, type DiscountTier } from "./discount-tiers";
+import { DELIVERED_INCOTERMS, type Logistics } from "./incoterms";
 
 export const FX_MARGIN_RATE = 2;
 export const OFFER_VALIDITY_DAYS = 30;
@@ -68,11 +72,19 @@ export type AutoQuoteRow = {
   chosen: boolean;
 };
 
+export { DELIVERED_INCOTERMS, type Logistics };
+// Choix logistique de l'acheteur ; pour une ancienne demande sans choix, deduit de l'incoterm demande.
+export const logisticsOf = (logistics: string | null | undefined, requestedIncoterm: string | null | undefined): Logistics =>
+  logistics === "buyer" || logistics === "africanex"
+    ? logistics
+    : (DELIVERED_INCOTERMS as readonly string[]).includes(requestedIncoterm ?? "") ? "africanex" : "buyer";
+
 export type AutoContext = {
   rows: AutoInputRow[];
   quotes?: AutoQuoteRow[];
   buyerCurrency: string | null;
   requestedIncoterm: string | null;
+  logistics?: string | null;
   rates: Partial<Record<"EUR" | "USD", number>>;
   today: string; // AAAA-MM-JJ
 };
@@ -174,7 +186,6 @@ type Source = {
   chosen: boolean;
   companyId: string | null;
   companyName: string | null;
-  tier: string | null;
   mode: string | null;
   exportPrice: number | null; // EUR ou USD
   exportCurrency: string | null;
@@ -196,7 +207,6 @@ const catalogSource = (row: AutoInputRow): Source => ({
   chosen: false,
   companyId: row.company_id,
   companyName: row.company_name,
-  tier: row.subscription_tier,
   mode: row.export_mode,
   exportPrice: num(row.unit_price_ht),
   exportCurrency: row.currency,
@@ -222,7 +232,6 @@ const quoteSource = (q: AutoQuoteRow): Source => {
     chosen: q.chosen,
     companyId: q.company_id,
     companyName: q.company_name,
-    tier: q.subscription_tier,
     mode: q.export_mode,
     exportPrice: q.currency === "DZD" ? null : price,
     exportCurrency: q.currency,
@@ -313,18 +322,19 @@ export function computeAutoOffers(ctx: AutoContext): AutoResult {
   const demandTotalRef = round2(eligible.reduce((s, e) => s + ref(e), 0));
   const commissionRate = commissionRateFor(demandTotalRef, "USD");
 
+  const delivered = logisticsOf(ctx.logistics, ctx.requestedIncoterm) === "africanex";
   const priced: PricedLine[] = eligible.map((e) => {
     const { row, source: s } = e;
-    const detailed = s.tier === "pro" || s.tier === "enterprise";
-    const africanexFreight = e.mode === "africanex" || detailed;
-    const insuranceRate = africanexFreight ? DEFAULT_INSURANCE_RATE : 0;
+    // Fret gere par AFRICA NEX seulement si l'acheteur a choisi la livraison.
+    const africanexFreight = delivered;
+    const insuranceRate = DEFAULT_INSURANCE_RATE;
     // En dinars, pas de conversion : pas de marge de change.
     const earningRate = e.mode === "self" ? commissionRate : e.fxRate ? FX_MARGIN_RATE : 0;
     const p = priceLine(e.base, e.quantity, insuranceRate, earningRate);
     const tierAmount = s.exportPrice !== null && s.exportPrice > 0 ? s.exportPrice * e.quantity : e.supplierUnitPrice * e.quantity;
     const tier = reachedTier(s.tiers, e.quantity, tierAmount);
-    // Starter : le prix est donne a l'incoterm du fournisseur. Sinon AFRICA NEX livre a l'incoterm demande.
-    const incoterm = africanexFreight ? (ctx.requestedIncoterm ?? (detailed ? "FCA" : null)) : s.basis;
+    // Livraison par AFRICA NEX : offre a l'incoterm demande ; sinon, a l'incoterm du fournisseur.
+    const incoterm = africanexFreight ? ctx.requestedIncoterm : s.basis;
     return {
       row,
       source: s.kind,

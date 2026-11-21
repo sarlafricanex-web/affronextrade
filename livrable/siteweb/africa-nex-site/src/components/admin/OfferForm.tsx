@@ -5,14 +5,14 @@ import { useLocale, useTranslations } from "next-intl";
 import { saveOffer, type OfferField, type OfferState } from "@/app/[locale]/(app)/admin/rfqs/offer-actions";
 import { Alert, Field, TextInput } from "@/components/auth/fields";
 import { COMMISSION_TIERS, commissionRateFor, priceOffer } from "@/lib/offer-pricing";
+import { DELIVERED_INCOTERMS, INCOTERMS } from "@/lib/incoterms";
 
 export type OfferDefaults = Record<OfferField, string>;
 
 const HAIR = "#d8cebb";
 const caps = { letterSpacing: "0.08em" } as const;
 const box = { background: "var(--field-a)", border: "1px solid var(--field-b)", outline: "none" } as const;
-const INCOTERMS = ["EXW", "FCA", "FOB", "CFR", "CIF", "DAP", "DDP"] as const;
-const WITH_FREIGHT = ["CFR", "CIF", "DAP", "DDP"];
+const WITH_FREIGHT: readonly string[] = DELIVERED_INCOTERMS;
 const num = (s: string) => {
   const n = Number(s.replace(/\s/g, "").replace(",", "."));
   return Number.isFinite(n) ? n : 0;

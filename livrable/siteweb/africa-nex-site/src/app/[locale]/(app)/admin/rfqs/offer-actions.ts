@@ -12,11 +12,12 @@ import { OFFER_VALIDITY_DAYS } from "@/lib/offer-auto";
 import { repriceOffer, type MarginInput } from "@/lib/offer-reprice";
 import { notify } from "@/lib/notify";
 import { frDate, money } from "@/lib/notify/format";
+import { DELIVERED_INCOTERMS, INCOTERMS as ALL_INCOTERMS } from "@/lib/incoterms";
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
 const UUID = /^[0-9a-f-]{36}$/i;
-const INCOTERMS = ["EXW", "FCA", "FOB", "CFR", "CIF", "DAP", "DDP"];
-const WITH_FREIGHT = ["CFR", "CIF", "DAP", "DDP"];
+const INCOTERMS: readonly string[] = ALL_INCOTERMS;
+const WITH_FREIGHT: readonly string[] = DELIVERED_INCOTERMS;
 const one = <T,>(x: unknown) => (Array.isArray(x) ? (x[0] ?? null) : (x ?? null)) as T | null;
 
 async function adminContext(formData: FormData) {

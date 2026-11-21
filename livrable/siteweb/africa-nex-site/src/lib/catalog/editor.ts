@@ -34,8 +34,6 @@ export function toEditorProduct(p: Product | null): EditorProduct {
     images: productImages(p),
     sku: p?.sku ?? "",
     crossRefs: (p?.cross_refs ?? []).join(", "),
-    productCost: str(p?.product_cost),
-    packagingCost: str(p?.packaging_cost),
     pricePlace: p?.price_place ?? "",
     priceValidUntil: p?.price_valid_until ?? "",
     leadDays: str(p?.lead_time_days),

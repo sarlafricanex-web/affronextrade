@@ -157,7 +157,7 @@ try {
   await go("/fr/catalog", `return !!document.querySelector('[data-download="price-list"]');`);
   report("Catalogue : boutons telecharger et importer", await run(`return !!document.querySelector('a[href$="/catalog/import"]');`));
   await go("/fr/catalog/import", `return !!document.querySelector("input[name=file]");`);
-  report("Page d'import : modele Starter annonce", await run(`return document.body.innerText.includes("forfait Starter");`));
+  report("Page d'import : modele unique annonce (prix HT et incoterm)", await run(`return document.body.innerText.includes("prix HT et incoterm (les 11 incoterms 2020)");`));
   await attach(FILE);
   await run(`[...document.querySelectorAll("main button")].find((b) => /vérifier/i.test(b.textContent)).click(); return true;`);
   report("Apercu : 1 mis a jour, 1 nouveau, 2 lignes en erreur", await waitFor(`return ${count("importUpdates")} === 1 && ${count("importCreates")} === 1 && ${count("importIssues")} === 2;`), await run(`return [${count("importUpdates")}, ${count("importCreates")}, ${count("importUnchanged")}, ${count("importIssues")}].join("/");`));
@@ -217,18 +217,24 @@ try {
   const { data: viaEditor } = await admin.from("products").select(cols).eq("id", pB.id).single();
   report("Meme resultat logistique par l'editeur et par Excel", JSON.stringify(viaExcel) === JSON.stringify(viaEditor), `${JSON.stringify(viaExcel)} / ${JSON.stringify(viaEditor)}`);
 
-  // Forfait Pro : modele detaille et prix FCA calcule
+  // Ancien forfait Pro : meme modele unique que tous (21 novembre 2026), les 11 incoterms 2020.
   const p = await download(pro);
   const pw = p.wb.getWorksheet("Liste de prix");
   const pk = keysOf(pw);
-  report("Modele Pro : cout produit + cout emballage = FCA, sans incoterm", pk.has("productCost") && pk.has("packagingCost") && pk.has("fca") && !pk.has("price") && !pk.has("priceBasis"), [...pk.keys()].join(","));
+  report("Modele unique pour tous : prix HT + incoterm, sans couts ni FCA calcule", pk.has("price") && pk.has("priceBasis") && pk.has("pricePlace") && !pk.has("productCost") && !pk.has("fca"), [...pk.keys()].join(","));
+  const basisFormula = String(pw.getCell(5, pk.get("priceBasis")).dataValidation?.formulae?.[0] ?? "");
+  const basisCol = /!\$([A-Z]+)\$/.exec(basisFormula)?.[1];
+  const basisVals = []; if (basisCol) p.wb.getWorksheet("Listes")?.getColumn(basisCol).eachCell((c) => { if (c.value !== null && c.value !== "") basisVals.push(String(c.value)); });
+  report("Incoterms proposes : les 11 d'Incoterms 2020", basisVals.join(",") === "EXW,FCA,FAS,FOB,CFR,CIF,CPT,CIP,DAP,DPU,DDP", basisVals.join(","));
+  // Fichier de l'ancien modele (cout produit + cout emballage) : toujours importable, repris en FCA.
   const prow = rowOf(pw, pP.id);
-  report("Formule FCA dans le fichier", Boolean(pw.getCell(prow, pk.get("fca")).value?.formula));
-  pw.getCell(prow, pk.get("productCost")).value = 1.6;
+  pw.getCell(2, pk.get("price")).value = "productCost";
+  pw.getCell(2, pk.get("priceBasis")).value = "packagingCost";
+  pw.getCell(prow, pk.get("price")).value = 1.6;
+  pw.getCell(prow, pk.get("priceBasis")).value = 0.4;
   pw.getCell(prow, pk.get("priceDzd")).value = 300;
-  pw.getCell(prow, pk.get("packagingCost")).value = 0.4;
   pw.getCell(prow, pk.get("priceValidUntil")).value = new Date(`${day(60)}T00:00:00Z`);
-  const PRO_FILE = `${OUT}/liste-de-prix-pro.xlsx`;
+  const PRO_FILE = `${OUT}/liste-de-prix-ancien-modele.xlsx`;
   writeFileSync(PRO_FILE, Buffer.from(await p.wb.xlsx.writeBuffer()));
   await loginAs(pro);
   await go("/fr/catalog/import", `return !!document.querySelector("input[name=file]");`);
@@ -236,11 +242,11 @@ try {
   await run(`[...document.querySelectorAll("main button")].find((b) => /vérifier/i.test(b.textContent)).click(); return true;`);
   await waitFor(`return ${count("importUpdates")} === 1;`);
   await run(`[...document.querySelectorAll("main button")].find((b) => /enregistrer/i.test(b.textContent)).click(); return true;`);
-  report("Pro : import sans erreur, retour au catalogue", await waitFor(`return location.pathname === "/fr/catalog" && location.search.includes("imported=1");`));
+  report("Ancien modele : import sans erreur, retour au catalogue", await waitFor(`return location.pathname === "/fr/catalog" && location.search.includes("imported=1");`));
   const { data: pp } = await admin.from("products").select("unit_price_ht, product_cost, packaging_cost, price_basis").eq("id", pP.id).single();
-  report("En base : FCA 2,00 = 1,60 + 0,40, base FCA", Number(pp.unit_price_ht) === 2 && Number(pp.product_cost) === 1.6 && Number(pp.packaging_cost) === 0.4 && pp.price_basis === "FCA", JSON.stringify(pp));
-  await go(`/fr/catalog/${pP.id}`, `return !!document.getElementById("pe-cost");`);
-  report("Editeur Pro : couts et total FCA affiche", await run(`return !document.getElementById("pe-price") && document.querySelector("[data-fca]").innerText.replace(/\\s/g, "").includes("2,00");`));
+  report("En base : prix 2,00 FCA (1,60 + 0,40), couts effaces", Number(pp.unit_price_ht) === 2 && pp.product_cost === null && pp.packaging_cost === null && pp.price_basis === "FCA", JSON.stringify(pp));
+  await go(`/fr/catalog/${pP.id}`, `return !!document.getElementById("pe-price");`);
+  report("Editeur : un seul prix et les 11 incoterms, plus de couts", await run(`return !document.getElementById("pe-cost") && !document.querySelector("[data-fca]") && [...document.getElementById("pe-basis").options].map((o) => o.value).join() === "EXW,FCA,FAS,FOB,CFR,CIF,CPT,CIP,DAP,DPU,DDP" && document.getElementById("pe-basis").value === "FCA";`));
 
   // Confidentialite des couts
   const anonClient = createClient(url, pub, { auth: { persistSession: false } });

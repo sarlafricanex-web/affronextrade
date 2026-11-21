@@ -81,11 +81,21 @@ try {
 
   // Mode d'affaire du fournisseur
   report("Fournisseur sans mode : 'A definir'", await run(`const li = document.querySelector('[data-supplier="${supplierName}"]'); return !!li && li.querySelector("select").value === "";`));
+  report("Sans accord du fournisseur : export AFRICA NEX indisponible", await run(`const li = document.querySelector('[data-supplier="${supplierName}"]'); return li.querySelector("[data-consent]").dataset.consent === "no" && li.querySelector("option[value=africanex]").disabled;`));
+  // Le fournisseur donne son accord (case de "Mon entreprise", ecrite ici avec ses propres droits).
+  const { error: consentError } = await producer.client.from("companies").update({ africanex_export_consent: true }).eq("id", supplierId);
+  report("Le fournisseur donne son accord lui-meme", !consentError, consentError?.message);
+  await go("/fr/admin/settings", `return !!document.querySelector('[data-supplier="${supplierName}"] [data-consent="yes"]');`);
+  report("Accord visible pour AFRICA NEX, option disponible", await run(`const li = document.querySelector('[data-supplier="${supplierName}"]'); return li.querySelector("[data-consent]").dataset.consent === "yes" && !li.querySelector("option[value=africanex]").disabled;`));
   await run(`${SET} setV(document.querySelector('[data-supplier="${supplierName}"] select'), "africanex"); [...document.querySelectorAll("button[type=submit]")].find((b) => /modes/i.test(b.textContent)).click(); return true;`);
   report("Mode enregistre : message", await waitFor(`return location.search.includes("saved=modes") && document.body.innerText.includes("1 fournisseur(s) modifié(s)");`));
   const { data: mode } = await admin.from("supplier_settings").select("export_mode, updated_by").eq("company_id", supplierId).maybeSingle();
   report("En base : AFRICA NEX exporte pour ce fournisseur", mode?.export_mode === "africanex" && mode.updated_by === boss.id, JSON.stringify(mode));
   await shot("admin-settings");
+  await producer.client.from("companies").update({ africanex_export_consent: false }).eq("id", supplierId);
+  const { data: back } = await admin.from("supplier_settings").select("export_mode").eq("company_id", supplierId).maybeSingle();
+  report("Retrait de l'accord : le fournisseur repasse en intermediation", back?.export_mode === "self", JSON.stringify(back));
+  await go("/fr/admin/settings", `return !!document.querySelector('[data-supplier="${supplierName}"]');`);
   await run(`${SET} setV(document.querySelector('[data-supplier="${supplierName}"] select'), ""); [...document.querySelectorAll("button[type=submit]")].find((b) => /modes/i.test(b.textContent)).click(); return true;`);
   await waitFor(`return location.search.includes("saved=modes");`);
   const { data: unset } = await admin.from("supplier_settings").select("company_id").eq("company_id", supplierId);

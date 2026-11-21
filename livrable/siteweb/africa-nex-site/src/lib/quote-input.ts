@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import { CURRENCIES, parseAmount } from "@/lib/onboarding/reference";
 import { documentContentType, readDocument } from "@/lib/images";
+import { INCOTERMS } from "@/lib/incoterms";
 
 // Lecture et validation d'un devis producteur, communes au producteur (lot 5c)
 // et a AFRICA NEX quand il saisit le devis d'un producteur hors ligne (lot 5d).
@@ -12,7 +13,7 @@ export type QuoteField = "currency" | "unitPrice" | "priceBasis" | "port" | "qua
 // Cles de traduction (espace "requests") ; values : saisie renvoyee en cas d'erreur.
 export type QuoteState = { errors: Partial<Record<QuoteField, string>>; formError?: string; values?: Record<string, string>; attempt?: number };
 
-const BASES = ["FOB", "FCA", "EXW"];
+const BASES: readonly string[] = INCOTERMS;
 const MAX_FILE = 4 * 1024 * 1024;
 const KEYS = ["currency", "unitPrice", "priceBasis", "port", "quantity", "leadDays", "availableOn", "paymentTerms", "validUntil", "notes"];
 

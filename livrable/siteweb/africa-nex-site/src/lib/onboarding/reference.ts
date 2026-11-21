@@ -37,7 +37,8 @@ export const isValidNis = (value: string) => /^\d{15}$/.test(normalizeNif(value)
 export const isValidTaxArticle = (value: string) => /^\d{11}$/.test(normalizeNif(value));
 
 export const CURRENCIES = ["USD", "EUR", "DZD"] as const;
-export const PRICE_BASES = ["FOB", "FCA", "EXW"] as const;
+// Les 11 incoterms 2020 (decision du 21 novembre 2026).
+export { INCOTERMS as PRICE_BASES } from "@/lib/incoterms";
 export const UNITS = ["kg", "t", "l", "unit", "carton", "pallet"] as const;
 
 // Code SH : 6, 8 ou 10 chiffres, enregistre groupe "1509.20.00". Renvoie null si invalide.

@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { getCompanyTier, getMyCompanyId, getProduct, getSupplierPricing } from "@/lib/data/company";
+import { getMyCompanyId, getProduct, getSupplierPricing } from "@/lib/data/company";
 import type { DiscountTier } from "@/lib/catalog/price-list";
 import { toEditorProduct } from "@/lib/catalog/editor";
 import { ProductEditor } from "@/components/catalog/ProductEditor";
@@ -20,7 +20,7 @@ export default async function ProductEditorPage({ params }: { params: Promise<{ 
   if (!companyId) redirect(`/${locale}/onboarding`);
 
   const isNew = id === "new";
-  const [product, tier, pricing] = await Promise.all([isNew ? null : getProduct(user.supabase, companyId, id), getCompanyTier(user.supabase, companyId), getSupplierPricing(user.supabase, companyId)]);
+  const [product, pricing] = await Promise.all([isNew ? null : getProduct(user.supabase, companyId, id), getSupplierPricing(user.supabase, companyId)]);
   if (!isNew && !product) notFound();
   const c = await getTranslations({ locale, namespace: "catalog" });
   const published = product?.status === "published";
@@ -48,7 +48,7 @@ export default async function ProductEditorPage({ params }: { params: Promise<{ 
         </div>
         <p className="text-sm" style={{ color: "var(--muted)" }}>{c("editorSubtitle")}</p>
       </header>
-      <ProductEditor product={toEditorProduct(product)} tier={tier} defaultTiers={(Array.isArray(pricing.discount_tiers) ? pricing.discount_tiers : []) as DiscountTier[]} />
+      <ProductEditor product={toEditorProduct(product)} defaultTiers={(Array.isArray(pricing.discount_tiers) ? pricing.discount_tiers : []) as DiscountTier[]} />
     </div>
   );
 }

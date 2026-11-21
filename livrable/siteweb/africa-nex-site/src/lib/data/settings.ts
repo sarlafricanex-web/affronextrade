@@ -20,7 +20,7 @@ export async function getFxRates(client: Client) {
 export async function listSupplierModes(client: Client) {
   const { data, error } = await client
     .from("companies")
-    .select("id, company_name, wilaya, city, claim_status, owner_profile_id, supplier_settings(export_mode, updated_at)")
+    .select("id, company_name, wilaya, city, claim_status, owner_profile_id, africanex_export_consent, supplier_settings(export_mode, updated_at)")
     .eq("kind", "producer")
     .order("company_name");
   if (error) throw error;

@@ -11,6 +11,7 @@ import { declineRequest } from "../actions";
 import { listThread, markThreadRead } from "@/lib/data/messages";
 import { MessageThread } from "@/components/messages/MessageThread";
 import { MessageForm } from "@/components/messages/MessageForm";
+import { isIncoterm } from "@/lib/incoterms";
 
 export const instant = false;
 
@@ -146,7 +147,7 @@ export default async function RequestPage({
               defaults={{
                 currency: quote?.currency ?? "USD",
                 unitPrice: quote ? String(quote.unit_price_ht) : "",
-                priceBasis: quote?.price_basis ?? (["FOB", "FCA", "EXW"].includes(req.requested_incoterm ?? "") ? req.requested_incoterm! : "FOB"),
+                priceBasis: quote?.price_basis ?? (isIncoterm(req.requested_incoterm) ? req.requested_incoterm : "FOB"),
                 port: quote?.port_of_loading ?? "",
                 quantity: quote ? String(quote.quantity) : req.quantity != null ? String(req.quantity) : "",
                 leadDays: quote?.production_lead_days != null ? String(quote.production_lead_days) : "",

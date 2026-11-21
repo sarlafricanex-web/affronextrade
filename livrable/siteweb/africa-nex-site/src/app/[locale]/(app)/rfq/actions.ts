@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { resolveLocale } from "@/lib/auth/next-path";
 import { getMyCompanyId } from "@/lib/data/company";
-import { getRfqContext, INCOTERMS, RFQ_MAX_FILE_BYTES } from "@/lib/data/rfq";
+import { getRfqContext, RFQ_MAX_FILE_BYTES } from "@/lib/data/rfq";
+import { LOGISTICS, incotermsFor, type Logistics } from "@/lib/incoterms";
 import { countryName, isCountryCode } from "@/lib/countries";
 import { CURRENCIES, UNITS, parseAmount } from "@/lib/onboarding/reference";
 import { documentContentType, readDocument } from "@/lib/images";
@@ -13,7 +14,7 @@ import { notify } from "@/lib/notify";
 
 export type RfqField =
   | "title" | "quantity" | "unit" | "containerCount" | "containerSize" | "country" | "port"
-  | "incoterm" | "targetPrice" | "currency" | "neededBy" | "description" | "file";
+  | "logistics" | "incoterm" | "targetPrice" | "currency" | "neededBy" | "description" | "file";
 export type RfqValues = Record<string, string>;
 // Cles de traduction (espace "rfq") ; values : saisie renvoyee en cas d'erreur (lignes en JSON).
 // lineErrors : erreurs par ligne (index -> champ -> cle).
@@ -26,7 +27,7 @@ export type RfqState = {
 };
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
-const FIELDS = ["mode", "containerCount", "containerSize", "reefer", "country", "port", "incoterm", "targetPrice", "currency", "neededBy", "description", "productId", "producer"];
+const FIELDS = ["mode", "containerCount", "containerSize", "reefer", "country", "port", "logistics", "incoterm", "targetPrice", "currency", "neededBy", "description", "productId", "producer"];
 const MAX_LINES = 50;
 
 // Nouvelle demande de devis. Tout est revalide ici ; la RLS verifie en plus le role et l'entreprise.
@@ -71,7 +72,10 @@ export async function createRfq(_prev: RfqState, formData: FormData): Promise<Rf
   const country = v.country.toUpperCase();
   if (!isCountryCode(country)) errors.country = "errorChoose";
   if (v.port.length > 120) errors.port = "errorTooLong";
-  if (!(INCOTERMS as readonly string[]).includes(v.incoterm)) errors.incoterm = "errorChoose";
+  // Transport choisi par l'acheteur ; l'incoterm doit correspondre a ce choix.
+  const logistics = (LOGISTICS as readonly string[]).includes(v.logistics) ? (v.logistics as Logistics) : null;
+  if (!logistics) errors.logistics = "errorChoose";
+  else if (!(incotermsFor(logistics) as readonly string[]).includes(v.incoterm)) errors.incoterm = "errorChoose";
   let targetPrice: number | null = null;
   if (v.targetPrice) {
     targetPrice = parseAmount(v.targetPrice);
@@ -112,6 +116,7 @@ export async function createRfq(_prev: RfqState, formData: FormData): Promise<Rf
       container_reefer: containers && v.reefer === "on",
       container_count: containerCount,
       incoterm: v.incoterm,
+      logistics,
       destination_country: country,
       destination_port: v.port || null,
       target_unit_price: targetPrice,

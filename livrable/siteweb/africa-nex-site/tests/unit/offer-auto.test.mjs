@@ -14,7 +14,7 @@ registerHooks({
   },
 });
 
-const { computeAutoOffers } = await import("../../src/lib/offer-auto.ts");
+const { computeAutoOffers, logisticsOf } = await import("../../src/lib/offer-auto.ts");
 
 const TODAY = "2026-11-17";
 let n = 0;
@@ -30,27 +30,29 @@ function row(over = {}) {
     ...over,
   };
 }
-const ctx = (rows, over = {}) => ({ rows, buyerCurrency: "EUR", requestedIncoterm: "CIF", rates: { EUR: 150, USD: 135 }, today: TODAY, ...over });
+// Par defaut l'acheteur organise le transport ; "livre" = il a choisi la logistique d'AFRICA NEX.
+const ctx = (rows, over = {}) => ({ rows, buyerCurrency: "EUR", requestedIncoterm: "CIF", logistics: "buyer", rates: { EUR: 150, USD: 135 }, today: TODAY, ...over });
+const delivered = { logistics: "africanex" };
 
-test("intermediation Starter : commission seule, incoterm du fournisseur, pas de fret", () => {
+test("acheteur qui organise le transport : commission + assurance 1 %, incoterm du fournisseur, pas de fret", () => {
   const r = computeAutoOffers(ctx([row()]));
   assert.equal(r.offers.length, 1);
   const o = r.offers[0];
   assert.equal(o.mode, "self");
   assert.equal(o.currency, "EUR");
   assert.equal(r.commissionRate, 10); // 1 000 EUR < 5 000
-  assert.equal(o.lines[0].unitPrice, 11);
-  assert.equal(o.total, 1100);
+  assert.equal(o.lines[0].unitPrice, 11.1); // assurance export sur toutes les offres (21 novembre)
+  assert.equal(o.total, 1110);
   assert.equal(o.commission, 100);
-  assert.equal(o.insurance, 0);
+  assert.equal(o.insurance, 10);
   assert.equal(o.incoterm, "FOB");
   assert.equal(o.lines[0].incotermPlace, "Alger");
   assert.equal(o.freightPending, false);
   assert.equal(o.marginPending, false);
 });
 
-test("intermediation Pro : commission + assurance 1 %, fret a saisir, incoterm demande", () => {
-  const r = computeAutoOffers(ctx([row({ subscription_tier: "pro" })]));
+test("livraison par AFRICA NEX (choix de l'acheteur) : fret a saisir, incoterm demande, quel que soit le forfait", () => {
+  const r = computeAutoOffers(ctx([row({ subscription_tier: "starter" })], delivered));
   const o = r.offers[0];
   assert.equal(o.lines[0].unitPrice, 11.1);
   assert.equal(o.insurance, 10);
@@ -75,19 +77,32 @@ test("une offre consolidee pour plusieurs fournisseurs du meme mode et de la mem
   assert.equal(r.offers[0].lines.length, 2);
 });
 
-test("incoterms differents : une offre par incoterm, dans l'ordre des lignes (decision du 19 novembre)", () => {
-  // Starter en FOB (son incoterm) et Pro livre a l'incoterm demande (CIF) : deux offres.
-  const r = computeAutoOffers(ctx([row(), row({ subscription_tier: "pro" }), row({ price_basis: "FOB", price_place: "Oran" })]));
+test("incoterms differents : une offre par incoterm du fournisseur, dans l'ordre des lignes (19 novembre)", () => {
+  const r = computeAutoOffers(ctx([row(), row({ price_basis: "CFR", price_place: "Abidjan" }), row({ price_basis: "FOB", price_place: "Oran" })]));
   assert.equal(r.offers.length, 2);
-  assert.deepEqual(r.offers.map((o) => o.incoterm), ["FOB", "CIF"]);
+  assert.deepEqual(r.offers.map((o) => o.incoterm), ["FOB", "CFR"]);
   assert.deepEqual(r.offers.map((o) => o.lines.length), [2, 1]);
-  assert.equal(r.offers[0].freightPending, false); // Starter seul : pas de fret a saisir
-  assert.equal(r.offers[1].freightPending, true);
+  assert.ok(r.offers.every((o) => !o.freightPending)); // l'acheteur organise le transport
   assert.equal(r.commissionRate, 10); // palier toujours sur le total de la demande
 });
 
+test("tous les incoterms sont acceptes pour le prix du fournisseur", () => {
+  for (const basis of ["EXW", "FCA", "FAS", "FOB", "CFR", "CIF", "CPT", "CIP", "DAP", "DPU", "DDP"]) {
+    assert.equal(computeAutoOffers(ctx([row({ price_basis: basis })])).offers[0].incoterm, basis);
+  }
+});
+
+test("choix logistique : celui de l'acheteur, sinon deduit de l'incoterm demande (anciennes demandes)", () => {
+  assert.equal(logisticsOf("buyer", "CIF"), "buyer");
+  assert.equal(logisticsOf("africanex", "FOB"), "africanex");
+  assert.equal(logisticsOf(null, "CIF"), "africanex");
+  assert.equal(logisticsOf(null, "DAP"), "africanex");
+  assert.equal(logisticsOf(null, "FOB"), "buyer");
+  assert.equal(logisticsOf(null, null), "buyer");
+});
+
 test("export AFRICA NEX : devise de l'acheteur, taux de reference, change 2 %, assurance 1 %, marge a saisir", () => {
-  const r = computeAutoOffers(ctx([row({ export_mode: "africanex", price_dzd_ht: 1500, line_quantity: 100 })]));
+  const r = computeAutoOffers(ctx([row({ export_mode: "africanex", price_dzd_ht: 1500, line_quantity: 100 })], delivered));
   const o = r.offers[0];
   assert.equal(o.mode, "africanex");
   assert.equal(o.currency, "EUR");
@@ -140,7 +155,7 @@ test("remise maximale du fournisseur : affichee, jamais appliquee", () => {
   const r = computeAutoOffers(ctx([row({ discount_tiers: tiers })]));
   const l = r.offers[0].lines[0];
   assert.equal(l.maxDiscountRate, 5);
-  assert.equal(l.unitPrice, 11); // prix inchange
+  assert.equal(l.unitPrice, 11.1); // prix inchange (commission et assurance seulement)
   assert.equal(r.offers[0].maxDiscountAmount, 50);
 });
 
@@ -174,7 +189,7 @@ test("ligne hors catalogue : le devis le moins cher entre dans le calcul", () =>
   assert.equal(l.quoteId, quotes[1].quote_id);
   assert.equal(l.supplierName, quotes[1].company_name);
   assert.equal(l.quotesUsable, 2);
-  assert.equal(l.unitPrice, 7.7);
+  assert.equal(l.unitPrice, 7.77);
   assert.equal(l.incoterm, "FOB");
   assert.equal(l.incotermPlace, "Oran");
   assert.equal(l.leadDays, 20);
@@ -219,9 +234,9 @@ test("devis expire ou producteur sans mode : ignores ; quantite proposee insuffi
   assert.ok(l.warnings.includes("quoteQuantityShort"));
 });
 
-test("devis d'un producteur Pro : assurance 1 % et fret a saisir", () => {
+test("devis consulte, livraison demandee : assurance 1 % et fret a saisir", () => {
   const r0 = row({ product_id: null });
-  const o = computeAutoOffers(ctx([r0], { quotes: [quote(r0.line_id, { unit_price_ht: 10, subscription_tier: "pro" })] })).offers[0];
+  const o = computeAutoOffers(ctx([r0], { quotes: [quote(r0.line_id, { unit_price_ht: 10 })], ...delivered })).offers[0];
   assert.equal(o.lines[0].unitPrice, 11.1);
   assert.equal(o.freightPending, true);
 });
@@ -229,8 +244,9 @@ test("devis d'un producteur Pro : assurance 1 % et fret a saisir", () => {
 test("arrondis : total = prix unitaire x quantite, l'ecart va dans la commission", () => {
   const r = computeAutoOffers(ctx([row({ unit_price_ht: 3.33, line_quantity: 7 })]));
   const o = r.offers[0];
-  assert.equal(o.lines[0].unitPrice, 3.66);
-  assert.equal(o.total, 25.62);
+  assert.equal(o.lines[0].unitPrice, 3.7);
+  assert.equal(o.total, 25.9);
   assert.equal(o.base, 23.31);
-  assert.equal(o.commission, 2.31);
+  assert.equal(o.insurance, 0.23);
+  assert.equal(o.commission, 2.36);
 });

@@ -13,11 +13,10 @@ export function stageOf(status: string) {
   return RFQ_STAGES.indexOf(status as (typeof RFQ_STAGES)[number]) + 1;
 }
 
-export const INCOTERMS = ["FOB", "CFR", "CIF", "DAP"] as const;
 export const RFQ_MAX_FILE_BYTES = 4 * 1024 * 1024; // limite des envois Vercel (4,5 Mo)
 
 const RFQ_COLUMNS =
-  "id, reference, title, description, quantity, unit, quantity_mode, container_size, container_reefer, container_count, incoterm, destination_country, destination_port, target_unit_price, currency, needed_by, attachments, status, created_at, product_id, source_company_id";
+  "id, reference, title, description, quantity, unit, quantity_mode, container_size, container_reefer, container_count, incoterm, logistics, destination_country, destination_port, target_unit_price, currency, needed_by, attachments, status, created_at, product_id, source_company_id";
 
 // Demandes de l'acheteur connecte (la RLS ne renvoie que les siennes), offres publiees comprises.
 export async function listMyRfqs(client: Client, userId: string) {

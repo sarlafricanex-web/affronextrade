@@ -13,12 +13,12 @@ const caps = { letterSpacing: "0.08em" } as const;
 const box = { background: "var(--field-a)", border: "1px solid var(--field-b)", outline: "none" } as const;
 
 // Reglages AFRICA NEX : taux de reference (offres en devise) et mode d'affaire de chaque fournisseur.
-export default async function AdminSettingsPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ saved?: string; count?: string }> }) {
+export default async function AdminSettingsPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ saved?: string; count?: string; refused?: string }> }) {
   const { locale } = await params;
   const user = await getCurrentUser();
   if (!user) redirect(`/${locale}/login`);
   if (user.role !== "admin") redirect(`/${locale}/dashboard`);
-  const [t, format, rates, suppliers, { saved, count }] = await Promise.all([
+  const [t, format, rates, suppliers, { saved, count, refused }] = await Promise.all([
     getTranslations({ locale, namespace: "admin" }),
     getFormatter({ locale }),
     getFxRates(user.supabase),
@@ -35,6 +35,9 @@ export default async function AdminSettingsPage({ params, searchParams }: { para
         <p role="status" className="p-4 font-semibold" style={{ background: "white", borderInlineStart: "4px solid #10b981" }}>
           {saved === "rates" ? t("settingsSavedRates") : t("settingsSavedModes", { count: Number(count) || 0 })}
         </p>
+      )}
+      {saved === "modes" && Number(refused) > 0 && (
+        <p role="alert" className="p-4 font-semibold" style={{ background: "white", borderInlineStart: "4px solid #c2410c" }}>{t("settingsModesRefused", { count: Number(refused) })}</p>
       )}
       <header>
         <p className="text-xs font-semibold uppercase" style={{ ...caps, color: "var(--muted)" }}>{t("accountsEyebrow")}</p>
@@ -68,12 +71,15 @@ export default async function AdminSettingsPage({ params, searchParams }: { para
                     {[s.city, WILAYAS.find(([c]) => c === s.wilaya)?.[1]].filter(Boolean).join(", ")}
                     {!s.owner_profile_id ? ` · ${t("rfqOffline")}` : ""}
                   </span>
+                  <span className="mt-1 inline-block px-2 py-0.5 text-[10px] font-bold uppercase" data-consent={s.africanex_export_consent ? "yes" : "no"} style={{ ...caps, ...(s.africanex_export_consent ? { background: "#ecfdf5", border: "1px solid #10b981", color: "#065f46" } : { background: "#f5efe6", border: `1px solid ${HAIR}`, color: "var(--muted)" }) }}>
+                    {t(s.africanex_export_consent ? "settingsConsentYes" : "settingsConsentNo")}
+                  </span>
                 </span>
                 <input type="hidden" name={`was_${s.id}`} value={s.export_mode ?? ""} />
                 <select name={`mode_${s.id}`} defaultValue={s.export_mode ?? ""} aria-label={t("settingsModeFor", { name: s.company_name })} className="w-full px-3 py-2.5 text-sm sm:w-72" style={box}>
                   <option value="">{t("settingsMode_unset")}</option>
                   <option value="self">{t("settingsMode_self")}</option>
-                  <option value="africanex">{t("settingsMode_africanex")}</option>
+                  <option value="africanex" disabled={!s.africanex_export_consent && s.export_mode !== "africanex"}>{t("settingsMode_africanex")}</option>
                 </select>
               </li>
             ))}

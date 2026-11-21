@@ -12,7 +12,7 @@ type Client = SupabaseClient<Database>;
 export async function computeRfqAutoOffers(client: Client, rfqId: string): Promise<(AutoResult & { rates: Awaited<ReturnType<typeof getFxRates>> }) | null> {
   if (!/^[0-9a-f-]{36}$/i.test(rfqId)) return null;
   const [{ data: rfq }, { data: rows, error }, { data: quotes, error: quotesError }, rates] = await Promise.all([
-    client.from("rfqs").select("id, currency, incoterm").eq("id", rfqId).maybeSingle(),
+    client.from("rfqs").select("id, currency, incoterm, logistics").eq("id", rfqId).maybeSingle(),
     client.rpc("offer_auto_inputs", { p_rfq: rfqId }),
     client.rpc("offer_auto_quotes", { p_rfq: rfqId }),
     getFxRates(client),
@@ -26,6 +26,7 @@ export async function computeRfqAutoOffers(client: Client, rfqId: string): Promi
     quotes: (quotes ?? []) as AutoQuoteRow[],
     buyerCurrency: rfq.currency,
     requestedIncoterm: rfq.incoterm,
+    logistics: rfq.logistics,
     rates: { EUR: rates.EUR?.dzd_per_unit, USD: rates.USD?.dzd_per_unit },
     today,
   });

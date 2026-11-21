@@ -1,12 +1,11 @@
 // Regles de la liste de prix fournisseur, communes a l'editeur de produit et a l'import Excel.
-// Forfait Starter : prix HT + incoterm (+ lieu), fret et assurance a la charge du fournisseur.
-// Forfaits Pro et Enterprise : cout produit + cout emballage = prix FCA (calcule en base).
+// Un seul modele pour tous les fournisseurs (21 novembre 2026) : un prix HT dans l'incoterm de son
+// choix (les 11 d'Incoterms 2020), plus de prix construit en FCA (cout produit + emballage).
 import { parseAmount } from "@/lib/onboarding/reference";
 import { isCountryCode } from "@/lib/countries";
+import { INCOTERMS } from "@/lib/incoterms";
 
-export type Tier = "starter" | "pro" | "enterprise";
-export const isDetailedTier = (tier: string | null | undefined) => tier === "pro" || tier === "enterprise";
-export const STARTER_BASES = ["EXW", "FCA", "FOB", "CFR", "CIF", "CPT", "CIP", "DAP", "DDP"] as const;
+export const PRICE_BASES = INCOTERMS;
 
 // Conditionnement en 4 niveaux (structure de l'annexe "brief conditionnement").
 export const PACK_LEVELS = [1, 2, 3, 4] as const;
@@ -32,9 +31,9 @@ export type TierField = `t${1 | 2 | 3}${"Basis" | "Threshold" | "Discount"}`;
 export const TIER_FIELDS: TierField[] = TIER_SLOTS.flatMap((n) => [`t${n}Basis`, `t${n}Threshold`, `t${n}Discount`] as TierField[]);
 
 export type PriceField =
-  | "sku" | "crossRefs" | "price" | "productCost" | "packagingCost" | "currency" | "priceBasis" | "pricePlace"
+  | "sku" | "crossRefs" | "price" | "currency" | "priceBasis" | "pricePlace"
   | "priceValidUntil" | "stock" | "moq" | "leadDays" | "originCountry" | "priceDzd" | TierField;
-export const PRICE_FIELDS: PriceField[] = ["sku", "crossRefs", "price", "productCost", "packagingCost", "currency", "priceBasis", "pricePlace", "priceValidUntil", "stock", "moq", "leadDays", "originCountry", "priceDzd", ...TIER_FIELDS];
+export const PRICE_FIELDS: PriceField[] = ["sku", "crossRefs", "price", "currency", "priceBasis", "pricePlace", "priceValidUntil", "stock", "moq", "leadDays", "originCountry", "priceDzd", ...TIER_FIELDS];
 export type PackField = `pk${1 | 2 | 3 | 4}${"Qty" | "Type" | "Weight" | "Length" | "Width" | "Height"}` | "pkLabel" | "pkWedging" | "pkProtection" | "pkNotes";
 
 const has = (list: readonly string[], v: string) => list.includes(v);
@@ -47,29 +46,16 @@ const optInt = (s: string, max: number) => {
 };
 
 // Prix, validite, stock, MOQ, delai, origine. "publishing" : la date de validite devient obligatoire.
-export function readPriceInput(v: Record<PriceField, string>, tier: string | null | undefined, today: string, publishing: boolean) {
+export function readPriceInput(v: Record<PriceField, string>, today: string, publishing: boolean) {
   const errors: Partial<Record<PriceField, string>> = {};
-  const detailed = isDetailedTier(tier);
   const sku = v.sku.trim();
   if (sku.length > 60) errors.sku = "errorSku";
   const crossRefs = [...new Set(v.crossRefs.split(/[,;\n]/).map((s) => s.trim()).filter(Boolean))];
   if (crossRefs.length > 20 || crossRefs.some((r) => r.length > 60)) errors.crossRefs = "errorCrossRefs";
 
-  let price: number | null = null;
-  let productCost: number | null = null;
-  let packagingCost: number | null = null;
-  if (detailed) {
-    productCost = parseAmount(v.productCost);
-    if (productCost === null || productCost <= 0) errors.productCost = "errorCost";
-    packagingCost = optAmount(v.packagingCost);
-    if (Number.isNaN(packagingCost)) errors.packagingCost = "errorCost";
-    if (productCost !== null && packagingCost !== null && !Number.isNaN(packagingCost)) price = productCost + packagingCost;
-    else price = productCost;
-  } else {
-    price = parseAmount(v.price);
-    if (price === null || price <= 0) errors.price = "errorPrice";
-    if (!has(STARTER_BASES, v.priceBasis)) errors.priceBasis = "errorChoose";
-  }
+  const price = parseAmount(v.price);
+  if (price === null || price <= 0) errors.price = "errorPrice";
+  if (!has(PRICE_BASES, v.priceBasis)) errors.priceBasis = "errorChoose";
   // Prix export : EUR ou USD seulement ; prix en dinars HT obligatoire a cote.
   if (!has(EXPORT_CURRENCIES, v.currency)) errors.currency = "errorExportCurrency";
   const priceDzd = parseAmount(v.priceDzd);
@@ -102,10 +88,11 @@ export function readPriceInput(v: Record<PriceField, string>, tier: string | nul
     min_order_quantity: moq,
     lead_time_days: leadDays !== null && !Number.isNaN(leadDays) ? leadDays : null,
     origin_country: origin,
-    // Pro/Enterprise : le prix FCA est recalcule en base a partir des couts.
-    ...(detailed
-      ? { product_cost: productCost, packaging_cost: packagingCost !== null && !Number.isNaN(packagingCost) ? packagingCost : 0, unit_price_ht: price, price_basis: "FCA" }
-      : { product_cost: null, packaging_cost: null, unit_price_ht: price, price_basis: v.priceBasis }),
+    unit_price_ht: price,
+    price_basis: v.priceBasis,
+    // Anciens couts du prix construit : effaces a la premiere modification.
+    product_cost: null,
+    packaging_cost: null,
   };
   return { errors, fields };
 }

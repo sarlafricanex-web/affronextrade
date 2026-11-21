@@ -7,6 +7,7 @@ import { computeRfqAutoOffers } from "@/lib/data/auto-offer";
 import { oneOf } from "@/lib/data/requests";
 import { OFFER_VALIDITY_DAYS } from "@/lib/offer-auto";
 import { AutoOfferForm, type AutoOfferLine } from "@/components/admin/AutoOfferForm";
+import { DELIVERED_INCOTERMS } from "@/lib/incoterms";
 
 export const instant = false;
 
@@ -54,7 +55,7 @@ export default async function AutoOfferPage({ params }: { params: Promise<{ loca
   });
   const freightManaged = m.freight_pending || m.freight_cost != null;
   const maxValid = new Date(Date.parse(`${today}T12:00:00Z`) + OFFER_VALIDITY_DAYS * 864e5).toISOString().slice(0, 10);
-  const withFreightPlace = ["CFR", "CIF", "DAP", "DDP"].includes(offer.incoterm ?? "");
+  const withFreightPlace = (DELIVERED_INCOTERMS as readonly string[]).includes(offer.incoterm ?? "");
 
   return (
     <div className="flex flex-col gap-6">

@@ -9,8 +9,8 @@ import { CountrySelect } from "@/components/country/CountrySelect";
 import { prepareUpload } from "@/lib/client/prepare-upload";
 import { CURRENCIES, UNITS } from "@/lib/onboarding/reference";
 import { estimateContainer, type LogisticsInput } from "@/lib/logistics/container";
+import { LOGISTICS, incotermsFor, type Logistics } from "@/lib/incoterms";
 
-const INCOTERMS = ["FOB", "CFR", "CIF", "DAP"] as const;
 const MAX_FILE = 4 * 1024 * 1024;
 const HAIR = "#d8cebb";
 const caps = { letterSpacing: "0.08em" } as const;
@@ -59,6 +59,8 @@ export function RfqForm({ context }: { context: RfqFormContext | null }) {
   const [state, action, pending] = useActionState<RfqState, FormData>(createRfq, { errors: {} });
   const v = state.values ?? {};
   const [mode, setMode] = useState<"units" | "containers">(v.mode === "containers" ? "containers" : "units");
+  // Transport : choix de l'acheteur des le depart ; les incoterms proposes en dependent.
+  const [logistics, setLogistics] = useState<Logistics | null>((LOGISTICS as readonly string[]).includes(v.logistics ?? "") ? (v.logistics as Logistics) : null);
   const [size, setSize] = useState<"20" | "40">(v.containerSize === "40" ? "40" : "20");
   const [count, setCount] = useState(v.containerCount || "1");
   const [file, setFile] = useState<string | null>(null);
@@ -215,17 +217,39 @@ export function RfqForm({ context }: { context: RfqFormContext | null }) {
       </Section>
 
       <Section n={4} title={t("sectionIncoterm")} tag="ICC 2020">
-        <div className="grid gap-2 sm:grid-cols-2" role="radiogroup">
-          {INCOTERMS.map((i) => (
-            <label key={i} className="flex cursor-pointer items-start gap-3 p-4" style={{ border: `1px solid ${HAIR}` }}>
-              <input type="radio" name="incoterm" value={i} required defaultChecked={v.incoterm === i} className="mt-1" />
-              <span>
-                <span className="block font-extrabold">{i} <span className="text-[10px] font-bold uppercase" style={{ ...caps, color: "var(--muted)" }}>{t(`incoterm_${i}_name`)}</span></span>
-                <span className="block text-sm" style={{ color: "var(--muted)" }}>{t(`incoterm_${i}_desc`)}</span>
-              </span>
-            </label>
-          ))}
-        </div>
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-2 text-xs font-semibold uppercase" style={{ ...caps, color: "var(--muted)" }}>{t("logisticsQuestion")}</legend>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {LOGISTICS.map((l) => (
+              <label key={l} className="flex cursor-pointer items-start gap-3 p-4" style={{ border: `${logistics === l ? 2 : 1}px solid ${logistics === l ? "#10b981" : HAIR}`, background: logistics === l ? "#ecfdf5" : "white" }}>
+                <input type="radio" name="logistics" value={l} required checked={logistics === l} onChange={() => setLogistics(l)} className="mt-1" />
+                <span>
+                  <span className="block font-extrabold">{t(`logistics_${l}_name`)}</span>
+                  <span className="block text-sm" style={{ color: "var(--muted)" }}>{t(`logistics_${l}_desc`)}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          {err("logistics")}
+        </fieldset>
+        {logistics ? (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-xs font-semibold uppercase" style={{ ...caps, color: "var(--muted)" }}>{t("incotermQuestion")}</legend>
+            <div key={logistics} className="grid gap-2 sm:grid-cols-2">
+              {incotermsFor(logistics).map((i) => (
+                <label key={i} className="flex cursor-pointer items-start gap-3 p-4" style={{ border: `1px solid ${HAIR}` }}>
+                  <input type="radio" name="incoterm" value={i} required defaultChecked={v.incoterm === i} className="mt-1" />
+                  <span>
+                    <span className="block font-extrabold">{i} <span className="text-[10px] font-bold uppercase" style={{ ...caps, color: "var(--muted)" }}>{t(`incoterm_${i}_name`)}</span></span>
+                    <span className="block text-sm" style={{ color: "var(--muted)" }}>{t(`incoterm_${i}_desc`)}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        ) : (
+          <p className="text-sm" style={{ color: "var(--muted)" }}>{t("logisticsFirst")}</p>
+        )}
         {err("incoterm")}
         <p className="text-xs" style={{ color: "var(--muted)" }}>{t("incotermHelp")}</p>
       </Section>

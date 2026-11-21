@@ -6,6 +6,7 @@ import { getOfferComposer } from "@/lib/data/admin-rfqs";
 import { destinationLabel, volumeLabel } from "@/lib/rfq-display";
 import { DEFAULT_INSURANCE_RATE } from "@/lib/offer-pricing";
 import { OfferForm } from "@/components/admin/OfferForm";
+import { DELIVERED_INCOTERMS } from "@/lib/incoterms";
 
 export const instant = false;
 
@@ -40,7 +41,7 @@ export default async function AdminOfferPage({
   const unitLabel = unit ? tc(`unitShort_${unit}`) : "";
   const date = (d: string | null) => (d ? format.dateTime(new Date(`${d.slice(0, 10)}T12:00:00`), { dateStyle: "long" }) : "-");
   const editable = !offer || offer.status === "draft";
-  const cIncoterm = ["CFR", "CIF", "DAP", "DDP"].includes(rfq.incoterm ?? "");
+  const cIncoterm = (DELIVERED_INCOTERMS as readonly string[]).includes(rfq.incoterm ?? "");
 
   const defaults = {
     label: str(offer?.label ?? nextLabel),

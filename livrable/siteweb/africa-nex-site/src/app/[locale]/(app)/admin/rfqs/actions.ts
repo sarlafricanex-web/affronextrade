@@ -7,10 +7,11 @@ import { isCountryCode } from "@/lib/countries";
 import { UNITS, parseAmount } from "@/lib/onboarding/reference";
 import { notify } from "@/lib/notify";
 import { frDate } from "@/lib/notify/format";
+import { INCOTERMS as ALL_INCOTERMS } from "@/lib/incoterms";
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
 const UUID = /^[0-9a-f-]{36}$/i;
-const INCOTERMS = ["EXW", "FCA", "FOB", "CFR", "CIF", "DAP", "DDP"];
+const INCOTERMS: readonly string[] = ALL_INCOTERMS;
 
 async function adminContext(formData: FormData) {
   const locale = resolveLocale(text(formData, "locale"));

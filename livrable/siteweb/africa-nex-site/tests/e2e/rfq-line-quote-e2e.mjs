@@ -115,7 +115,7 @@ try {
   await go(page, panelReady);
   report("Plus de ligne non chiffree", await run(`return !document.querySelector("[data-auto-skipped]");`));
   report("Ligne 2 chiffree depuis un devis", await run(`return document.querySelector('[data-auto-line="2"] [data-source]')?.dataset.source === "quote";`));
-  report("Prix acheteur : 11 (catalogue) et 7,70 (devis B, le moins cher, commission 10 %)", JSON.stringify(await prices()) === "[11,7.7]", JSON.stringify(await prices()));
+  report("Prix acheteur : 11,10 (catalogue) et 7,77 (devis B, le moins cher, commission 10 % + assurance 1 %)", JSON.stringify(await prices()) === "[11.1,7.77]", JSON.stringify(await prices()));
   report("Comparatif : devis B marque utilise, ligne indiquee", await run(`const tr = document.querySelector('[data-quote="${qB.id}"]'); return !!tr?.querySelector("[data-used]") && tr.querySelector("[data-quote-line]")?.dataset.quoteLine === "2";`));
   await shot("line-quote-cheapest");
 
@@ -123,7 +123,7 @@ try {
   await run(`document.querySelector('[data-choose="${qA.id}"]').click(); return true;`);
   report("Devis A retenu : message", await waitFor(`return location.search.includes("done=lineQuoteChosen");`));
   await waitFor(panelReady);
-  report("Le calcul utilise le devis A (9,90)", JSON.stringify(await prices()) === "[11,9.9]", JSON.stringify(await prices()));
+  report("Le calcul utilise le devis A (9,99)", JSON.stringify(await prices()) === "[11.1,9.99]", JSON.stringify(await prices()));
   report("Comparatif : A retenu et utilise", await run(`const tr = document.querySelector('[data-quote="${qA.id}"]'); return !!tr?.querySelector("[data-chosen]") && !!tr.querySelector("[data-used]");`));
 
   // 6. Brouillon, publication, retrait
@@ -132,7 +132,7 @@ try {
   const { data: offers } = await admin.from("offers").select("id, label, offer_lines(position, unit_price, offer_line_margins(quote_id, company_id, product_id))").eq("rfq_id", rfqId);
   const l2 = offers?.[0]?.offer_lines?.find((l) => l.position === 2);
   const m2 = Array.isArray(l2?.offer_line_margins) ? l2.offer_line_margins[0] : l2?.offer_line_margins;
-  report("En base : la ligne 2 garde le devis A et son producteur", offers?.length === 1 && Number(l2?.unit_price) === 9.9 && m2?.quote_id === qA.id && m2.company_id === coA && m2.product_id === null, JSON.stringify(offers));
+  report("En base : la ligne 2 garde le devis A et son producteur", offers?.length === 1 && Number(l2?.unit_price) === 9.99 && m2?.quote_id === qA.id && m2.company_id === coA && m2.product_id === null, JSON.stringify(offers));
   await run(`document.querySelector('[data-offer="A"] form button[type=submit]').click(); return true;`);
   report("Offre publiee", await waitFor(`return location.search.includes("done=offerPublished");`));
   const status = async () => Object.fromEntries(((await admin.from("quotes").select("id, status").in("id", [qA.id, qB.id])).data ?? []).map((q) => [q.id, q.status]));
@@ -149,7 +149,7 @@ try {
   await run(`document.querySelector('[data-choose="auto"]').click(); return true;`);
   await waitFor(`return location.search.includes("done=lineQuoteAuto");`);
   await waitFor(panelReady);
-  report("Retour au moins cher : le calcul reprend le devis B", JSON.stringify(await prices()) === "[11,7.7]", JSON.stringify(await prices()));
+  report("Retour au moins cher : le calcul reprend le devis B", JSON.stringify(await prices()) === "[11.1,7.77]", JSON.stringify(await prices()));
 
   // 8. Confidentialite
   const { data: choicesB } = await prodB.client.from("rfq_line_choices").select("rfq_line_id");

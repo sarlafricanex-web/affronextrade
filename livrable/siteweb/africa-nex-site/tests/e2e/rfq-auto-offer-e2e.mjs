@@ -1,6 +1,8 @@
 // Test de bout en bout du calcul automatique de l'offre (lot 6c) : demande multi-lignes chiffree
 // depuis les listes de prix, repartition par mode et par devise, palier de commission sur le total,
 // brouillons crees, publication bloquee tant que marge ou fret restent a saisir, confidentialite.
+// Session 2 des abonnements : l'acheteur a choisi "livre par AFRICA NEX" (fret a saisir sur chaque
+// offre), assurance 1 % partout, export par AFRICA NEX avec l'accord du fournisseur.
 import { site, OUT, CHROME } from "./_guard.mjs";
 import { waitEmails, delivered } from "./_emails.mjs";
 import { createRequire } from "node:module";
@@ -35,11 +37,12 @@ async function makeUser(role, name) {
 }
 
 const companies = [];
-async function supplier(name, tier, mode, owner) {
-  const { data, error } = await admin.from("companies").insert({ company_name: `${name} ${TAG}`, kind: "producer", slug: `test-auto-${name}-${TAG}`.toLowerCase(), owner_profile_id: owner ?? null, sector: "C10", subscription_tier: tier, visibility: "draft" }).select("id").single();
+async function supplier(name, mode, owner) {
+  const { data, error } = await admin.from("companies").insert({ company_name: `${name} ${TAG}`, kind: "producer", slug: `test-auto-${name}-${TAG}`.toLowerCase(), owner_profile_id: owner ?? null, sector: "C10", visibility: "draft", africanex_export_consent: mode === "africanex" }).select("id").single();
   if (error) throw error;
   companies.push(data.id);
-  await admin.from("supplier_settings").upsert({ company_id: data.id, export_mode: mode });
+  const { error: modeError } = await admin.from("supplier_settings").upsert({ company_id: data.id, export_mode: mode });
+  if (modeError) throw modeError;
   return data.id;
 }
 async function product(company_id, fields) {
@@ -58,16 +61,19 @@ try {
   const producer = await makeUser("producer", "Producteur Calcul");
   await admin.from("fx_rates").upsert([{ currency: "EUR", dzd_per_unit: 150 }, { currency: "USD", dzd_per_unit: 135 }]);
 
-  // Trois fournisseurs : Starter en intermediation, Pro en intermediation, Starter exporte par AFRICA NEX.
-  const s1 = await supplier("starter", "starter", "self");
-  const s2 = await supplier("pro", "pro", "self", producer.id);
-  const s3 = await supplier("export", "starter", "africanex");
+  // Trois fournisseurs : deux en intermediation (EUR, USD), un exporte par AFRICA NEX (avec son accord).
+  const s1 = await supplier("huile", "self");
+  const s2 = await supplier("dattes", "self", producer.id);
+  const s3 = await supplier("export", "africanex");
+  const sansAccord = await supplier("sans-accord", "self");
+  const { error: refusEx } = await admin.from("supplier_settings").update({ export_mode: "africanex" }).eq("company_id", sansAccord);
+  report("Export par AFRICA NEX refuse sans l'accord du fournisseur", /export consent required/.test(refusEx?.message ?? ""), refusEx?.message);
   const p1 = await product(s1, { product_name: "Huile 1 L", unit_price_ht: 10, currency: "EUR", price_basis: "FOB", price_place: "Alger", stock_quantity: 1000 });
-  const p2 = await product(s2, { product_name: "Dattes 5 kg", product_cost: 18, packaging_cost: 2, currency: "EUR", price_basis: "FCA", stock_quantity: 10, lead_time_days: 30, discount_tiers: [{ basis: "qty", threshold: 50, discount: 4 }] });
+  const p2 = await product(s2, { product_name: "Dattes 5 kg", unit_price_ht: 20, currency: "USD", price_basis: "FCA", stock_quantity: 10, lead_time_days: 30, discount_tiers: [{ basis: "qty", threshold: 50, discount: 4 }] });
   const p3 = await product(s3, { product_name: "Couscous 1 kg", unit_price_ht: 9, currency: "EUR", price_dzd_ht: 3000, stock_quantity: 500 });
-  report("Forfait Pro : prix FCA calcule en base (18 + 2)", Number(p2.unit_price_ht) === 20, String(p2.unit_price_ht));
+  report("Plus de prix construit : le prix saisi reste tel quel (20 USD FCA)", Number(p2.unit_price_ht) === 20, String(p2.unit_price_ht));
 
-  const { data: rfq, error: rfqError } = await admin.from("rfqs").insert({ buyer_profile_id: buyer.id, title: `Panier ${TAG}`, currency: "EUR", incoterm: "CIF", destination_country: "CI", status: "qualified" }).select("id").single();
+  const { data: rfq, error: rfqError } = await admin.from("rfqs").insert({ buyer_profile_id: buyer.id, title: `Panier ${TAG}`, currency: "EUR", incoterm: "CIF", logistics: "africanex", destination_country: "CI", status: "qualified" }).select("id").single();
   if (rfqError) throw rfqError;
   rfqId = rfq.id;
   const { error: linesError } = await admin.from("rfq_lines").insert([
@@ -96,16 +102,16 @@ try {
 
   // Apercu du calcul
   await loginAs(boss);
-  await go(page, `return !!document.querySelector("[data-auto-offers]");`);
+  await go(page, `return document.querySelectorAll("[data-auto-offer]").length === 3;`);
   const blocks = await run(`return document.querySelector("[data-auto-offers]").dataset.autoOffers + " " + [...document.querySelectorAll("[data-auto-offer]")].map((e) => e.dataset.autoOffer + ":" + e.dataset.incoterm).join();`);
-  report("Apercu : 3 offres (intermediation FOB, intermediation CIF, export AFRICA NEX CIF)", blocks === "3 self-EUR:FOB,self-EUR:CIF,africanex-EUR:CIF", blocks);
-  report("Palier sur le total de la demande (4 000 EUR) : 10 %", await run(`return document.querySelector("[data-commission-rate]").dataset.commissionRate === "10";`));
+  report("Apercu : 3 offres livrees en CIF (intermediation EUR, intermediation USD, export AFRICA NEX)", blocks === "3 self-EUR:CIF,self-USD:CIF,africanex-EUR:CIF", blocks);
+  report("Palier sur le total de la demande (moins de 5 000 EUR) : 10 %", await run(`return document.querySelector("[data-commission-rate]").dataset.commissionRate === "10";`));
   const prices = await run(`return [...document.querySelectorAll("[data-buyer-price]")].map((e) => Number(e.dataset.buyerPrice));`);
-  report("Prix acheteur : Starter 11, Pro 22,20 (+ assurance), export 20,60 (+ assurance et change)", JSON.stringify(prices) === JSON.stringify([11, 22.2, 20.6]), JSON.stringify(prices));
+  report("Prix acheteur : 11,10 EUR et 22,20 USD (commission + assurance 1 %), export 20,60 (+ assurance et change)", JSON.stringify(prices) === JSON.stringify([11.1, 22.2, 20.6]), JSON.stringify(prices));
   report("Ligne hors catalogue signalee", await run(`const s = document.querySelector("[data-auto-skipped]"); return s?.dataset.autoSkipped === "1" && !!s.querySelector('[data-issue="noProduct"]');`));
   report("Stock insuffisant : delai de production affiche", await run(`return document.querySelector('[data-auto-line="2"]').innerText.includes("À produire · 30 j");`));
   report("Remise maximale du fournisseur visible (4 %)", await run(`return document.querySelector('[data-auto-line="2"]').innerText.includes("4 %");`));
-  report("Fret et marge signales a saisir (rien pour le Starter en FOB)", await run(`const b = [...document.querySelectorAll("[data-auto-offer]")]; return !b[0].querySelector("[data-pending]") && !!b[1].querySelector('[data-pending="freight"]') && !b[1].querySelector('[data-pending="margin"]') && !!b[2].querySelector('[data-pending="margin"]') && !!b[2].querySelector('[data-pending="freight"]');`));
+  report("Fret a saisir sur chaque offre (livraison choisie par l'acheteur), marge sur l'export", await run(`const b = [...document.querySelectorAll("[data-auto-offer]")]; return !!b[0].querySelector('[data-pending="freight"]') && !b[0].querySelector('[data-pending="margin"]') && !!b[1].querySelector('[data-pending="freight"]') && !b[1].querySelector('[data-pending="margin"]') && !!b[2].querySelector('[data-pending="margin"]') && !!b[2].querySelector('[data-pending="freight"]');`));
   await shot("auto-offer-preview");
 
   // Telephone : pas de debordement de la page
@@ -123,13 +129,13 @@ try {
   let offers = await offersOf();
   const m = (o) => (Array.isArray(o.offer_margins) ? o.offer_margins[0] : o.offer_margins);
   const [oa, ob, oc] = offers;
-  report("En base : offre A intermediation FOB, 1 ligne, 1 100 EUR, commission 10 %, rien a saisir", offers.length === 3 && oa.label === "A" && oa.incoterm === "FOB" && m(oa).export_mode === "self" && oa.offer_lines.length === 1 && Number(oa.total_amount) === 1100 && Number(m(oa).commission_rate) === 10 && !m(oa).freight_pending && oa.unit_price === null, JSON.stringify(oa));
-  report("En base : offre B intermediation CIF (Pro), 2 220 EUR, fret a saisir", ob?.label === "B" && ob.incoterm === "CIF" && m(ob).export_mode === "self" && Number(ob.total_amount) === 2220 && m(ob).freight_pending, JSON.stringify(ob));
+  report("En base : offre A intermediation CIF, 1 ligne, 1 110 EUR, commission 10 %, fret a saisir", offers.length === 3 && oa.label === "A" && oa.incoterm === "CIF" && oa.currency === "EUR" && m(oa).export_mode === "self" && oa.offer_lines.length === 1 && Number(oa.total_amount) === 1110 && Number(m(oa).commission_rate) === 10 && m(oa).freight_pending && oa.unit_price === null, JSON.stringify(oa));
+  report("En base : offre B intermediation CIF en USD, 2 220 USD, fret a saisir", ob?.label === "B" && ob.incoterm === "CIF" && ob.currency === "USD" && m(ob).export_mode === "self" && Number(ob.total_amount) === 2220 && m(ob).freight_pending, JSON.stringify(ob));
   report("En base : offre C export AFRICA NEX, marge a saisir", oc?.label === "C" && m(oc).export_mode === "africanex" && m(oc).margin_pending && Number(oc.total_amount) === 1030, JSON.stringify(oc));
   const lm = oc?.offer_lines?.[0]?.offer_line_margins;
   const lineMargin = Array.isArray(lm) ? lm[0] : lm;
   report("En base : prix fournisseur en dinars conserve (3 000 DZD)", Number(lineMargin?.supplier_unit_price) === 3000 && lineMargin.supplier_currency === "DZD");
-  report("Liste des offres : badges a saisir", await run(`return !document.querySelector('[data-offer="A"] [data-pending]') && !!document.querySelector('[data-offer="B"] [data-pending="freight"]') && !!document.querySelector('[data-offer="C"] [data-pending="margin"]');`));
+  report("Liste des offres : badges a saisir", await run(`return !!document.querySelector('[data-offer="A"] [data-pending="freight"]') && !!document.querySelector('[data-offer="B"] [data-pending="freight"]') && !!document.querySelector('[data-offer="C"] [data-pending="margin"]');`));
 
   // Confidentialite
   const { data: buyerLines } = await buyer.client.from("offer_lines").select("id");
@@ -195,7 +201,7 @@ try {
   report("Brouillon enregistre sans fret", await waitFor(`return location.search.includes("done=offerSaved");`));
   offers = await offersOf();
   const b2 = offers.find((o) => o.label === "B");
-  report("En base : B en brouillon, commission 5 % (100 EUR), total 2 120, fret toujours a saisir", b2.status === "draft" && Number(m(b2).commission_rate) === 5 && Number(m(b2).commission_amount) === 100 && Number(b2.total_amount) === 2120 && m(b2).freight_pending && b2.freight_amount === null, JSON.stringify(b2));
+  report("En base : B en brouillon, commission 5 % (100 USD), total 2 120, fret toujours a saisir", b2.status === "draft" && Number(m(b2).commission_rate) === 5 && Number(m(b2).commission_amount) === 100 && Number(b2.total_amount) === 2120 && m(b2).freight_pending && b2.freight_amount === null, JSON.stringify(b2));
   await go(editor(offB), `return !!document.querySelector("[data-calc]");`);
   report("La commission saisie est conservee a la reouverture", await run(`return document.querySelector("#a-commission").value === "5";`));
 

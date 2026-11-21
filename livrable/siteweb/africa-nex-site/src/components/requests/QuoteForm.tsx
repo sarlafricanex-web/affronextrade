@@ -7,13 +7,13 @@ import type { QuoteField, QuoteState } from "@/lib/quote-input";
 import { Alert, Field, TextInput } from "@/components/auth/fields";
 import { prepareUpload } from "@/lib/client/prepare-upload";
 import { CURRENCIES } from "@/lib/onboarding/reference";
+import { INCOTERMS } from "@/lib/incoterms";
 
 export type QuoteDefaults = { currency: string; unitPrice: string; priceBasis: string; port: string; quantity: string; leadDays: string; availableOn: string; paymentTerms: string; validUntil: string; notes: string };
 
 const HAIR = "#d8cebb";
 const caps = { letterSpacing: "0.08em" } as const;
 const box = { background: "var(--field-a)", border: "1px solid var(--field-b)", outline: "none" } as const;
-const BASES = ["FOB", "FCA", "EXW"] as const;
 
 function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
   return (
@@ -79,8 +79,8 @@ export function QuoteForm({
         </div>
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-2 text-xs font-semibold uppercase" style={{ ...caps, color: "var(--muted)" }}>{t("priceBasis")}</legend>
-          <div className="grid grid-cols-3 gap-2">
-            {BASES.map((b) => (
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {INCOTERMS.map((b) => (
               <label key={b} className="flex cursor-pointer items-center gap-2 px-3 py-2.5 text-sm font-semibold" style={{ border: `1px solid ${HAIR}` }}>
                 <input type="radio" name="priceBasis" value={b} defaultChecked={v.priceBasis === b} required />
                 {b}

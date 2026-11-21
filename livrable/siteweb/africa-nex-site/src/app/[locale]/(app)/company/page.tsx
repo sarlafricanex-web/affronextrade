@@ -215,6 +215,7 @@ export default async function CompanyPage({
                   address: company.private?.address ?? "",
                   phone: company.private?.contact_phone ?? "",
                   whatsapp: company.private?.contact_whatsapp ?? "",
+                  exportConsent: company.africanex_export_consent,
                 }}
               />
             )}

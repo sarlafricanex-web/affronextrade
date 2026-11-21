@@ -787,6 +787,36 @@ await check("Descente vers un forfait payant : nouvelle demande au prix inferieu
   expect(subs.length === 2 && subs[0].status === "past_due" && subs[1].plan_code === "essentiel" && subs[1].status === "pending_payment" && subs[1].price_charged_dzd === 15000 && plan === "vitrine", JSON.stringify(subs) + " " + plan);
 });
 
+// ---------------------------------------------------------------------------------------------
+// Session 2 (migration 36) : tous les incoterms, accord du fournisseur pour l'export par AFRICA NEX
+// ---------------------------------------------------------------------------------------------
+await check("Incoterms : les 11 d'Incoterms 2020 acceptes pour un prix fournisseur, un inconnu refuse", async () => {
+  const co = await supplier("incoterms");
+  for (const basis of ["EXW", "FAS", "CPT", "DAP", "DPU", "DDP"]) {
+    await rows("insert into public.products (company_id, product_name, hs_code, unit, unit_price_ht, currency, price_basis, status) values ($1, $2, '150910', 'carton', 10, 'EUR', $3, 'draft')", [co, basis, basis]);
+  }
+  await expectFail(rows("insert into public.products (company_id, product_name, hs_code, unit, unit_price_ht, currency, price_basis, status) values ($1, 'X', '150910', 'carton', 10, 'EUR', 'DAF', 'draft')", [co]), /price_basis_check/);
+});
+
+await check("Export par AFRICA NEX : refuse par la base sans l'accord du fournisseur", () =>
+  expectFail(as(U.admin, () => rows("insert into public.supplier_settings (company_id, export_mode) values ($1, 'africanex')", [companyA])), /export consent required/));
+
+await check("Accord du fournisseur : il le donne lui-meme, la date est posee par la base", async () => {
+  await as(U.prodA, () => rows("update public.companies set africanex_export_consent = true where id = $1", [companyA]));
+  const [c] = await rows("select africanex_export_consent as ok, africanex_export_consent_at as at from public.companies where id = $1", [companyA]);
+  await as(U.prodA, () => rows("update public.companies set africanex_export_consent_at = '2020-01-01' where id = $1", [companyA]));
+  const at2 = await one("select africanex_export_consent_at from public.companies where id = $1", [companyA]);
+  expect(c.ok === true && c.at && String(at2) === String(c.at), `accord ${c.ok}, date ${c.at}, apres forcage ${at2}`);
+  await as(U.admin, () => rows("insert into public.supplier_settings (company_id, export_mode) values ($1, 'africanex') on conflict (company_id) do update set export_mode = 'africanex'", [companyA]));
+});
+
+await check("Retrait de l'accord : le fournisseur repasse en intermediation", async () => {
+  await as(U.prodA, () => rows("update public.companies set africanex_export_consent = false where id = $1", [companyA]));
+  const mode = await one("select export_mode from public.supplier_settings where company_id = $1", [companyA]);
+  const at = await one("select africanex_export_consent_at from public.companies where id = $1", [companyA]);
+  expect(mode === "self" && at === null, `mode ${mode}, date ${at}`);
+});
+
 console.log(`\n${passed} tests reussis, ${failures.length} en echec`);
 for (const f of failures) console.log(`  ECHEC  ${f}`);
 process.exit(failures.length ? 1 : 0);

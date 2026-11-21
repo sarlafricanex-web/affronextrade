@@ -89,7 +89,10 @@ export async function saveIdentity(_prev: IdentityState, formData: FormData): Pr
   if (Object.keys(errors).length) return { errors };
 
   const { supabase, userId } = user;
-  const fields = { company_name: v.companyName, legal_form: v.legalForm, sector: v.sector, activity_code: v.activityCode, activity_description: v.activityDescription, wilaya: v.wilaya, city: v.city };
+  const fields = { company_name: v.companyName, legal_form: v.legalForm, sector: v.sector, activity_code: v.activityCode, activity_description: v.activityDescription, wilaya: v.wilaya, city: v.city,
+    // Accord pour l'export par AFRICA NEX : la base date l'accord et, s'il est retire, repasse le
+    // fournisseur en intermediation.
+    africanex_export_consent: formData.get("exportConsent") === "on" };
 
   let companyId = await getMyCompanyId(supabase, userId);
   if (!companyId) {

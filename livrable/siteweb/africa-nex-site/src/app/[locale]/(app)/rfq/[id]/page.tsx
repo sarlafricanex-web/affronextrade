@@ -12,6 +12,7 @@ import { MessageForm } from "@/components/messages/MessageForm";
 import { destinationLabel, volumeLabel } from "@/lib/rfq-display";
 import { StatusBadge } from "@/components/rfq/RfqList";
 import { cancelRfq } from "../actions";
+import { logisticsOf } from "@/lib/offer-auto";
 
 export const instant = false;
 
@@ -57,6 +58,7 @@ export default async function RfqDetailPage({
   const specs = [
     { label: t("specQuantity"), value: volumeLabel(rfq, t, tc, locale) },
     { label: t("specDestination"), value: destinationLabel(rfq, locale) || null },
+    { label: t("specLogistics"), value: t(`logistics_${logisticsOf(rfq.logistics, rfq.incoterm)}`) },
     { label: t("specIncoterm"), value: rfq.incoterm },
     { label: t("specNeededBy"), value: date(rfq.needed_by) },
     { label: t("specTargetPrice"), value: rfq.target_unit_price != null ? `${Number(rfq.target_unit_price).toLocaleString(locale)} ${rfq.currency ?? ""}`.trim() : null },

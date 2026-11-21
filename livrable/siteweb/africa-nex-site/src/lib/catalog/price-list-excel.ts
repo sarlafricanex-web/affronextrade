@@ -1,10 +1,10 @@
 import "server-only";
 import ExcelJS from "exceljs";
 import { UNITS } from "@/lib/onboarding/reference";
-import { EXPORT_CURRENCIES, PACK_LABELS, PACK_LEVELS, PACK_PROTECTIONS, PACK_TYPES, PACK_WEDGING, STARTER_BASES, TIER_BASES, TIER_SLOTS, isDetailedTier, packagingValues, tierValues, type PackField, type PriceField } from "@/lib/catalog/price-list";
+import { EXPORT_CURRENCIES, PACK_LABELS, PACK_LEVELS, PACK_PROTECTIONS, PACK_TYPES, PACK_WEDGING, PRICE_BASES, TIER_BASES, TIER_SLOTS, packagingValues, tierValues, type PackField, type PriceField } from "@/lib/catalog/price-list";
 import { PACK_PICTOGRAMS } from "@/lib/catalog/pictograms";
 
-// Liste de prix fournisseur en Excel : modele selon le forfait (Starter ou detaille), pre-rempli
+// Liste de prix fournisseur en Excel : un modele unique (prix HT + incoterm), pre-rempli
 // avec les references du catalogue, puis relu a l'import. La ligne 2 (masquee) porte la cle de
 // chaque colonne : l'import retrouve les colonnes meme si le fournisseur en deplace.
 
@@ -15,29 +15,22 @@ const KEY_ROW = 2;
 const FIRST_ROW = 5;
 const EXTRA_ROWS = 200; // lignes vides pour de nouvelles references
 
-type Col = { key: string; fr: string; en: string; width: number; editable: boolean; list?: string; kind?: "date" | "number" | "formula" };
+type Col = { key: string; fr: string; en: string; width: number; editable: boolean; list?: string; kind?: "date" | "number" };
 type Labels = Record<"packType" | "packLabel" | "packWedging" | "packProtection" | "storage" | "tierBasis", Record<string, string>>;
 
-export function priceColumns(tier: string | null | undefined): Col[] {
+export function priceColumns(): Col[] {
   const head: Col[] = [
     { key: "id", fr: "ID (ne pas modifier)", en: "ID (do not edit)", width: 6, editable: false },
     { key: "sku", fr: "Réf. fournisseur", en: "Supplier ref.", width: 16, editable: true },
     { key: "productName", fr: "Désignation", en: "Product", width: 34, editable: true },
     { key: "unit", fr: "Unité de vente", en: "Sales unit", width: 12, editable: true, list: "units" },
   ];
-  const price: Col[] = isDetailedTier(tier)
-    ? [
-        { key: "productCost", fr: "Coût produit HT", en: "Product cost", width: 14, editable: true, kind: "number" },
-        { key: "packagingCost", fr: "Coût emballage HT", en: "Packaging cost", width: 14, editable: true, kind: "number" },
-        { key: "fca", fr: "Total FCA (calculé)", en: "Total FCA (calc.)", width: 14, editable: false, kind: "formula" },
-        { key: "currency", fr: "Devise", en: "Currency", width: 9, editable: true, list: "currencies" },
-      ]
-    : [
-        { key: "price", fr: "Prix unitaire HT", en: "Unit price", width: 14, editable: true, kind: "number" },
-        { key: "currency", fr: "Devise", en: "Currency", width: 9, editable: true, list: "currencies" },
-        { key: "priceBasis", fr: "Incoterm", en: "Incoterm", width: 10, editable: true, list: "bases" },
-        { key: "pricePlace", fr: "Lieu de l'incoterm", en: "Incoterm place", width: 18, editable: true },
-      ];
+  const price: Col[] = [
+    { key: "price", fr: "Prix unitaire HT", en: "Unit price", width: 14, editable: true, kind: "number" },
+    { key: "currency", fr: "Devise", en: "Currency", width: 9, editable: true, list: "currencies" },
+    { key: "priceBasis", fr: "Incoterm", en: "Incoterm", width: 10, editable: true, list: "bases" },
+    { key: "pricePlace", fr: "Lieu de l'incoterm", en: "Incoterm place", width: 18, editable: true },
+  ];
   // Deuxieme prix (confidentiel) puis marge de negociation par paliers (facultative).
   const dzd: Col[] = [{ key: "priceDzd", fr: "Prix en dinars HT (confidentiel)", en: "Price in DZD excl. tax (confidential)", width: 16, editable: true, kind: "number" }];
   const tiers: Col[] = TIER_SLOTS.flatMap((n) => [
@@ -96,16 +89,15 @@ const INK = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F172A" } }
 const THIN = { style: "thin", color: { argb: "FFD8CEBB" } } as const;
 
 export type ExportProduct = {
-  id: string; sku: string | null; product_name: string; unit: string | null; unit_price_ht: number | null; product_cost: number | null; packaging_cost: number | null;
+  id: string; sku: string | null; product_name: string; unit: string | null; unit_price_ht: number | null;
   currency: string | null; price_basis: string | null; price_place: string | null; price_valid_until: string | null; stock_quantity: number | null;
   min_order_quantity: number | null; lead_time_days: number | null; origin_country: string | null; cross_refs: string[] | null; packaging_spec: unknown;
   storage_condition: string | null; max_stack_layers: number | null; price_dzd_ht: number | null; discount_tiers: unknown;
 };
 
-export async function buildPriceListWorkbook({ products, tier, companyName, labels, generatedOn }: { products: ExportProduct[]; tier: string; companyName: string; labels: Labels; generatedOn: string }) {
+export async function buildPriceListWorkbook({ products, companyName, labels, generatedOn }: { products: ExportProduct[]; companyName: string; labels: Labels; generatedOn: string }) {
   const wb = new ExcelJS.Workbook();
   wb.creator = "AFRICA NEX";
-  const detailed = isDetailedTier(tier);
 
   // Listes des menus deroulants (feuille masquee : une liste en ligne est limitee a 255 caracteres).
   const lists = wb.addWorksheet(LIST_SHEET, { state: "veryHidden" });
@@ -114,7 +106,7 @@ export async function buildPriceListWorkbook({ products, tier, companyName, labe
     units: [...UNITS],
     currencies: [...EXPORT_CURRENCIES],
     tierBases: TIER_BASES.map((b) => labels.tierBasis[b]),
-    bases: [...STARTER_BASES],
+    bases: [...PRICE_BASES],
     packType: PACK_TYPES.map((c) => labels.packType[c]),
     packLabel: PACK_LABELS.map((c) => labels.packLabel[c]),
     packWedging: PACK_WEDGING.map((c) => labels.packWedging[c]),
@@ -131,12 +123,10 @@ export async function buildPriceListWorkbook({ products, tier, companyName, labe
   const help = wb.addWorksheet("Consignes");
   help.getColumn(1).width = 110;
   const helpLines = [
-    `Liste de prix AFRICA NEX · ${companyName} · forfait ${tier.toUpperCase()} · généré le ${generatedOn}`,
+    `Liste de prix AFRICA NEX · ${companyName} · généré le ${generatedOn}`,
     "",
     "1. Complétez les cellules jaunes de la feuille « Liste de prix », puis la feuille « Conditionnement ».",
-    detailed
-      ? "2. Forfait Pro / Enterprise : indiquez le coût produit et le coût emballage HT ; le total FCA est calculé. AFRICA NEX ajoute le fret et l'assurance."
-      : "2. Forfait Starter : indiquez votre prix HT et son incoterm (EXW, FOB, CIF...). Le fret et l'assurance éventuels sont compris dans votre prix.",
+    "2. Indiquez votre prix HT et son incoterm (les 11 d'Incoterms 2020 : EXW, FCA, FOB, CIF, DAP...), avec le lieu (ville, port). Le fret et l'assurance éventuels sont compris dans votre prix selon l'incoterm choisi.",
     "   Votre prix export est en EUR ou en USD (une seule devise). Indiquez aussi votre prix en dinars HT : il reste confidentiel, réservé à AFRICA NEX, et n'est jamais montré à l'acheteur.",
     "   Facultatif : votre marge de négociation, jusqu'à 3 paliers (seuil en quantité ou en montant, remise maximale en %). Confidentielle, jamais appliquée d'office. Laissée vide, votre grille par défaut s'applique.",
     "3. Indiquez la date jusqu'à laquelle chaque prix est valable : un prix expiré n'est plus proposé aux acheteurs.",
@@ -182,9 +172,8 @@ export async function buildPriceListWorkbook({ products, tier, companyName, labe
   };
 
   // Liste de prix
-  const pcols = priceColumns(tier);
-  const ws = sheetFor(PRICE_SHEET, pcols, detailed ? "Liste de prix · construction du prix FCA (Pro / Enterprise)" : "Liste de prix · prix HT et incoterm (Starter)");
-  const idx = (key: string) => pcols.findIndex((c) => c.key === key) + 1;
+  const pcols = priceColumns();
+  const ws = sheetFor(PRICE_SHEET, pcols, "Liste de prix · prix HT et incoterm");
   const total = products.length + EXTRA_ROWS;
   for (let r = 0; r < total; r++) {
     const p = products[r];
@@ -192,7 +181,7 @@ export async function buildPriceListWorkbook({ products, tier, companyName, labe
     const values: Record<string, unknown> = p
       ? {
           id: p.id, sku: p.sku ?? "", productName: p.product_name, unit: p.unit ?? "",
-          productCost: p.product_cost, packagingCost: p.packaging_cost, price: p.unit_price_ht,
+          price: p.unit_price_ht,
           // Devise export : EUR ou USD seulement (un ancien prix en DZD passe dans la colonne dinars).
           currency: p.currency === "EUR" || p.currency === "USD" ? p.currency : "", priceBasis: p.price_basis ?? "FOB", pricePlace: p.price_place ?? "",
           priceDzd: p.price_dzd_ht,
@@ -205,14 +194,11 @@ export async function buildPriceListWorkbook({ products, tier, companyName, labe
     pcols.forEach((c, i) => {
       const cell = ws.getCell(row, i + 1);
       const v = values[c.key];
-      if (c.kind === "formula") {
-        const a = ws.getColumn(idx("productCost")).letter, b = ws.getColumn(idx("packagingCost")).letter;
-        cell.value = { formula: `IF(${a}${row}="","",${a}${row}+N(${b}${row}))` };
-      } else if (v !== null && v !== undefined && v !== "") {
+      if (v !== null && v !== undefined && v !== "") {
         cell.value = c.kind === "number" ? Number(v) : v instanceof Date ? v : safe(v);
       }
       if (c.kind === "date") cell.numFmt = "dd/mm/yyyy";
-      if (c.kind === "number" || c.kind === "formula") cell.numFmt = "#,##0.00";
+      if (c.kind === "number") cell.numFmt = "#,##0.00";
       cell.fill = c.editable ? EDIT : LOCKED;
       cell.border = { bottom: THIN, right: THIN };
       if (c.list) cell.dataValidation = { type: "list", allowBlank: true, formulae: [listRanges[c.list]], showErrorMessage: true, errorTitle: "AFRICA NEX", error: "Choisissez une valeur de la liste." };
@@ -327,6 +313,14 @@ export async function readPriceListWorkbook(buffer: ArrayBuffer, labels: Labels)
       }
       for (const n of PACK_LEVELS) { const k = `pk${n}Type`; if (values[k]) values[k] = maps.packType.get(values[k].toLowerCase()) ?? values[k]; }
       for (const n of TIER_SLOTS) { const k = `t${n}Basis`; if (values[k]) values[k] = maps.tierBasis.get(values[k].toLowerCase()) ?? values[k]; }
+      // Ancien modele "construction du prix FCA" (avant le 21 novembre 2026) : cout produit +
+      // emballage repris comme prix FCA, pour qu'un fichier deja telecharge reste importable.
+      if (!values.price && values.productCost) {
+        const num = (x?: string) => Number((x ?? "").replace(/s/g, "").replace(",", ".")) || 0;
+        values.price = String(Math.round((num(values.productCost) + num(values.packagingCost)) * 100) / 100);
+        values.priceBasis ||= "FCA";
+      }
+      delete values.productCost; delete values.packagingCost;
       if (Object.entries(values).some(([k, v]) => v && k !== "fca")) rows.push({ row: n, values });
     });
     return { rows, keys: new Set(keys.values()) };
@@ -334,4 +328,4 @@ export async function readPriceListWorkbook(buffer: ArrayBuffer, labels: Labels)
   return { prices: readSheet(PRICE_SHEET), packaging: readSheet(PACK_SHEET) };
 }
 
-export const PRICE_KEYS: PriceField[] = ["sku", "crossRefs", "price", "productCost", "packagingCost", "currency", "priceBasis", "pricePlace", "priceValidUntil", "stock", "moq", "leadDays", "originCountry"];
+export const PRICE_KEYS: PriceField[] = ["sku", "crossRefs", "price", "currency", "priceBasis", "pricePlace", "priceValidUntil", "stock", "moq", "leadDays", "originCountry"];

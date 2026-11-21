@@ -6,7 +6,7 @@ import { saveProduct, type CatalogField, type CatalogState } from "@/app/[locale
 import { Alert } from "@/components/auth/fields";
 import { Link } from "@/i18n/navigation";
 import { UNITS } from "@/lib/onboarding/reference";
-import { EXPORT_CURRENCIES, PACK_LABELS, PACK_LEVELS, PACK_PROTECTIONS, PACK_TYPES, PACK_WEDGING, STARTER_BASES, TIER_BASES, TIER_SLOTS, isDetailedTier, readPackagingInput, type DiscountTier, type PackField, type TierField } from "@/lib/catalog/price-list";
+import { EXPORT_CURRENCIES, PACK_LABELS, PACK_LEVELS, PACK_PROTECTIONS, PACK_TYPES, PACK_WEDGING, PRICE_BASES, TIER_BASES, TIER_SLOTS, readPackagingInput, type DiscountTier, type PackField, type TierField } from "@/lib/catalog/price-list";
 import { CountrySelect } from "@/components/country/CountrySelect";
 import type { CountryCode } from "libphonenumber-js";
 import { prepareUpload } from "@/lib/client/prepare-upload";
@@ -45,8 +45,6 @@ export type EditorProduct = {
   // Liste de prix : reference, construction du prix selon le forfait, validite, delai, origine.
   sku: string;
   crossRefs: string;
-  productCost: string;
-  packagingCost: string;
   pricePlace: string;
   priceValidUntil: string;
   leadDays: string;
@@ -101,7 +99,7 @@ function readChecks(form: HTMLFormElement | null, product: EditorProduct, hasNew
     name: get("productName").length >= 2,
     descFr: get("descriptionFr").length > 0,
     hs: /^\d{4}([.\s]?\d{2}){1,3}$/.test(get("hsCode")),
-    price: Number(get("price").replace(",", ".")) > 0 || Number(get("productCost").replace(",", ".")) > 0,
+    price: Number(get("price").replace(",", ".")) > 0,
     currency: get("currency").length > 0,
     unit: get("unit").length > 0,
     moq: Number(get("moq").replace(/\s/g, "").replace(",", ".")) > 0,
@@ -111,8 +109,7 @@ function readChecks(form: HTMLFormElement | null, product: EditorProduct, hasNew
   };
 }
 
-export function ProductEditor({ product: initial, tier, defaultTiers }: { product: EditorProduct; tier: string; defaultTiers: DiscountTier[] }) {
-  const detailed = isDetailedTier(tier);
+export function ProductEditor({ product: initial, defaultTiers }: { product: EditorProduct; defaultTiers: DiscountTier[] }) {
   const t = useTranslations("onboarding");
   const c = useTranslations("catalog");
   const locale = useLocale();
@@ -139,11 +136,6 @@ export function ProductEditor({ product: initial, tier, defaultTiers }: { produc
   const est20 = estimateContainer(logistics.input, "20", "floor");
   const est40 = estimateContainer(logistics.input, "40", "floor");
   const unitShort = logistics.unit ? c(`unitShort_${logistics.unit}`) : "";
-  // Pro / Enterprise : prix FCA = cout produit + cout emballage, affiche pendant la saisie.
-  const [costs, setCosts] = useState<{ value: [string, string]; attempt?: number } | null>(null);
-  const [pc, pk] = costs && costs.attempt === state.attempt ? costs.value : [product.productCost, product.packagingCost];
-  const amount = (s: string) => Number(s.replace(/\s/g, "").replace(",", ".")) || 0;
-  const fca = amount(pc) + amount(pk);
   const [live, setLive] = useState<{ value: Record<string, string>; attempt?: number } | null>(null);
   const liveValue = (k: string) => String((live && live.attempt === state.attempt ? live.value[k] : (product as unknown as Record<string, string>)[k]) ?? "").replace(",", ".");
   const refresh = (form: HTMLFormElement, hasNewPhoto = Boolean(preview)) => {
@@ -151,7 +143,6 @@ export function ProductEditor({ product: initial, tier, defaultTiers }: { produc
     setLogi({ value: readLogistics(form, product), attempt: state.attempt });
     const fd = new FormData(form);
     setLive({ value: Object.fromEntries([...fd.entries()].map(([k, v]) => [k, String(v)])), attempt: state.attempt });
-    setCosts({ value: [String(fd.get("productCost") ?? ""), String(fd.get("packagingCost") ?? "")], attempt: state.attempt });
   };
 
   return (
@@ -207,7 +198,7 @@ export function ProductEditor({ product: initial, tier, defaultTiers }: { produc
           </div>
         </Block>
 
-        <Block title={c("block3")} aside={c(detailed ? "block3AsideDetailed" : "block3AsideStarter")}>
+        <Block title={c("block3")} aside={c("block3AsidePrice")}>
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <Label htmlFor="pe-sku">{c("skuLabel")}</Label>
@@ -222,45 +213,26 @@ export function ProductEditor({ product: initial, tier, defaultTiers }: { produc
               {err("crossRefs")}
             </div>
           </div>
-          {detailed ? (
-            <div className="grid gap-5 sm:grid-cols-3">
-              <div>
-                <Label htmlFor="pe-cost">{c("productCostLabel")}</Label>
-                <input id="pe-cost" name="productCost" required dir="ltr" inputMode="decimal" placeholder="1,60" defaultValue={product.productCost} className={`${inputCls} text-end`} style={fieldStyle} />
-                {err("productCost")}
-              </div>
-              <div>
-                <Label htmlFor="pe-packcost">{c("packagingCostLabel")}</Label>
-                <input id="pe-packcost" name="packagingCost" dir="ltr" inputMode="decimal" placeholder="0,40" defaultValue={product.packagingCost} className={`${inputCls} text-end`} style={fieldStyle} />
-                {err("packagingCost")}
-              </div>
-              <div className="flex flex-col justify-end p-3" style={{ background: "#ecfdf5", border: "1px solid #a7f3d0" }} aria-live="polite" data-fca="">
-                <span className="text-[11px] font-bold uppercase" style={{ ...labelStyle, color: "#065f46" }}>{c("fcaLabel")}</span>
-                <strong dir="ltr" style={{ fontSize: "1.3rem" }}>{fca > 0 ? fca.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}</strong>
-              </div>
+          <div className="grid gap-5 sm:grid-cols-3">
+            <div>
+              <Label htmlFor="pe-price">{t("price")}</Label>
+              <input id="pe-price" name="price" required dir="ltr" inputMode="decimal" placeholder="9,20" defaultValue={product.price} className={`${inputCls} text-end`} style={fieldStyle} />
+              {err("price")}
             </div>
-          ) : (
-            <div className="grid gap-5 sm:grid-cols-3">
-              <div>
-                <Label htmlFor="pe-price">{t("price")}</Label>
-                <input id="pe-price" name="price" required dir="ltr" inputMode="decimal" placeholder="9,20" defaultValue={product.price} className={`${inputCls} text-end`} style={fieldStyle} />
-                {err("price")}
-              </div>
-              <div>
-                <Label htmlFor="pe-basis">{t("priceBasis")}</Label>
-                <select id="pe-basis" name="priceBasis" required defaultValue={product.priceBasis || "FOB"} className={inputCls} style={fieldStyle}>
-                  {STARTER_BASES.map((b) => <option key={b} value={b}>{t.has(`basis_${b}`) ? t(`basis_${b}`) : b}</option>)}
-                </select>
-                {err("priceBasis")}
-              </div>
-              <div>
-                <Label htmlFor="pe-place">{c("pricePlaceLabel")}</Label>
-                <input id="pe-place" name="pricePlace" maxLength={120} placeholder={c("pricePlacePlaceholder")} defaultValue={product.pricePlace} className={inputCls} style={fieldStyle} />
-                {err("pricePlace")}
-              </div>
+            <div>
+              <Label htmlFor="pe-basis">{t("priceBasis")}</Label>
+              <select id="pe-basis" name="priceBasis" required defaultValue={product.priceBasis || "FOB"} className={inputCls} style={fieldStyle}>
+                {PRICE_BASES.map((b) => <option key={b} value={b}>{t.has(`basis_${b}`) ? t(`basis_${b}`) : b}</option>)}
+              </select>
+              {err("priceBasis")}
             </div>
-          )}
-          <p className="text-xs" style={{ color: "var(--muted)" }}>{c(detailed ? "priceRuleDetailed" : "priceRuleStarter")}</p>
+            <div>
+              <Label htmlFor="pe-place">{c("pricePlaceLabel")}</Label>
+              <input id="pe-place" name="pricePlace" maxLength={120} placeholder={c("pricePlacePlaceholder")} defaultValue={product.pricePlace} className={inputCls} style={fieldStyle} />
+              {err("pricePlace")}
+            </div>
+          </div>
+          <p className="text-xs" style={{ color: "var(--muted)" }}>{c("priceRule")}</p>
           {/* Deuxieme prix : en dinars HT, confidentiel (AFRICA NEX seule, jamais montre a l'acheteur). */}
           <div className="grid gap-5 sm:grid-cols-2">
             <div>

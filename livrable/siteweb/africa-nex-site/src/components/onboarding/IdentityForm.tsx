@@ -24,6 +24,7 @@ export type IdentityDefaults = {
   address: string;
   phone: string;
   whatsapp: string;
+  exportConsent: boolean;
 };
 
 const selectStyle = { background: "var(--field-a)", border: "1px solid var(--field-b)", outline: "none" } as const;
@@ -123,6 +124,16 @@ export function IdentityForm({ defaults, mode = "onboarding" }: { defaults: Iden
           <PhoneField id="ob-whatsapp" name="whatsapp" required defaultValue={defaults.whatsapp || undefined} />
           {err("whatsapp")}
         </Field>
+      </div>
+
+      {/* Accord du fournisseur pour l'export par AFRICA NEX (facultatif, revocable). */}
+      <div className="flex flex-col gap-2 p-4" style={{ background: "#ecfdf5", border: "1px solid #a7f3d0" }} data-export-consent="">
+        <span className="text-[11px] font-bold uppercase" style={{ letterSpacing: "0.08em", color: "#065f46" }}>{t("exportConsentTitle")}</span>
+        <label className="flex cursor-pointer items-start gap-3">
+          <input type="checkbox" name="exportConsent" defaultChecked={defaults.exportConsent} className="mt-1 h-4 w-4 shrink-0" />
+          <span className="font-semibold">{t("exportConsentLabel")}</span>
+        </label>
+        <p className="text-xs" style={{ color: "var(--muted)" }}>{t("exportConsentHelp")}</p>
       </div>
 
       <p className="text-xs" style={{ color: "var(--muted)" }}>{t("privacyNote")}</p>
