@@ -1,5 +1,6 @@
 // Test de bout en bout du lot 5c : demandes recues et devis cote producteur.
 import { site, OUT, CHROME } from "./_guard.mjs";
+import { waitEmails, delivered } from "./_emails.mjs";
 import { createRequire } from "node:module";
 import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -109,11 +110,15 @@ try {
   report("Piece jointe rangee sous dispatch/<envoi>/", Array.isArray(q1?.attachments) && q1.attachments[0]?.path?.startsWith(`dispatch/${d1.id}/`));
   const { data: v2 } = await admin.from("rfq_dispatches").select("status").eq("id", d1.id).single();
   report("Envoi passe 'devis recu'", v2.status === "quoted", v2.status);
+  const quoteMails = await waitEmails(admin, { rfq_id: rfq.id, kind: "admin_new_quote" });
+  report("Email a AFRICA NEX : devis recu, avec le producteur et le prix", quoteMails.length === 1 && delivered(quoteMails) && quoteMails[0].subject.startsWith("Devis reçu") && quoteMails[0].subject.includes(`Huilerie Quote ${TAG}`), JSON.stringify(quoteMails.map((m) => `${m.status} ${m.subject}`)));
 
   // Mise a jour
   await run(`${SET} setV(document.getElementById("q-price"), "4,70"); ${submit} return true;`);
   report("Mise a jour : message", await waitFor(`return location.search.includes("sent=update") && document.body.innerText.includes("Devis mis à jour.");`));
   const { data: q2 } = await admin.from("quotes").select("unit_price_ht").eq("dispatch_id", d1.id).single();
+  const updateMails = await waitEmails(admin, { rfq_id: rfq.id, kind: "admin_new_quote" }, { count: 2 });
+  report("Email a AFRICA NEX : devis mis a jour", updateMails.length === 2 && updateMails[1].subject.startsWith("Devis mis à jour"), JSON.stringify(updateMails.map((m) => m.subject)));
   report("En base : prix mis a jour 4,70", Number(q2.unit_price_ht) === 4.7);
   await go("/fr/requests", `return !!document.querySelector("main [role=tablist]");`);
   report("Compteur disparu apres ouverture", await run(`const a = [...document.querySelectorAll("aside a")].find((x) => x.getAttribute("href") === "/fr/requests"); return !a?.querySelector("span");`));

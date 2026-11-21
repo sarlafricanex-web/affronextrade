@@ -2,6 +2,7 @@
 // jamais acheteur <-> producteur. Garde-fous d'anonymat des messages d'AFRICA NEX, messages lus et
 // non lus (listes, menus), question sur une offre, fil ferme, cloisonnement entre producteurs.
 import { site, OUT, CHROME } from "./_guard.mjs";
+import { waitEmails, delivered } from "./_emails.mjs";
 import { createRequire } from "node:module";
 import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -146,6 +147,12 @@ try {
   await shot("messages-admin");
 
   // Demande close : plus de nouveau message
+  // Emails : l'acheteur et le producteur sont prevenus des messages d'AFRICA NEX (sans le texte),
+  // AFRICA NEX de ceux de l'acheteur et du producteur.
+  const toAdmin = await waitEmails(admin, { rfq_id: rfqId, kind: "admin_new_message" }, { count: 2 });
+  const toUsers = await waitEmails(admin, { rfq_id: rfqId, kind: "new_message" }, { count: 2 });
+  report("Emails a AFRICA NEX : message de l'acheteur et du producteur", toAdmin.length === 2 && delivered(toAdmin) && toAdmin.some((m) => m.subject.includes(buyerName)) && toAdmin.some((m) => m.subject.includes(producerName)), JSON.stringify(toAdmin.map((m) => m.subject)));
+  report("Emails a l'acheteur et au producteur : un par message d'AFRICA NEX, sans le texte", toUsers.length === 2 && delivered(toUsers) && toUsers.some((m) => m.recipient_profile_id === buyer.id) && toUsers.some((m) => m.recipient_profile_id === producer.id) && toUsers.every((m) => !/fer-blanc|palettis/i.test(m.subject)), JSON.stringify(toUsers.map((m) => m.subject)));
   await admin.from("rfqs").update({ status: "closed" }).eq("id", rfqId);
   await loginAs(buyer);
   await go(buyerPage);

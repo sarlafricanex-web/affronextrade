@@ -10,6 +10,8 @@ import { autoOffersPayload, computeRfqAutoOffers } from "@/lib/data/auto-offer";
 import { getAutoOfferEditor } from "@/lib/data/admin-rfqs";
 import { OFFER_VALIDITY_DAYS } from "@/lib/offer-auto";
 import { repriceOffer, type MarginInput } from "@/lib/offer-reprice";
+import { notify } from "@/lib/notify";
+import { frDate, money } from "@/lib/notify/format";
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -184,6 +186,20 @@ async function publishOffer(supabase: Client, offerId: string, rfqId: string, qu
   if (error) return false;
   await supabase.from("rfqs").update({ status: "offered" }).eq("id", rfqId).in("status", ["qualified", "dispatched"]);
   if (quoteId) await supabase.from("quotes").update({ status: "selected" }).eq("id", quoteId).eq("status", "submitted");
+  // Email a l'acheteur : une offre l'attend (sans aucun nom de producteur).
+  const [{ data: rfq }, { data: offer }] = await Promise.all([
+    supabase.from("rfqs").select("buyer_profile_id, reference, title").eq("id", rfqId).maybeSingle(),
+    supabase.from("offers").select("label, total_amount, currency, valid_until").eq("id", offerId).maybeSingle(),
+  ]);
+  if (rfq && offer) {
+    notify.profile(rfq.buyer_profile_id, {
+      kind: "offer_ready",
+      rfqId,
+      path: `/rfq/${rfqId}#offers`,
+      values: { reference: rfq.reference, title: rfq.title, label: offer.label },
+      rows: [["rowReference", rfq.reference], ["rowOffer", offer.label], ["rowTotal", money(offer.total_amount, offer.currency)], ["rowValidUntil", frDate(offer.valid_until)]],
+    });
+  }
   return true;
 }
 

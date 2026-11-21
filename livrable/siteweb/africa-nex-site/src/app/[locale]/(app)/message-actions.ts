@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { resolveLocale } from "@/lib/auth/next-path";
+import { notify } from "@/lib/notify";
 
 // Lot 5f : envoi d'un message dans un fil (acheteur, producteur ou AFRICA NEX). La RLS verifie le
 // role, le fil et la demande ; ici, on verifie le texte et l'anonymat des messages d'AFRICA NEX :
@@ -79,6 +80,23 @@ export async function sendMessage(_prev: MessageState, formData: FormData): Prom
   if (error) {
     if (!/row-level security/.test(error.message)) console.error("Message insert failed:", error.code, error.message);
     return fail("errorClosed");
+  }
+
+  // Email au destinataire : jamais le texte du message (il ne s'affiche que dans l'espace).
+  if (user.role === "admin") {
+    if (dispatchId) {
+      const { data: d } = await supabase.from("rfq_dispatches").select("company_id, reference").eq("id", dispatchId).maybeSingle();
+      if (d) notify.company(d.company_id, { kind: "new_message", variant: "producer", rfqId, path: `/requests/${dispatchId}#messages`, values: { reference: d.reference } });
+    } else {
+      const { data: r } = await supabase.from("rfqs").select("buyer_profile_id, reference").eq("id", rfqId).maybeSingle();
+      if (r) notify.profile(r.buyer_profile_id, { kind: "new_message", variant: "buyer", rfqId, path: `/rfq/${rfqId}#messages`, values: { reference: r.reference } });
+    }
+  } else if (user.role === "buyer") {
+    const { data: r } = await supabase.from("rfqs").select("reference, buyer:companies!rfqs_buyer_company_id_fkey(company_name)").eq("id", rfqId).maybeSingle();
+    notify.admin({ kind: "admin_new_message", rfqId, path: `/admin/rfqs/${rfqId}#messages`, values: { reference: r?.reference ?? "", who: one<{ company_name: string }>(r?.buyer)?.company_name ?? "Acheteur" } });
+  } else {
+    const { data: d } = await supabase.from("rfq_dispatches").select("reference, company:companies(company_name)").eq("id", dispatchId!).maybeSingle();
+    notify.admin({ kind: "admin_new_message", rfqId, path: `/admin/rfqs/${rfqId}?thread=${dispatchId}#messages`, values: { reference: d?.reference ?? "", who: one<{ company_name: string }>(d?.company)?.company_name ?? "Producteur" } });
   }
   redirect(`${back}?${user.role === "admin" && dispatchId ? `thread=${dispatchId}&` : ""}msg=sent#messages`);
 }

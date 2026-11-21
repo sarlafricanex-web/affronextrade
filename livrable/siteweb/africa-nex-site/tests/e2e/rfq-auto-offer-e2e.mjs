@@ -2,6 +2,7 @@
 // depuis les listes de prix, repartition par mode et par devise, palier de commission sur le total,
 // brouillons crees, publication bloquee tant que marge ou fret restent a saisir, confidentialite.
 import { site, OUT, CHROME } from "./_guard.mjs";
+import { waitEmails, delivered } from "./_emails.mjs";
 import { createRequire } from "node:module";
 import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -181,6 +182,8 @@ try {
   report("En base : C publiee, prix 22,20, fret 120 en ligne separee, total 1 230, marge 8 % (80 EUR)", c2.status === "published" && Number(cl.unit_price) === 22.2 && Number(cl.total_amount) === 1110 && Number(c2.freight_amount) === 120 && Number(c2.total_amount) === 1230 && Number(m(c2).margin_rate) === 8 && Number(m(c2).margin_amount) === 80 && Number(clm.margin_amount) === 80 && !m(c2).margin_pending && !m(c2).freight_pending && c2.incoterm_place === "Abidjan" && c2.payment_terms === "30 % à la commande", JSON.stringify(c2));
   const { data: rfqOffered } = await admin.from("rfqs").select("status").eq("id", rfqId).single();
   report("La demande passe en offres pretes", rfqOffered.status === "offered", rfqOffered.status);
+  const offerMails = await waitEmails(admin, { rfq_id: rfqId, kind: "offer_ready" });
+  report("Email a l'acheteur : offre C disponible (compte de test : non envoye)", offerMails.length === 1 && offerMails[0].recipient_profile_id === buyer.id && offerMails[0].status === "skipped" && offerMails[0].subject.includes("Une offre est disponible"), JSON.stringify(offerMails.map((m) => `${m.status} ${m.subject}`)));
 
   await go(editor(offB), `return !!document.querySelector("[data-calc]");`);
   report("Offre B (intermediation) : commission de la grille proposee, pas de marge", await run(`return document.querySelector("#a-commission").value === "10" && !document.querySelector("#a-margin");`));

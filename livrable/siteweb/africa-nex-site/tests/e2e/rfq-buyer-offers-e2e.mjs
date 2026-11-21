@@ -2,6 +2,7 @@
 // demande une autre devise, accepte une offre (son alternative est ecartee, l'offre complementaire
 // reste a decider), refuse l'autre avec un motif ; la console admin voit chaque decision.
 import { site, OUT, CHROME } from "./_guard.mjs";
+import { waitEmails, delivered } from "./_emails.mjs";
 import { createRequire } from "node:module";
 import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -145,6 +146,9 @@ try {
   await shot("buyer-offers-mobile");
   await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 1300, deviceScaleFactor: 1, mobile: false });
   await go(`/ar/rfq/${rfqId}`, ready);
+  const decisions = await waitEmails(admin, { rfq_id: rfqId, kind: "admin_decision" }, { count: 3 });
+  const subjects = decisions.map((m) => m.subject).join(" | ");
+  report("Emails a AFRICA NEX : devise demandee, acceptation, refus", decisions.length === 3 && delivered(decisions) && subjects.includes("Changement de devise demandé") && subjects.includes("Offre A acceptée") && subjects.includes("Offre B non retenue"), subjects);
   report("Arabe : offres traduites", await run(`return document.documentElement.dir === "rtl" && document.body.innerText.includes("عروض تفاوضت عليها AFRICA NEX");`));
   await shot("buyer-offers-ar");
   ws.close();

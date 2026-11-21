@@ -495,6 +495,60 @@ export type Database = {
           },
         ]
       }
+      email_notifications: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: number
+          kind: string
+          locale: string
+          recipient_email: string | null
+          recipient_profile_id: string | null
+          rfq_id: string | null
+          status: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: never
+          kind: string
+          locale?: string
+          recipient_email?: string | null
+          recipient_profile_id?: string | null
+          rfq_id?: string | null
+          status: string
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: never
+          kind?: string
+          locale?: string
+          recipient_email?: string | null
+          recipient_profile_id?: string | null
+          rfq_id?: string | null
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_notifications_recipient_profile_id_fkey"
+            columns: ["recipient_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_notifications_rfq_id_fkey"
+            columns: ["rfq_id"]
+            isOneToOne: false
+            referencedRelation: "rfqs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fx_rates: {
         Row: {
           currency: string

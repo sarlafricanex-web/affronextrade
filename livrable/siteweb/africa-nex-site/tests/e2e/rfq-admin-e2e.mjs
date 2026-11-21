@@ -1,5 +1,6 @@
 // Test de bout en bout du lot 5b : console AFRICA NEX des demandes (qualification, brief anonymise, envoi).
 import { site, OUT, CHROME } from "./_guard.mjs";
+import { waitEmails, delivered } from "./_emails.mjs";
 import { createRequire } from "node:module";
 import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -111,6 +112,10 @@ try {
   report("Envoi : message 2 producteurs", await waitFor(`return location.search.includes("done=dispatch") && document.body.innerText.includes("Brief envoyé à 2 producteurs");`));
   const { data: ds } = await admin.from("rfq_dispatches").select("company_id, status, respond_by, brief_title, brief_specs, requested_incoterm, destination_country, quantity, unit").eq("rfq_id", rfq.id);
   report("En base : 2 envois, statut envoye, date de reponse, FOB, CI, 2000 L", ds?.length === 2 && ds.every((d) => d.status === "sent" && d.respond_by && d.requested_incoterm === "FOB" && d.destination_country === "CI" && Number(d.quantity) === 2000 && d.unit === "l"), JSON.stringify(ds?.map((d) => d.status)));
+  // Emails : un par personne des entreprises consultees (une fiche non revendiquee n'a personne).
+  const { data: members } = await admin.from("company_members").select("profile_id").in("company_id", (ds ?? []).map((d) => d.company_id));
+  const mails = await waitEmails(admin, { rfq_id: rfq.id, kind: "new_request" }, { count: members?.length ?? 0 });
+  report("Emails aux producteurs consultes : journalises, sans le nom de l'acheteur", (members?.length ?? 0) > 0 && mails.length === members.length && delivered(mails) && mails.every((m) => !m.subject.includes(buyerName) && members.some((x) => x.profile_id === m.recipient_profile_id)), `${mails.length} email(s) pour ${members?.length} personne(s)`);
   const { data: s3 } = await admin.from("rfqs").select("status").eq("id", rfq.id).single();
   report("En base : demande passee 'producteurs consultes'", s3.status === "dispatched");
   const { count: audit } = await admin.from("audit_log").select("id", { count: "exact", head: true }).eq("action", "rfq.dispatch").eq("entity_id", rfq.id);

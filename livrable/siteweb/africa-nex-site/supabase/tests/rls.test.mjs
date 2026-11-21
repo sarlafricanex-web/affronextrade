@@ -514,6 +514,27 @@ await check("Lot 5e : l'acheteur n'appelle pas les fonctions internes", async ()
   await expectError(as(U.buyer, () => rows("select public.offers_overlap($1, $2)", [oA, oB])));
 });
 
+// Emails de notification : journal lisible par AFRICA NEX seule
+await rows("insert into public.email_notifications (kind, rfq_id, recipient_profile_id, recipient_email, subject, status) values ('offer_ready', $1, $2, 'acheteur@test.dz', 'Une offre est disponible', 'logged')", [rfq, U.buyer]);
+
+await check("Emails : seul l'admin lit le journal", async () => {
+  for (const user of [U.buyer, U.prodA, null]) {
+    const r = await as(user, () => rows("select * from public.email_notifications").catch((e) => {
+      if (/permission denied/.test(e.message)) return [];
+      throw e;
+    }));
+    expect(r.length === 0, `${user ?? "anonyme"} lit ${r.length} email(s)`);
+  }
+  const r = await as(U.admin, () => rows("select subject from public.email_notifications"));
+  expect(r.length === 1, `admin : ${r.length}`);
+});
+
+await check("Emails : personne n'ecrit dans le journal avec sa session", async () => {
+  for (const user of [U.buyer, U.admin]) {
+    await expectError(as(user, () => rows("insert into public.email_notifications (kind, subject, status) values ('x', 'y', 'sent')")));
+  }
+});
+
 // Messages : deux fils, jamais acheteur avec producteur
 await as(U.buyer, () => rows(
   "insert into public.messages (rfq_id, sender_profile_id, sender_role, body) values ($1, $2, 'buyer', 'Question acheteur')",

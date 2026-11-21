@@ -5,6 +5,8 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { resolveLocale } from "@/lib/auth/next-path";
 import { isCountryCode } from "@/lib/countries";
 import { UNITS, parseAmount } from "@/lib/onboarding/reference";
+import { notify } from "@/lib/notify";
+import { frDate } from "@/lib/notify/format";
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -113,7 +115,7 @@ export async function dispatchRfq(_prev: DispatchState, formData: FormData): Pro
   const fresh = companies.filter((c) => !already.has(c));
   if (!fresh.length) return fail({ errors: { companies: "rfqErrorAlreadySent" } });
 
-  const { error } = await supabase.from("rfq_dispatches").insert(
+  const { data: sent, error } = await supabase.from("rfq_dispatches").insert(
     fresh.map((company_id) => ({
       rfq_id: id,
       rfq_line_id: lineId || null,
@@ -128,10 +130,14 @@ export async function dispatchRfq(_prev: DispatchState, formData: FormData): Pro
       respond_by: v.respondBy,
       created_by: userId,
     })),
-  );
+  ).select("id, company_id, reference");
   if (error) {
     console.error("RFQ dispatch failed:", error.message);
     return fail({ errors: {}, formError: "rfqErrorGeneric" });
+  }
+  // Email a chaque producteur consulte (brief anonymise : jamais le nom de l'acheteur).
+  for (const d of sent ?? []) {
+    notify.company(d.company_id, { kind: "new_request", rfqId: id, path: `/requests/${d.id}`, values: { title: v.briefTitle, reference: d.reference }, rows: [["rowReference", d.reference], ["rowRespondBy", frDate(v.respondBy)]] });
   }
   await Promise.all([
     supabase.from("rfqs").update({ status: "dispatched" }).eq("id", id).in("status", ["submitted", "qualified"]),

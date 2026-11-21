@@ -14,7 +14,11 @@ Les comptes créés sont tous en `test-...@example.com`. Le compte de démonstra
 
 ## Tests hors ligne
 
-- `npm run test:unit` : calcul automatique de l'offre et saisie de la marge, du fret et de la commission (fonctions pures, sans base ni serveur).
+- `npm run test:unit` : calcul automatique de l'offre, saisie de la marge, du fret et de la commission, et mise en page des emails de notification (fonctions pures, sans base ni serveur).
+
+## Emails de notification
+
+En développement, rien ne part : chaque email est seulement tracé dans la table `email_notifications` (statut `logged`, ou `skipped` pour les comptes `@example.com`). Les suites `rfq-admin`, `rfq-buyer`, `rfq-producer`, `rfq-messages`, `rfq-buyer-offers` et `rfq-auto-offer` vérifient ces traces (aide commune : `_emails.mjs`).
 - `npm run test:rls` : règles d'accès en base (PostgreSQL en local via PGlite).
 
 ## Lancer les tests

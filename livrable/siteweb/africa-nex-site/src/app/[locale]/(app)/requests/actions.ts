@@ -5,6 +5,8 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { resolveLocale } from "@/lib/auth/next-path";
 import { getMyCompanyId } from "@/lib/data/company";
 import { readQuoteForm, storeQuoteFile, type QuoteState } from "@/lib/quote-input";
+import { notify } from "@/lib/notify";
+import { frDate, money } from "@/lib/notify/format";
 
 const text = (formData: FormData, key: string) => String(formData.get(key) ?? "").trim();
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -47,6 +49,28 @@ export async function submitQuote(_prev: QuoteState, formData: FormData): Promis
     quoteId = created.id;
   }
   if (upload && quoteId) await storeQuoteFile(supabase, id, quoteId, upload, formData.get("file") as File);
+
+  // Email a AFRICA NEX : devis recu ou mis a jour.
+  const [{ data: d }, { data: q2 }] = await Promise.all([
+    supabase.from("rfq_dispatches").select("rfq_id, reference, unit, company:companies(company_name)").eq("id", id).maybeSingle(),
+    quoteId ? supabase.from("quotes").select("unit_price_ht, currency, price_basis, quantity, valid_until").eq("id", quoteId).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+  if (d) {
+    const company = (Array.isArray(d.company) ? d.company[0] : d.company) as { company_name: string } | null;
+    notify.admin({
+      kind: "admin_new_quote",
+      variant: existing ? "update" : undefined,
+      rfqId: d.rfq_id,
+      path: `/admin/rfqs/${d.rfq_id}`,
+      values: { reference: d.reference, producer: company?.company_name ?? "-" },
+      rows: [
+        ["rowReference", d.reference],
+        ["rowProducer", company?.company_name ?? "-"],
+        ["rowPrice", q2 ? `${money(q2.unit_price_ht, q2.currency)} ${q2.price_basis ?? ""}`.trim() : "-"],
+        ["rowValidUntil", frDate(q2?.valid_until)],
+      ],
+    });
+  }
 
   redirect(`/${locale}/requests/${id}?sent=${existing ? "update" : "new"}`);
 }

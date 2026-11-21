@@ -1,5 +1,6 @@
 // Test de bout en bout du lot 5a : demande de devis cote acheteur (nouvelle demande, liste, detail).
 import { site, OUT, CHROME } from "./_guard.mjs";
+import { waitEmails, delivered } from "./_emails.mjs";
 import { createRequire } from "node:module";
 import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -116,6 +117,8 @@ try {
   const rfq1Id = await run(`return location.pathname.split("/").pop();`);
   const { data: rfq1 } = await admin.from("rfqs").select("*").eq("id", rfq1Id).single();
   report("En base : acheteur, entreprise, produit, producteur d'origine, CIF, CI, USD", rfq1?.buyer_profile_id === buyer.id && rfq1.buyer_company_id && rfq1.product_id === product.id && rfq1.source_company_id === product.companies.id && rfq1.incoterm === "CIF" && rfq1.destination_country === "CI" && rfq1.currency === "USD" && rfq1.status === "submitted" && rfq1.title.endsWith("(+1)"), JSON.stringify({ c: rfq1?.destination_country, cur: rfq1?.currency, s: rfq1?.status, t: rfq1?.title }));
+  const newRfqMails = await waitEmails(admin, { rfq_id: rfq1Id, kind: "admin_new_rfq" });
+  report("Email a AFRICA NEX : nouvelle demande journalisee, en francais", newRfqMails.length === 1 && delivered(newRfqMails) && newRfqMails[0].locale === "fr" && newRfqMails[0].subject.includes(rfq1?.reference) && !newRfqMails[0].recipient_profile_id, JSON.stringify(newRfqMails.map((m) => `${m.status} ${m.subject}`)));
   const { data: lines1 } = await admin.from("rfq_lines").select("position, description, reference, quantity, unit, product_id").eq("rfq_id", rfq1Id).order("position");
   report("2 lignes : produit de la fiche (20 000 t) puis sucre roux SR-50 (500 t)", lines1?.length === 2 && lines1[0].product_id === product.id && Number(lines1[0].quantity) === 20000 && lines1[0].unit === "t" && lines1[1].description === "Sucre roux en vrac" && lines1[1].reference === "SR-50" && Number(lines1[1].quantity) === 500 && !lines1[1].product_id, JSON.stringify(lines1));
   const { data: otherLines } = await otherBuyer.client.from("rfq_lines").select("id").eq("rfq_id", rfq1Id);

@@ -6,9 +6,10 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { resolveLocale } from "@/lib/auth/next-path";
 import { getMyCompanyId } from "@/lib/data/company";
 import { getRfqContext, INCOTERMS, RFQ_MAX_FILE_BYTES } from "@/lib/data/rfq";
-import { isCountryCode } from "@/lib/countries";
+import { countryName, isCountryCode } from "@/lib/countries";
 import { CURRENCIES, UNITS, parseAmount } from "@/lib/onboarding/reference";
 import { documentContentType, readDocument } from "@/lib/images";
+import { notify } from "@/lib/notify";
 
 export type RfqField =
   | "title" | "quantity" | "unit" | "containerCount" | "containerSize" | "country" | "port"
@@ -117,7 +118,7 @@ export async function createRfq(_prev: RfqState, formData: FormData): Promise<Rf
       currency: v.currency,
       needed_by: v.neededBy || null,
     })
-    .select("id")
+    .select("id, reference, title")
     .single();
   if (error || !created) {
     console.error("RFQ insert failed:", error?.code, error?.message);
@@ -144,6 +145,16 @@ export async function createRfq(_prev: RfqState, formData: FormData): Promise<Rf
     if (upError) console.error("RFQ attachment upload failed:", upError.message);
     else await supabase.from("rfqs").update({ attachments: [{ path, name: original.name.slice(0, 120), size: file.bytes.length, type }] }).eq("id", created.id);
   }
+
+  // Email a AFRICA NEX : une demande a qualifier.
+  const { data: buyerCo } = await supabase.from("companies").select("company_name").eq("id", companyId).maybeSingle();
+  notify.admin({
+    kind: "admin_new_rfq",
+    rfqId: created.id,
+    path: `/admin/rfqs/${created.id}`,
+    values: { reference: created.reference, title: created.title, buyer: buyerCo?.company_name ?? "-" },
+    rows: [["rowReference", created.reference], ["rowBuyer", buyerCo?.company_name ?? "-"], ["rowDestination", countryName(country, "fr") ?? country], ["rowLines", String(lines.length)]],
+  });
 
   redirect(`/${locale}/rfq/${created.id}?sent=1`);
 }
@@ -192,5 +203,19 @@ export async function decideOffer(formData: FormData) {
     if (!/offer not available/.test(error.message)) console.error("Offer decision failed:", op, error.message);
     back("unavailable");
   }
+  // Email a AFRICA NEX : la decision de l'acheteur (acceptation, refus avec motif, devise demandee).
+  const [{ data: r }, { data: o }] = await Promise.all([
+    user.supabase.from("rfqs").select("reference, status").eq("id", rfqId).maybeSingle(),
+    user.supabase.from("offers").select("label, decline_reason, currency_change_to, currency_change_note").eq("id", offerId).maybeSingle(),
+  ]);
+  const detail = op === "decline" ? (o?.decline_reason ?? "-") : op === "currency" ? `${o?.currency_change_to ?? ""}${o?.currency_change_note ? ` : ${o.currency_change_note}` : ""}` : "";
+  notify.admin({
+    kind: "admin_decision",
+    variant: op,
+    rfqId,
+    path: `/admin/rfqs/${rfqId}`,
+    values: { reference: r?.reference ?? "", label: o?.label ?? "", detail },
+    rows: [["rowReference", r?.reference ?? ""], ["rowOffer", o?.label ?? ""], ["rowRequestStatus", r?.status ?? ""]],
+  });
   back(op === "accept" ? "accepted" : op === "decline" ? "declined" : "currencyRequested");
 }
