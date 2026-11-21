@@ -652,6 +652,141 @@ await check("Un chemin malforme est refuse sans planter", () =>
   expectError(as(U.prodA, () => rows(
     "insert into storage.objects (bucket_id, name) values ('company-documents', 'pas-un-uuid/rc.pdf')"))));
 
+// ---------------------------------------------------------------------------------------------
+// Abonnements fournisseurs (migration 35) : prix, quotas, places fondateurs, descente de forfait
+// ---------------------------------------------------------------------------------------------
+async function expectFail(promise, re) {
+  try {
+    await promise;
+  } catch (e) {
+    if (!re.test(e.message)) throw new Error(`erreur inattendue : ${e.message}`);
+    return;
+  }
+  throw new Error("aurait du etre refuse");
+}
+const supplier = async (slug) =>
+  (await rows("insert into public.companies (company_name, slug, kind, visibility, sector) values ($1, $2, 'producer', 'published', 'C10') returning id", [slug, slug]))[0].id;
+const addProducts = (company, n) =>
+  rows("insert into public.products (company_id, product_name, hs_code, unit, unit_price_ht, currency, status) select $1, 'Produit ' || g, '150910', 'carton', 10, 'EUR', 'published' from generate_series(1, $2) g", [company, n]);
+const subscribe = async (company, plan, cycle = "monthly", founder = false) => {
+  const [{ id }] = await as(U.admin, () => rows("select public.request_subscription($1, $2, $3::public.billing_cycle, $4) as id", [company, plan, cycle, founder]));
+  await as(U.admin, () => rows("select public.activate_subscription($1, 'VIR-TEST')", [id]));
+  return id;
+};
+const one = async (sql, params = []) => Object.values((await rows(sql, params))[0])[0];
+
+await check("Abonnements : formules de prix (mensuel, annuel 2 mois offerts, fondateur -50 %)", async () => {
+  const p = await as(null, () => rows(`select public.compute_price('croissance', 'monthly') as m, public.compute_price('croissance', 'annual_prepaid') as a,
+    public.compute_price('croissance', 'annual_prepaid', true) as f, public.compute_price('vitrine', 'monthly') as v`));
+  expect(p[0].m === 40000 && p[0].a === 400000 && p[0].f === 200000 && p[0].v === 0, JSON.stringify(p[0]));
+  await expectFail(as(null, () => rows("select public.compute_price('croissance', 'monthly', true)")), /founder discount requires annual prepaid/);
+});
+
+await check("Abonnements : forfaits lisibles par un visiteur, abonnements non", async () => {
+  const plans = await as(null, () => rows("select code from public.plans order by sort_order"));
+  const subs = await as(null, () => rows("select id from public.subscriptions").catch((e) => (/permission denied/.test(e.message) ? [] : Promise.reject(e))));
+  expect(plans.map((p) => p.code).join() === "vitrine,essentiel,croissance,export_pro" && subs.length === 0, `${plans.length} forfaits, ${subs.length} abonnements`);
+});
+
+await check("Abonnements : Vitrine par defaut ; un concurrent ne lit pas le forfait d'un autre", async () => {
+  const plan = await as(U.prodA, () => one("select public.current_plan($1)", [companyA]));
+  expect(plan === "vitrine", plan);
+  await expectFail(as(U.prodB, () => rows("select public.current_plan($1)", [companyA])), /forbidden/);
+});
+
+await check("Abonnements : le fournisseur n'ecrit ni son abonnement ni ses compteurs", async () => {
+  await expectFail(as(U.prodA, () => rows("insert into public.subscriptions (company_id, plan_code, price_charged_dzd, status) values ($1, 'export_pro', 0, 'active')", [companyA])), /row-level security/);
+  await expectFail(as(U.prodA, () => rows("insert into public.usage_counters (company_id, feature_key, period_start, used) values ($1, 'ai_videos', current_date, 0)", [companyA])), /row-level security/);
+  await expectFail(as(U.prodA, () => rows("select public.request_subscription($1, 'essentiel', 'monthly', false)", [companyB])), /forbidden/);
+});
+
+await check("Quota de produits : 11e publication refusee en Vitrine", async () => {
+  const co = await supplier("quota-vitrine");
+  await addProducts(co, 10);
+  await expectFail(addProducts(co, 1), /product quota reached/);
+  const n = await one("select count(*)::int from public.products where company_id = $1", [co]);
+  expect(n === 10, `${n} produits`);
+});
+
+await rows("update public.features set available = true where key = 'ai_videos'");
+
+await check("Quota depasse : 3e video du mois refusee en Croissance (2 par mois)", async () => {
+  const co = await supplier("quota-croissance");
+  await subscribe(co, "croissance");
+  await as(U.admin, () => rows("select public.consume($1, 'ai_videos')", [co]));
+  await as(U.admin, () => rows("select public.consume($1, 'ai_videos')", [co]));
+  await expectFail(as(U.admin, () => rows("select public.consume($1, 'ai_videos')", [co])), /quota exceeded/);
+  const [s] = await as(U.admin, () => rows("select * from public.can_use($1, 'ai_videos')", [co]));
+  expect(s.allowed === false && s.used === 2 && s.remaining === 0 && s.plan_code === "croissance", JSON.stringify(s));
+});
+
+await check("Remise a zero mensuelle : le quota du mois precedent ne compte plus", async () => {
+  const co = await supplier("quota-mois");
+  await subscribe(co, "croissance");
+  await rows("insert into public.usage_counters (company_id, feature_key, period_start, used) values ($1, 'ai_videos', (date_trunc('month', current_date) - interval '1 month')::date, 2)", [co]);
+  const used = await as(U.admin, () => one("select public.consume($1, 'ai_videos')", [co]));
+  expect(used === 1, `consomme ${used}`);
+});
+
+await check("Remise a zero trimestrielle : Essentiel, 1 video par trimestre", async () => {
+  const co = await supplier("quota-trimestre");
+  await subscribe(co, "essentiel");
+  await rows("insert into public.usage_counters (company_id, feature_key, period_start, used) values ($1, 'ai_videos', (date_trunc('quarter', current_date) - interval '3 months')::date, 1)", [co]);
+  const used = await as(U.admin, () => one("select public.consume($1, 'ai_videos')", [co]));
+  expect(used === 1, `consomme ${used}`);
+  await expectFail(as(U.admin, () => rows("select public.consume($1, 'ai_videos')", [co])), /quota exceeded/);
+});
+
+await rows("update public.features set available = false where key = 'ai_videos'");
+
+await check("Service pas encore disponible : consommation refusee", () =>
+  expectFail(as(U.admin, () => rows("select public.consume($1, 'ai_campaigns')", [companyA])), /feature not available/));
+
+await check("Places fondateurs : la 31e est refusee", async () => {
+  const ids = (await rows("insert into public.companies (company_name, slug, kind, visibility, sector) select 'Fondateur ' || g, 'fondateur-' || g, 'producer', 'published', 'C10' from generate_series(1, 31) g returning id")).map((r) => r.id);
+  for (const id of ids.slice(0, 30)) {
+    await as(U.admin, () => rows("select public.request_subscription($1, 'essentiel', 'annual_prepaid', true)", [id]));
+  }
+  const used = await one("select public.founder_slots_used()");
+  await expectFail(as(U.admin, () => rows("select public.request_subscription($1, 'essentiel', 'annual_prepaid', true)", [ids[30]])), /no founder slot/);
+  const price = await one("select price_charged_dzd from public.subscriptions where company_id = $1", [ids[0]]);
+  expect(used === 30 && price === 75000, `places ${used}, prix fondateur ${price}`);
+});
+
+await check("Descente de forfait : produits en trop masques, jamais supprimes, invisibles du public", async () => {
+  const co = await supplier("descente");
+  await subscribe(co, "croissance");
+  await addProducts(co, 15);
+  await as(U.admin, () => rows("select public.schedule_downgrade($1, 'vitrine')", [co]));
+  await rows("update public.subscriptions set current_period_start = current_date - 31, current_period_end = current_date - 1 where company_id = $1 and status = 'active'", [co]);
+  await as(U.admin, () => rows("select public.sync_subscriptions()"));
+  const visible = await one("select count(*)::int from public.products where company_id = $1 and not quota_hidden", [co]);
+  const total = await one("select count(*)::int from public.products where company_id = $1", [co]);
+  const status = await one("select status::text from public.subscriptions where company_id = $1 order by created_at desc limit 1", [co]);
+  const publicView = await as(null, () => rows("select id from public.products where company_id = $1", [co]));
+  expect(visible === 10 && total === 15 && status === "cancelled" && publicView.length === 10, `visibles ${visible}, total ${total}, statut ${status}, public ${publicView.length}`);
+});
+
+await check("Montee de forfait immediate : produits masques de nouveau visibles", async () => {
+  const co = (await rows("select id from public.companies where slug = 'descente'"))[0].id;
+  await subscribe(co, "essentiel");
+  const visible = await one("select count(*)::int from public.products where company_id = $1 and not quota_hidden", [co]);
+  const plan = await as(U.admin, () => one("select public.current_plan($1)", [co]));
+  expect(visible === 15 && plan === "essentiel", `visibles ${visible}, forfait ${plan}`);
+});
+
+await check("Descente vers un forfait payant : nouvelle demande au prix inferieur, retour en Vitrine en attendant", async () => {
+  const co = await supplier("descente-payante");
+  await subscribe(co, "export_pro");
+  await as(U.admin, () => rows("select public.schedule_downgrade($1, 'essentiel')", [co]));
+  await expectFail(as(U.admin, () => rows("select public.schedule_downgrade($1, 'export_pro')", [co])), /not a downgrade/);
+  await rows("update public.subscriptions set current_period_start = current_date - 31, current_period_end = current_date - 1 where company_id = $1 and status = 'active'", [co]);
+  await as(U.admin, () => rows("select public.sync_subscriptions()"));
+  const subs = await rows("select plan_code, status::text as status, price_charged_dzd from public.subscriptions where company_id = $1 order by created_at", [co]);
+  const plan = await as(U.admin, () => one("select public.current_plan($1)", [co]));
+  expect(subs.length === 2 && subs[0].status === "past_due" && subs[1].plan_code === "essentiel" && subs[1].status === "pending_payment" && subs[1].price_charged_dzd === 15000 && plan === "vitrine", JSON.stringify(subs) + " " + plan);
+});
+
 console.log(`\n${passed} tests reussis, ${failures.length} en echec`);
 for (const f of failures) console.log(`  ECHEC  ${f}`);
 process.exit(failures.length ? 1 : 0);

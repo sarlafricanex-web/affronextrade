@@ -52,6 +52,35 @@ export type Database = {
           },
         ]
       }
+      billing_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: number
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: number
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cnrc_activities: {
         Row: {
           authority: string | null
@@ -86,6 +115,8 @@ export type Database = {
         Row: {
           activity_code: string | null
           activity_description: string | null
+          africanex_export_consent: boolean
+          africanex_export_consent_at: string | null
           brand_color: string | null
           brand_initials: string | null
           buyer_type: string | null
@@ -127,6 +158,8 @@ export type Database = {
         Insert: {
           activity_code?: string | null
           activity_description?: string | null
+          africanex_export_consent?: boolean
+          africanex_export_consent_at?: string | null
           brand_color?: string | null
           brand_initials?: string | null
           buyer_type?: string | null
@@ -168,6 +201,8 @@ export type Database = {
         Update: {
           activity_code?: string | null
           activity_description?: string | null
+          africanex_export_consent?: boolean
+          africanex_export_consent_at?: string | null
           brand_color?: string | null
           brand_initials?: string | null
           buyer_type?: string | null
@@ -548,6 +583,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      features: {
+        Row: {
+          available: boolean
+          key: string
+          sort_order: number
+        }
+        Insert: {
+          available?: boolean
+          key: string
+          sort_order: number
+        }
+        Update: {
+          available?: boolean
+          key?: string
+          sort_order?: number
+        }
+        Relationships: []
       }
       fx_rates: {
         Row: {
@@ -1004,6 +1057,69 @@ export type Database = {
           },
         ]
       }
+      plan_features: {
+        Row: {
+          access_level: string | null
+          feature_key: string
+          limit_value: number | null
+          period: Database["public"]["Enums"]["quota_period"]
+          plan_code: string
+        }
+        Insert: {
+          access_level?: string | null
+          feature_key: string
+          limit_value?: number | null
+          period?: Database["public"]["Enums"]["quota_period"]
+          plan_code: string
+        }
+        Update: {
+          access_level?: string | null
+          feature_key?: string
+          limit_value?: number | null
+          period?: Database["public"]["Enums"]["quota_period"]
+          plan_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_features_feature_key_fkey"
+            columns: ["feature_key"]
+            isOneToOne: false
+            referencedRelation: "features"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "plan_features_plan_code_fkey"
+            columns: ["plan_code"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          code: string
+          is_active: boolean
+          monthly_price_dzd: number
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          code: string
+          is_active?: boolean
+          monthly_price_dzd: number
+          name: string
+          sort_order: number
+        }
+        Update: {
+          code?: string
+          is_active?: boolean
+          monthly_price_dzd?: number
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           carton_gross_weight_kg: number | null
@@ -1043,6 +1159,7 @@ export type Database = {
           price_valid_until: string | null
           product_cost: number | null
           product_name: string
+          quota_hidden: boolean
           sku: string | null
           slug: string | null
           sort_order: number
@@ -1095,6 +1212,7 @@ export type Database = {
           price_valid_until?: string | null
           product_cost?: number | null
           product_name: string
+          quota_hidden?: boolean
           sku?: string | null
           slug?: string | null
           sort_order?: number
@@ -1147,6 +1265,7 @@ export type Database = {
           price_valid_until?: string | null
           product_cost?: number | null
           product_name?: string
+          quota_hidden?: boolean
           sku?: string | null
           slug?: string | null
           sort_order?: number
@@ -1688,6 +1807,7 @@ export type Database = {
           destination_port: string | null
           id: string
           incoterm: string | null
+          logistics: string | null
           needed_by: string | null
           product_id: string | null
           quantity: number | null
@@ -1714,6 +1834,7 @@ export type Database = {
           destination_port?: string | null
           id?: string
           incoterm?: string | null
+          logistics?: string | null
           needed_by?: string | null
           product_id?: string | null
           quantity?: number | null
@@ -1740,6 +1861,7 @@ export type Database = {
           destination_port?: string | null
           id?: string
           incoterm?: string | null
+          logistics?: string | null
           needed_by?: string | null
           product_id?: string | null
           quantity?: number | null
@@ -1857,6 +1979,116 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          activated_at: string | null
+          activated_by: string | null
+          billing_cycle: Database["public"]["Enums"]["billing_cycle"]
+          company_id: string
+          created_at: string
+          created_by: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          founder_testimonial_received: boolean
+          id: string
+          is_founder: boolean
+          payment_reference: string | null
+          plan_code: string
+          price_charged_dzd: number
+          scheduled_plan_code: string | null
+          status: Database["public"]["Enums"]["sub_status"]
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          activated_by?: string | null
+          billing_cycle?: Database["public"]["Enums"]["billing_cycle"]
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          founder_testimonial_received?: boolean
+          id?: string
+          is_founder?: boolean
+          payment_reference?: string | null
+          plan_code: string
+          price_charged_dzd: number
+          scheduled_plan_code?: string | null
+          status?: Database["public"]["Enums"]["sub_status"]
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          activated_by?: string | null
+          billing_cycle?: Database["public"]["Enums"]["billing_cycle"]
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          founder_testimonial_received?: boolean
+          id?: string
+          is_founder?: boolean
+          payment_reference?: string | null
+          plan_code?: string
+          price_charged_dzd?: number
+          scheduled_plan_code?: string | null
+          status?: Database["public"]["Enums"]["sub_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_activated_by_fkey"
+            columns: ["activated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "cdct_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "producer_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_code_fkey"
+            columns: ["plan_code"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "subscriptions_scheduled_plan_code_fkey"
+            columns: ["scheduled_plan_code"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       supplier_pricing: {
         Row: {
           company_id: string
@@ -1944,6 +2176,56 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      usage_counters: {
+        Row: {
+          company_id: string
+          feature_key: string
+          period_start: string
+          used: number
+        }
+        Insert: {
+          company_id: string
+          feature_key: string
+          period_start: string
+          used?: number
+        }
+        Update: {
+          company_id?: string
+          feature_key?: string
+          period_start?: string
+          used?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_counters_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "cdct_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usage_counters_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usage_counters_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "producer_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usage_counters_feature_key_fkey"
+            columns: ["feature_key"]
+            isOneToOne: false
+            referencedRelation: "features"
+            referencedColumns: ["key"]
           },
         ]
       }
@@ -2089,12 +2371,49 @@ export type Database = {
     }
     Functions: {
       accept_offer: { Args: { p_offer_id: string }; Returns: undefined }
+      activate_subscription: {
+        Args: { p_payment_reference: string; p_subscription: string }
+        Returns: undefined
+      }
       approve_claim: { Args: { p_claim: string }; Returns: undefined }
+      billing_setting: { Args: { p_key: string }; Returns: number }
       buyer_open_offer: { Args: { p_offer: string }; Returns: string }
+      can_read_company_billing: {
+        Args: { p_company: string }
+        Returns: boolean
+      }
+      can_use: {
+        Args: { p_company: string; p_feature: string }
+        Returns: {
+          access_level: string
+          allowed: boolean
+          available: boolean
+          limit_value: number
+          plan_code: string
+          remaining: number
+          used: number
+        }[]
+      }
+      claim_founder_slot: { Args: { p_company: string }; Returns: boolean }
+      compute_price: {
+        Args: {
+          p_cycle: Database["public"]["Enums"]["billing_cycle"]
+          p_founder?: boolean
+          p_plan: string
+        }
+        Returns: number
+      }
+      consume: {
+        Args: { p_amount?: number; p_company: string; p_feature: string }
+        Returns: number
+      }
+      current_plan: { Args: { p_company: string }; Returns: string }
       decline_offer: {
         Args: { p_offer_id: string; p_reason: string }
         Returns: undefined
       }
+      enforce_product_quota: { Args: { p_company: string }; Returns: number }
+      founder_slots_used: { Args: never; Returns: number }
       is_admin: { Args: never; Returns: boolean }
       is_member_of: { Args: { target_company: string }; Returns: boolean }
       is_owner_of: { Args: { target_company: string }; Returns: boolean }
@@ -2166,10 +2485,23 @@ export type Database = {
           unit_price_ht: number
         }[]
       }
+      quota_period_start: {
+        Args: { p_period: Database["public"]["Enums"]["quota_period"] }
+        Returns: string
+      }
       reject_claim: { Args: { p_claim: string }; Returns: undefined }
       request_offer_currency: {
         Args: { p_currency: string; p_note: string; p_offer_id: string }
         Returns: undefined
+      }
+      request_subscription: {
+        Args: {
+          p_company: string
+          p_cycle: Database["public"]["Enums"]["billing_cycle"]
+          p_founder?: boolean
+          p_plan: string
+        }
+        Returns: string
       }
       rfq_settle_offers: { Args: { p_rfq: string }; Returns: undefined }
       save_auto_offers: {
@@ -2180,10 +2512,17 @@ export type Database = {
         Args: { p: Json; p_offer: string }
         Returns: undefined
       }
+      schedule_downgrade: {
+        Args: { p_company: string; p_plan: string }
+        Returns: undefined
+      }
+      sync_subscriptions: { Args: never; Returns: number }
       try_uuid: { Args: { p: string }; Returns: string }
     }
     Enums: {
-      [_ in never]: never
+      billing_cycle: "monthly" | "annual_prepaid"
+      quota_period: "none" | "once" | "month" | "quarter"
+      sub_status: "pending_payment" | "active" | "past_due" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2310,6 +2649,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      billing_cycle: ["monthly", "annual_prepaid"],
+      quota_period: ["none", "once", "month", "quarter"],
+      sub_status: ["pending_payment", "active", "past_due", "cancelled"],
+    },
   },
 } as const
