@@ -7,26 +7,29 @@ import { PanoramaScroll } from "@/components/PanoramaScroll";
 import { ArrowButton } from "@/components/ArrowButton";
 
 const CAPABILITIES = [
-  { key: "b2b", value: "8+ pays" },
-  { key: "marketing", value: "IA" },
+  { key: "b2b", value: "8 marchés" },
+  { key: "marketing", value: "Bientôt" },
   { key: "logistics", value: "Maritime, routier, aerien" },
   { key: "consulting", value: "Inclus" },
-  { key: "insurance", value: "CAGEX" },
+  { key: "insurance", value: "1 %" },
   { key: "compliance", value: "SH" },
 ] as const;
 
+// Chiffres verifiables uniquement (audit legal du 19 novembre 2026 : plus de "80+ producteurs" ni de
+// "500+ transactions", qui ne correspondaient a rien de reel).
 const STATS = [
-  { figure: "80+", key: "producers" },
   { figure: "8", key: "countries" },
   { figure: "7", key: "sectors" },
-  { figure: "500+", key: "transactions" },
+  { figure: "3", key: "languages" },
+  { figure: "11", key: "incoterms" },
 ] as const;
 
+// Etapes sans delai promis (audit legal : pas de "Jour 2-3" ni de "Semaine 1" garantis).
 const STEPS = [
-  { time: "Jour 1", key: "step1", label: "Inscription et verification", desc: "Creez votre profil producteur. Nous verifions vos documents." },
-  { time: "Jour 2-3", key: "step2", label: "Catalogue en ligne", desc: "Vos produits sont publies et visibles par les acheteurs internationaux." },
-  { time: "Semaine 1", key: "step3", label: "Premieres demandes", desc: "Les acheteurs vous contactent. Notre IA optimise votre visibilite." },
-  { time: "En continu", key: "step4", label: "Export et croissance", desc: "Logistique geree, paiements securises, croissance pilotee par les donnees." },
+  { time: "Étape 1", key: "step1", label: "Inscription et vérification", desc: "Créez votre profil producteur. AFRICA NEX examine vos documents." },
+  { time: "Étape 2", key: "step2", label: "Catalogue en ligne", desc: "Vos produits sont publiés et visibles par les acheteurs internationaux." },
+  { time: "Étape 3", key: "step3", label: "Demandes qualifiées", desc: "AFRICA NEX vous transmet les demandes qui correspondent à vos produits." },
+  { time: "Étape 4", key: "step4", label: "Devis et export", desc: "Vous répondez avec votre devis ; AFRICA NEX construit l'offre et accompagne l'export." },
 ] as const;
 
 export default async function HomePage({
@@ -69,49 +72,6 @@ export default async function HomePage({
           </div>
         </div>
       </ScrollExpandMedia>
-
-      {/* Trust: partner logos */}
-      <section
-        style={{
-          padding: "clamp(3rem, 6vw, 5rem) var(--page-margin)",
-          borderTop: "1px solid var(--field-b)",
-          borderBottom: "1px solid var(--field-b)",
-        }}
-      >
-        <Reveal>
-          <p
-            className="text-center text-xs font-semibold uppercase tracking-widest mb-10"
-            style={{ color: "var(--muted)" }}
-          >
-            {t("partners.title")}
-          </p>
-        </Reveal>
-        <Reveal delay={1}>
-          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-8">
-            <img
-              src="/images/logos/bna.svg"
-              alt="BNA - Banque Nationale d'Algerie"
-              className="h-10 md:h-12 w-auto object-contain"
-              loading="lazy"
-            />
-            <img
-              src="/images/logos/cagex.png"
-              alt="CAGEX - Assurance et Garantie des Exportations"
-              className="h-10 md:h-12 w-auto object-contain"
-              loading="lazy"
-            />
-            <span
-              className="font-extrabold tracking-wide"
-              style={{
-                color: "var(--ink)",
-                fontSize: "clamp(1.4rem, 2.5vw, 1.8rem)",
-              }}
-            >
-              AFG Bank
-            </span>
-          </div>
-        </Reveal>
-      </section>
 
       {/* Stats: quiet figure lines */}
       <section style={{ padding: "var(--section-gap) var(--page-margin)" }}>
@@ -241,7 +201,7 @@ export default async function HomePage({
           </Reveal>
           <Reveal delay={1}>
             <p className="mt-4" style={{ color: "var(--muted)", maxWidth: "30ch" }}>
-              De l&apos;inscription a l&apos;export, chaque etape est accompagnee.
+              De l&apos;inscription à l&apos;export, chaque étape est accompagnée.
             </p>
           </Reveal>
         </div>
@@ -278,7 +238,7 @@ export default async function HomePage({
               className="mt-4 py-3 px-4 text-center font-semibold text-sm"
               style={{ background: "var(--ink)", color: "var(--ground)" }}
             >
-              Resultat : vos produits exportes vers 8+ marches
+              Objectif : vos produits sur 8 marchés africains prioritaires
             </div>
           </Reveal>
         </div>
@@ -307,31 +267,6 @@ export default async function HomePage({
               </div>
             </Reveal>
           ))}
-        </div>
-      </section>
-
-      {/* CAGEX trust badge */}
-      <section style={{ background: "var(--ink)", color: "var(--ground)", padding: "clamp(3rem, 6vw, 5rem) var(--page-margin)" }}>
-        <div className="max-w-4xl mx-auto grid md:grid-cols-[auto_1fr] gap-8 items-center">
-          <Reveal>
-            <img
-              src="/images/logos/cagex.png"
-              alt="CAGEX"
-              className="h-16 md:h-20 w-auto object-contain mx-auto md:mx-0"
-              style={{ filter: "brightness(0) invert(1)" }}
-              loading="lazy"
-            />
-          </Reveal>
-          <Reveal delay={1}>
-            <div>
-              <h3 className="font-extrabold text-lg md:text-xl">
-                {t("trust.cagex")}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.75)", maxWidth: "50ch" }}>
-                {t("trust.cagexDesc")}
-              </p>
-            </div>
-          </Reveal>
         </div>
       </section>
 

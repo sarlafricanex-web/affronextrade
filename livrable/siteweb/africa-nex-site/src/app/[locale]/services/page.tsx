@@ -13,11 +13,11 @@ export async function generateMetadata({
 }
 
 const SERVICES = [
-  { key: "b2b", figure: "8+" },
+  { key: "b2b", figure: "8" },
   { key: "marketing", figure: "IA" },
   { key: "logistics", figure: "3" },
-  { key: "consulting", figure: "24h" },
-  { key: "insurance", figure: "CAGEX" },
+  { key: "consulting", figure: "Export" },
+  { key: "insurance", figure: "1 %" },
   { key: "compliance", figure: "SH" },
 ] as const;
 
