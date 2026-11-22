@@ -194,7 +194,7 @@ export default function ContactPage() {
                 />
                 <span className="text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
                   {t("consent")}{" "}
-                  <Link href="/legal" className="underline" style={{ color: "var(--ink)" }}>
+                  <Link href="/privacy" className="underline" style={{ color: "var(--ink)" }}>
                     {t("privacyLink")}
                   </Link>
                 </span>

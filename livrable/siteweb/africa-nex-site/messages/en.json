@@ -363,37 +363,16 @@
     "centrafrique_product4": "Textiles",
     "centrafrique_opportunity": "Under-supplied market, unmet demand for essential goods"
   },
-  "legal": {
-    "title": "Legal notice",
-    "companyTitle": "Site publisher",
-    "hostingTitle": "Hosting",
-    "dataTitle": "Personal data",
-    "dataIntro": "Data collected through the contact form includes:",
-    "dataItem1": "Name, email, company, country, phone, WhatsApp, message",
-    "dataItem2": "Purpose: to respond to your request and offer our services",
-    "dataItem3": "Retention: 12 months, then automatic deletion",
-    "dataPurpose": "This data is processed by SARL AFRICA NEX and is never sold to third parties.",
-    "dataRetention": "In accordance with Algerian law 18-07 and GDPR, you have rights over your data.",
-    "rightsTitle": "Your rights",
-    "rightsIntro": "You can exercise your rights at any time:",
-    "rightsAccess": "Right to access your data",
-    "rightsCorrect": "Right to rectification",
-    "rightsDelete": "Right to deletion",
-    "rightsObject": "Right to object to processing",
-    "rightsContact": "To exercise these rights, contact us at sarlafricanex@gmail.com.",
-    "cookiesTitle": "Cookies",
-    "cookiesText": "This site does not use tracking or advertising cookies. Only essential technical cookies may be used for site functionality.",
-    "lastUpdate": "Last updated: November 2026"
-  },
   "footer": {
     "description": "The B2B marketplace connecting Algerian producers to international markets.",
     "quickLinks": "Quick links",
     "legal": "Legal notice",
-    "privacy": "Privacy policy",
+    "privacy": "Privacy and cookies",
     "terms": "Terms of use",
     "followUs": "Follow us",
     "rights": "All rights reserved.",
-    "madeWith": "Made with passion in Setif, Algeria"
+    "madeWith": "Made with passion in Setif, Algeria",
+    "sales": "Terms of sale"
   },
   "meta": {
     "title": "AFRICA NEX - B2B Export Marketplace Algeria",
@@ -439,7 +418,6 @@
     "passwordHint": "At least 8 characters",
     "phone": "Phone",
     "consentBefore": "I accept the",
-    "consentLink": "terms of use and privacy policy",
     "createAccount": "Create my account",
     "haveAccount": "Already registered?",
     "signIn": "Sign in",
@@ -468,7 +446,10 @@
     "loading": "Please wait...",
     "mySpace": "My space",
     "showPassword": "Show password",
-    "hidePassword": "Hide password"
+    "hidePassword": "Hide password",
+    "consentTerms": "terms of use",
+    "consentAnd": "and the",
+    "consentPrivacy": "privacy policy"
   },
   "app": {
     "greeting": "Hello {name}",

@@ -151,7 +151,9 @@ export default function RegisterPage() {
           <input id="register-consent" type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1" />
           <span>
             {t("consentBefore")}{" "}
-            <Link href="/legal" className="font-semibold underline" style={{ color: "var(--ink)" }}>{t("consentLink")}</Link>
+            <Link href="/terms" className="font-semibold underline" style={{ color: "var(--ink)" }}>{t("consentTerms")}</Link>{" "}
+            {t("consentAnd")}{" "}
+            <Link href="/privacy" className="font-semibold underline" style={{ color: "var(--ink)" }}>{t("consentPrivacy")}</Link>
           </span>
         </label>
 

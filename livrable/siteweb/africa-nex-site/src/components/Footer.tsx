@@ -80,10 +80,14 @@ export function Footer() {
               {t("madeWith")}
             </p>
             <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
-              &copy; 2026 AFRICA NEX. {t("rights")} &middot;{" "}
-              <Link href="/legal" className="underline hover:no-underline">
-                {t("legal")}
-              </Link>
+              &copy; 2026 AFRICA NEX. {t("rights")}
+            </p>
+            <p className="text-xs mt-1 flex flex-wrap gap-x-3 gap-y-1" style={{ color: "var(--muted)" }}>
+              {(["legal", "privacy", "terms", "sales"] as const).map((k) => (
+                <Link key={k} href={`/${k}`} className="underline hover:no-underline">
+                  {t(k)}
+                </Link>
+              ))}
             </p>
             <p className="text-xs mt-3 leading-relaxed" style={{ color: "var(--muted)", opacity: 0.6 }}>
               Images: &ldquo;Olive Trees&rdquo; by Vincent van Gogh, 1889, public domain, via The Metropolitan Museum of Art.

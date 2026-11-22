@@ -268,7 +268,7 @@
     "whatsapp": "WhatsApp",
     "message": "Votre message",
     "consent": "J'accepte que mes données soient utilisées pour traiter ma demande, conformément à la",
-    "privacyLink": "politique de confidentialite",
+    "privacyLink": "politique de confidentialité",
     "send": "Envoyer",
     "successTitle": "Message envoyé",
     "successMessage": "Merci pour votre message. Notre équipe vous répondra dans les 24 heures.",
@@ -363,37 +363,16 @@
     "centrafrique_product4": "Textiles",
     "centrafrique_opportunity": "Marché sous-approvisionné, demande non satisfaite en biens essentiels"
   },
-  "legal": {
-    "title": "Mentions légales",
-    "companyTitle": "Editeur du site",
-    "hostingTitle": "Hebergement",
-    "dataTitle": "Données personnelles",
-    "dataIntro": "Les données collectées via le formulaire de contact sont :",
-    "dataItem1": "Nom, email, entreprise, pays, téléphone, WhatsApp, message",
-    "dataItem2": "Finalité : répondre à votre demande et vous proposer nos services",
-    "dataItem3": "Conservation : 12 mois, puis suppression automatique",
-    "dataPurpose": "Ces données sont traitées par SARL AFRICA NEX et ne sont jamais vendues à des tiers.",
-    "dataRetention": "Conformément à la loi algérienne 18-07 et au RGPD, vous disposez de droits sur vos données.",
-    "rightsTitle": "Vos droits",
-    "rightsIntro": "Vous pouvez à tout moment exercer vos droits :",
-    "rightsAccess": "Droit d'accès à vos données",
-    "rightsCorrect": "Droit de rectification",
-    "rightsDelete": "Droit de suppression",
-    "rightsObject": "Droit d'opposition au traitement",
-    "rightsContact": "Pour exercer ces droits, contactez-nous à sarlafricanex@gmail.com.",
-    "cookiesTitle": "Cookies",
-    "cookiesText": "Ce site n'utilise pas de cookies de suivi ou de publicité. Seuls des cookies techniques essentiels au fonctionnement du site peuvent être utilisés.",
-    "lastUpdate": "Dernière mise à jour : novembre 2026"
-  },
   "footer": {
     "description": "La marketplace B2B qui connecte les producteurs algériens aux marchés internationaux.",
     "quickLinks": "Liens rapides",
     "legal": "Mentions légales",
-    "privacy": "Politique de confidentialite",
-    "terms": "Conditions d'utilisation",
+    "privacy": "Confidentialité et cookies",
+    "terms": "CGU",
     "followUs": "Suivez-nous",
     "rights": "Tous droits réservés.",
-    "madeWith": "Fait avec passion à Sétif, Algérie"
+    "madeWith": "Fait avec passion à Sétif, Algérie",
+    "sales": "CGV"
   },
   "meta": {
     "title": "AFRICA NEX - Marketplace B2B Export Algérie",
@@ -439,7 +418,6 @@
     "passwordHint": "8 caractères minimum",
     "phone": "Téléphone",
     "consentBefore": "J'accepte les",
-    "consentLink": "conditions d'utilisation et la politique de confidentialite",
     "createAccount": "Créer mon compte",
     "haveAccount": "Déjà inscrit ?",
     "signIn": "Se connecter",
@@ -468,7 +446,10 @@
     "loading": "Patientez...",
     "mySpace": "Mon espace",
     "showPassword": "Afficher le mot de passe",
-    "hidePassword": "Masquer le mot de passe"
+    "hidePassword": "Masquer le mot de passe",
+    "consentTerms": "conditions générales d'utilisation",
+    "consentAnd": "et la",
+    "consentPrivacy": "politique de confidentialité"
   },
   "app": {
     "greeting": "Bonjour {name}",
