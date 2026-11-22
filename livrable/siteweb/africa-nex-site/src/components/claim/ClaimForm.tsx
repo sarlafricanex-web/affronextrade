@@ -69,7 +69,7 @@ export function ClaimForm({ slug, companyName, defaults: initial }: { slug: stri
         <Prefixed prefix="@">
           <input id="cl-email" name="workEmail" type="email" required autoComplete="email" placeholder={t("workEmailPlaceholder")} defaultValue={defaults.workEmail} className={inputClass} style={inputStyle} />
         </Prefixed>
-        <span className="mt-1 block text-xs" style={{ color: "#059669" }}>{t("workEmailHint")}</span>
+        <span className="mt-1 block text-xs" style={{ color: "#065f46" }}>{t("workEmailHint")}</span>
         {err("workEmail")}
       </div>
 
@@ -135,7 +135,7 @@ export function ClaimForm({ slug, companyName, defaults: initial }: { slug: stri
       </label>
       {err("consent")}
 
-      <button type="submit" disabled={pending} className="flex w-full items-center justify-center gap-2 py-4 text-sm font-bold uppercase disabled:opacity-60" style={{ background: "#10b981", color: "white", letterSpacing: "0.08em" }}>
+      <button type="submit" disabled={pending} className="flex w-full items-center justify-center gap-2 py-4 text-sm font-bold uppercase disabled:opacity-60" style={{ background: "#047857", color: "white", letterSpacing: "0.08em" }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
         {pending ? t("sending") : t("submit")}
       </button>

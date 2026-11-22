@@ -111,7 +111,7 @@ export function AutoOfferForm({
               <Field label={t("offerCommissionRate")} htmlFor="a-commission">
                 <TextInput id="a-commission" name="commissionRate" required inputMode="decimal" dir="ltr" value={rate} onChange={(e) => setRate(e.target.value)} />
                 {num(rate) !== gridRate ? (
-                  <button type="button" onClick={() => setRate(String(gridRate))} className="w-fit text-xs font-semibold underline" style={{ color: "#059669" }}>{t("offerUseGrid", { rate: gridRate })}</button>
+                  <button type="button" onClick={() => setRate(String(gridRate))} className="w-fit text-xs font-semibold underline" style={{ color: "#065f46" }}>{t("offerUseGrid", { rate: gridRate })}</button>
                 ) : (
                   <span className="text-xs" style={{ color: "var(--muted)" }}>{t("autoEditGridNote")}</span>
                 )}
@@ -205,7 +205,7 @@ export function AutoOfferForm({
             {[marginMissing ? t("offerPendingMargin") : null, freightMissing ? t("offerPendingFreight") : null].filter(Boolean).join(" · ")} : {t("autoEditPendingNote")}
           </p>
         )}
-        <button type="submit" name="intent" value="publish" disabled={pending} className="px-6 py-3 text-sm font-bold uppercase disabled:opacity-60" style={{ ...caps, background: "#10b981", color: "white" }}>
+        <button type="submit" name="intent" value="publish" disabled={pending} className="px-6 py-3 text-sm font-bold uppercase disabled:opacity-60" style={{ ...caps, background: "#047857", color: "white" }}>
           {pending ? t("offerSaving") : t("autoEditPublish")}
         </button>
         <button type="submit" name="intent" value="draft" disabled={pending} className="px-6 py-3 text-xs font-bold uppercase disabled:opacity-60" style={{ ...caps, border: "1px solid var(--ink)", background: "white" }}>

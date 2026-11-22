@@ -8,7 +8,7 @@ import { ClaimDecision } from "@/components/admin/ClaimDecision";
 
 export const instant = false;
 
-const STATUS_COLOR = { pending: "#f97316", approved: "var(--accent)", rejected: "#dc2626" } as const;
+const STATUS_COLOR = { pending: "#c2410c", approved: "var(--accent-text)", rejected: "#dc2626" } as const;
 
 export default async function ClaimsPage({
   params,
@@ -81,7 +81,7 @@ export default async function ClaimsPage({
             </dl>
             {c.message && <p className="whitespace-pre-line text-sm" style={{ background: "var(--ground)", padding: "0.75rem 1rem" }}>{c.message}</p>}
             {c.evidence_path && (
-              <a href={`/api/admin/claims/${c.id}/evidence`} target="_blank" rel="noopener" className="w-fit text-sm font-bold underline" style={{ color: "var(--accent)" }}>
+              <a href={`/api/admin/claims/${c.id}/evidence`} target="_blank" rel="noopener" className="w-fit text-sm font-bold underline" style={{ color: "var(--accent-text)" }}>
                 {t("claimEvidence")}
               </a>
             )}

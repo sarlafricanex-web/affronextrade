@@ -105,7 +105,7 @@ export default async function CompanyPage({
           <nav aria-label={tc("breadcrumb")} className="mb-2 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase" style={{ ...caps, color: "var(--muted)" }}>
             <Link href="/dashboard" className="hover:underline">{tc("eyebrow")}</Link>
             <span aria-hidden="true" style={{ color: HAIR }}>/</span>
-            <span style={{ color: "#059669" }}>{tc("breadcrumbCurrent")}</span>
+            <span style={{ color: "#065f46" }}>{tc("breadcrumbCurrent")}</span>
           </nav>
           <h1 className="font-extrabold uppercase" style={{ fontSize: "clamp(1.5rem, 3vw, 2.1rem)", lineHeight: 1.15, letterSpacing: "-0.025em" }}>
             {tc("title", { name: company.company_name })}
@@ -159,7 +159,7 @@ export default async function CompanyPage({
           {stats.map((s, i) => (
             <div key={s.label} className="p-4" style={{ borderInlineStart: i ? `1px solid ${HAIR}` : undefined, borderTop: i > 1 ? `1px solid ${HAIR}` : undefined }}>
               <dt className="text-[10px] font-bold uppercase" style={{ ...caps, color: "var(--muted)" }}>{s.label}</dt>
-              <dd className="mt-1 font-extrabold uppercase" style={{ fontSize: "1.1rem", color: s.value ? "var(--ink)" : "#f97316" }}>{s.value ? <span dir="ltr" style={{ unicodeBidi: "isolate" }}>{s.value}</span> : tc("toComplete")}</dd>
+              <dd className="mt-1 font-extrabold uppercase" style={{ fontSize: "1.1rem", color: s.value ? "var(--ink)" : "#c2410c" }}>{s.value ? <span dir="ltr" style={{ unicodeBidi: "isolate" }}>{s.value}</span> : tc("toComplete")}</dd>
             </div>
           ))}
         </dl>
@@ -231,16 +231,16 @@ export default async function CompanyPage({
             <div className="flex flex-col gap-3 p-5">
               <p className="font-extrabold" style={{ fontSize: "2.25rem", lineHeight: 1, fontFeatureSettings: '"tnum" 1' }}>{percent} %</p>
               <div className="h-2 w-full" style={{ background: "#f5efe6", border: `1px solid ${HAIR}` }} role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
-                <div className="h-full" style={{ width: `${percent}%`, background: "#059669" }} />
+                <div className="h-full" style={{ width: `${percent}%`, background: "#065f46" }} />
               </div>
               <ul className="flex flex-col gap-1.5 text-sm">
                 {checks.map((c) => (
                   <li key={c.key} className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-2" style={{ color: c.ok ? "var(--ink)" : "var(--muted)" }}>
-                      <span aria-hidden="true" className="flex h-4 w-4 shrink-0 items-center justify-center text-[10px] font-bold" style={c.ok ? { background: "#059669", color: "white" } : { border: `1px solid ${HAIR}` }}>{c.ok ? "✓" : ""}</span>
+                      <span aria-hidden="true" className="flex h-4 w-4 shrink-0 items-center justify-center text-[10px] font-bold" style={c.ok ? { background: "#065f46", color: "white" } : { border: `1px solid ${HAIR}` }}>{c.ok ? "✓" : ""}</span>
                       {t(c.key)}
                     </span>
-                    <span className="text-[10px] font-bold uppercase" style={{ ...caps, color: c.ok ? "#059669" : "#c2410c" }}>{c.ok ? tc("checkOk") : tc("checkTodo")}</span>
+                    <span className="text-[10px] font-bold uppercase" style={{ ...caps, color: c.ok ? "#065f46" : "#c2410c" }}>{c.ok ? tc("checkOk") : tc("checkTodo")}</span>
                   </li>
                 ))}
               </ul>
@@ -261,7 +261,7 @@ export default async function CompanyPage({
                 <ul className="flex flex-col gap-2">
                   {(verifiedDocs ?? []).map((d) => (
                     <li key={d.id} className="flex items-start gap-3 p-3 text-sm" style={{ background: "#fff8f3", border: `1px solid ${HAIR}` }}>
-                      <span aria-hidden="true" className="font-bold" style={{ color: "#059669" }}>✓</span>
+                      <span aria-hidden="true" className="font-bold" style={{ color: "#065f46" }}>✓</span>
                       <span>
                         <span className="block font-semibold">{d.title || td(`kind_${d.kind}`)}</span>
                         <span className="block text-xs" style={{ color: "var(--muted)" }}>{td(`kind_${d.kind}`)}{d.expires_on ? ` · ${td("validUntil", { date: format.dateTime(new Date(`${d.expires_on}T12:00:00`), { dateStyle: "medium" }) })}` : ""}</span>

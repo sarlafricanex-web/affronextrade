@@ -56,7 +56,7 @@ export function Footer() {
           <div className="mt-16">
             <div className="flex gap-8 mb-6">
               <div>
-                <p className="text-xs font-semibold mb-1" style={{ color: "var(--muted)" }}>
+                <p className="text-xs font-semibold mb-1" style={{ color: "var(--on-ink-muted)" }}>
                   {t("followUs")}
                 </p>
                 <div className="flex gap-3">
@@ -69,27 +69,27 @@ export function Footer() {
                 </div>
               </div>
               <div>
-                <p className="text-xs font-semibold mb-1" style={{ color: "var(--muted)" }}>
+                <p className="text-xs font-semibold mb-1" style={{ color: "var(--on-ink-muted)" }}>
                   Email
                 </p>
                 <p className="text-sm" style={{ color: "var(--ground)" }}>sarlafricanex@gmail.com</p>
               </div>
             </div>
 
-            <p className="text-xs" style={{ color: "var(--muted)" }}>
+            <p className="text-xs" style={{ color: "var(--on-ink-muted)" }}>
               {t("madeWith")}
             </p>
-            <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+            <p className="text-xs mt-1" style={{ color: "var(--on-ink-muted)" }}>
               &copy; 2026 AFRICA NEX. {t("rights")}
             </p>
-            <p className="text-xs mt-1 flex flex-wrap gap-x-3 gap-y-1" style={{ color: "var(--muted)" }}>
+            <p className="text-xs mt-1 flex flex-wrap gap-x-3 gap-y-1" style={{ color: "var(--on-ink-muted)" }}>
               {(["legal", "privacy", "terms", "sales"] as const).map((k) => (
                 <Link key={k} href={`/${k}`} className="underline hover:no-underline">
                   {t(k)}
                 </Link>
               ))}
             </p>
-            <p className="text-xs mt-3 leading-relaxed" style={{ color: "var(--muted)", opacity: 0.6 }}>
+            <p className="text-xs mt-3 leading-relaxed" style={{ color: "var(--on-ink-muted)" }}>
               Images: &ldquo;Olive Trees&rdquo; by Vincent van Gogh, 1889, public domain, via The Metropolitan Museum of Art.
               &ldquo;Boat in Harbor, Algeria&rdquo; by John Beasley Greene, 1853, public domain, via The Met.
               &ldquo;Olives in olive oil&rdquo; by stu_spivack, CC BY-SA 2.0, via Wikimedia Commons.

@@ -39,7 +39,7 @@ export default async function AdminQuoteEntryPage({ params }: { params: Promise<
           <span aria-hidden="true">/</span>
           <Link href={`/admin/rfqs/${d.rfq_id}`} className="hover:underline">{t("quoteEntryBack")}</Link>
           <span aria-hidden="true">/</span>
-          <span dir="ltr" style={{ color: "#059669" }}>{d.reference}</span>
+          <span dir="ltr" style={{ color: "#065f46" }}>{d.reference}</span>
         </nav>
         <h1 className="font-extrabold" style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", lineHeight: 1.15 }}>{t("quoteEntryTitle", { company: company?.company_name ?? "" })}</h1>
         <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>{t("quoteEntryIntro")}</p>

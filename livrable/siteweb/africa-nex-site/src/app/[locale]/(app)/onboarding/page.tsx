@@ -98,7 +98,7 @@ export default async function OnboardingPage({
           const s = done[i] ? "done" : stateOf(i);
           return (
             <li key={key} className="flex items-start gap-3 p-3" style={{ background: s === "done" ? "#ecfdf5" : "#fff8f3", border: `1px solid ${s === "done" ? "#10b981" : HAIR}` }}>
-              <span aria-hidden="true" className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center text-[10px] font-bold" style={s === "done" ? { background: "#059669", color: "white" } : { border: `1px solid ${HAIR}`, background: "white" }}>{s === "done" ? "✓" : ""}</span>
+              <span aria-hidden="true" className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center text-[10px] font-bold" style={s === "done" ? { background: "#065f46", color: "white" } : { border: `1px solid ${HAIR}`, background: "white" }}>{s === "done" ? "✓" : ""}</span>
               <span className="min-w-0">
                 <span className="block text-sm font-bold" style={{ color: s === "done" ? "#065f46" : "var(--ink)" }}>{t(key)}</span>
                 <span className="block text-xs" style={{ color: "var(--muted)" }}>{ts(`progress${i + 1}`)}</span>
@@ -162,12 +162,12 @@ export default async function OnboardingPage({
             <span className="flex h-full items-center gap-3 p-4" style={{ borderBottom: `4px solid ${active ? "#10b981" : "transparent"}` }}>
               <span
                 className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold"
-                style={active ? { background: "#10b981", color: "white" } : s === "done" ? { background: "white", border: "1px solid #10b981", color: "#059669" } : { background: "white", border: `1px solid ${HAIR}`, color: "var(--muted)" }}
+                style={active ? { background: "#047857", color: "white" } : s === "done" ? { background: "white", border: "1px solid #10b981", color: "#065f46" } : { background: "white", border: `1px solid ${HAIR}`, color: "var(--muted)" }}
               >
                 {s === "done" ? "✓" : s === "locked" ? <LockIcon /> : String(number).padStart(2, "0")}
               </span>
               <span className="min-w-0">
-                <span className="block text-[10px] font-bold uppercase" style={{ ...caps, color: active ? "#6ee7b7" : s === "done" ? "#059669" : "var(--muted)" }}>
+                <span className="block text-[10px] font-bold uppercase" style={{ ...caps, color: active ? "#6ee7b7" : s === "done" ? "#065f46" : "var(--muted)" }}>
                   {active ? t("stateCurrent") : s === "done" ? ts("stateValidated") : s === "locked" ? ts("stateLocked") : t("stateTodo")}
                 </span>
                 <span className="block font-bold uppercase" style={{ fontSize: "0.85rem", letterSpacing: "0.02em" }}>{number}. {t(key)}</span>

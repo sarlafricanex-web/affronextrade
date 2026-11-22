@@ -66,7 +66,7 @@ export function SubmissionsTable({ submissions }: { submissions: SubmissionRow[]
                       open(s);
                     }}
                     className="text-xs font-bold uppercase"
-                    style={{ color: "var(--accent)", letterSpacing: "0.08em" }}
+                    style={{ color: "var(--accent-text)", letterSpacing: "0.08em" }}
                   >
                     {t("view")}
                   </button>

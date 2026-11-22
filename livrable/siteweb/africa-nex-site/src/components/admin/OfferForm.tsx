@@ -99,7 +99,7 @@ export function OfferForm({
             <Field label={t("offerCommissionRate")} htmlFor="o-commission">
               <TextInput id="o-commission" name="commissionRate" required inputMode="decimal" dir="ltr" value={rate} onChange={(e) => setManualRate(e.target.value)} />
               {manualRate !== null && num(manualRate) !== gridRate ? (
-                <button type="button" onClick={() => setManualRate(null)} className="w-fit text-xs font-semibold underline" style={{ color: "#059669" }}>{t("offerUseGrid", { rate: gridRate })}</button>
+                <button type="button" onClick={() => setManualRate(null)} className="w-fit text-xs font-semibold underline" style={{ color: "#065f46" }}>{t("offerUseGrid", { rate: gridRate })}</button>
               ) : (
                 <span className="text-xs" style={{ color: "var(--muted)" }}>{t("offerFromGrid")}</span>
               )}
@@ -182,7 +182,7 @@ export function OfferForm({
           <strong dir="ltr" style={{ fontSize: "1.5rem" }}>{money(p.unitPrice)} / {unitLabel}</strong>
         </p>
         <p className="text-xs font-semibold" style={{ color: "#c2410c" }}>{t("offerCalcPrivate", { margin: money(p.commission) })}</p>
-        <button type="submit" name="intent" value="publish" disabled={pending} className="px-6 py-3 text-sm font-bold uppercase disabled:opacity-60" style={{ ...caps, background: "#10b981", color: "white" }}>
+        <button type="submit" name="intent" value="publish" disabled={pending} className="px-6 py-3 text-sm font-bold uppercase disabled:opacity-60" style={{ ...caps, background: "#047857", color: "white" }}>
           {pending ? t("offerSaving") : t("offerPublish")}
         </button>
         <button type="submit" name="intent" value="draft" disabled={pending} className="px-6 py-3 text-xs font-bold uppercase disabled:opacity-60" style={{ ...caps, border: "1px solid var(--ink)", background: "white" }}>

@@ -10,6 +10,12 @@
   --muted: #5c5347;
   --accent: #10b981;
   --accent-warm: #f97316;
+  /* Teintes foncees pour le texte (audit legal, contrastes) : blanc sur --accent-strong = 5,5:1,
+     blanc sur --warm-strong = 5,2:1, --on-ink-muted sur --ink = 6,9:1. */
+  --accent-strong: #047857;
+  --warm-strong: #c2410c;
+  --on-ink-muted: #94a3b8;
+  --accent-text: #065f46; /* texte vert : 6:1 sur le sable, 7,7:1 sur blanc */
   --field-a: #e3d9c8;
   --field-b: #d8cebb;
 
@@ -70,6 +76,7 @@ a {
 /* ── Button hover effects ── */
 a[style*="background: var(--ink)"],
 a[style*="background: var(--accent)"],
+a[style*="background: var(--accent-strong)"],
 button[type="submit"] {
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
@@ -78,6 +85,7 @@ button[type="submit"] {
 
 a[style*="background: var(--ink)"]:hover,
 a[style*="background: var(--accent)"]:hover,
+a[style*="background: var(--accent-strong)"]:hover,
 button[type="submit"]:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
@@ -85,6 +93,7 @@ button[type="submit"]:hover {
 
 a[style*="background: var(--ink)"]:active,
 a[style*="background: var(--accent)"]:active,
+a[style*="background: var(--accent-strong)"]:active,
 button[type="submit"]:active {
   transform: translateY(0);
   box-shadow: none;
@@ -103,8 +112,16 @@ a[style*="border: 1px solid"]:hover {
 
 /* ── Selection ── */
 ::selection {
-  background: var(--accent);
+  background: var(--accent-strong);
   color: white;
+}
+
+/* ── Focus clavier visible partout (audit legal, accessibilite) : contour vert fonce, contraste
+   d'au moins 3:1 sur le sable, le blanc et l'ardoise. !important : certains champs ont un
+   style "outline: none" en ligne. ── */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent-strong) !important;
+  outline-offset: 2px;
 }
 
 /* ── Motion: section entrances ── */
@@ -147,13 +164,13 @@ a[style*="border: 1px solid"]:hover {
 /* ── Selecteur de langue : bouton rond vert emeraude (couleur du logo), menu deroulant anime ── */
 .lang-switcher-button {
   border: 1.5px solid #10b981;
-  color: #059669;
+  color: #047857;
   background: white;
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 .lang-switcher-button:hover,
 .lang-switcher[data-open] .lang-switcher-button {
-  background: #10b981;
+  background: #047857;
   color: white;
 }
 .lang-switcher-button:active { transform: scale(0.94); }
@@ -182,7 +199,7 @@ a[style*="border: 1px solid"]:hover {
 }
 .lang-switcher[data-open] .lang-switcher-item { opacity: 1; transform: none; }
 .lang-switcher-item:hover,
-.lang-switcher-item:focus-visible { background: var(--ground); outline: none; }
+.lang-switcher-item:focus-visible { background: var(--ground); }
 
 @media (prefers-reduced-motion: reduce) {
   .lang-switcher-menu,
@@ -287,7 +304,7 @@ form textarea {
 
 form input:not([type="hidden"]):not([type="checkbox"]):focus,
 form textarea:focus {
-  box-shadow: inset 0 -2px 0 var(--accent);
+  box-shadow: inset 0 -2px 0 var(--accent-strong);
 }
 
 /* ── CTA arrow hover ── */

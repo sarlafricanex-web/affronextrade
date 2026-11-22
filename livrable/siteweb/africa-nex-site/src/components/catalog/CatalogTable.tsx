@@ -112,7 +112,7 @@ export function CatalogTable({ rows }: { rows: CatalogRow[] }) {
               ].map(([label, value]) => (
                 <div key={label}>
                   <dt className="text-[10px] font-bold uppercase" style={caps}>{label}</dt>
-                  <dd className="font-semibold" style={{ color: value ? "var(--ink)" : "#f97316" }}>{value ?? c("missing")}</dd>
+                  <dd className="font-semibold" style={{ color: value ? "var(--ink)" : "#c2410c" }}>{value ?? c("missing")}</dd>
                   {label === c("colPrice") && <ValidityBadge v={r.validity} />}
                   {label === c("colStock") && r.stockDate && <span className="block text-xs" style={{ color: "var(--muted)" }}>{c("stockDateShort", { date: r.stockDate })}</span>}
                 </div>
@@ -158,7 +158,7 @@ export function CatalogTable({ rows }: { rows: CatalogRow[] }) {
                     </div>
                   </div>
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap font-semibold" dir="ltr" style={{ fontFeatureSettings: '"tnum" 1' }}>{r.hsCode ?? <span style={{ color: "#f97316" }}>{c("missing")}</span>}</td>
+                <td className="px-3 py-4 whitespace-nowrap font-semibold" dir="ltr" style={{ fontFeatureSettings: '"tnum" 1' }}>{r.hsCode ?? <span style={{ color: "#c2410c" }}>{c("missing")}</span>}</td>
                 <td className="px-3 py-4 text-end whitespace-nowrap">
                   {r.price ? (
                     <>
@@ -166,7 +166,7 @@ export function CatalogTable({ rows }: { rows: CatalogRow[] }) {
                       {r.priceBasis && <span className="block text-xs" style={{ color: "var(--muted)" }}>{r.priceBasis}</span>}
                       <ValidityBadge v={r.validity} />
                     </>
-                  ) : <span style={{ color: "#f97316" }}>{c("missing")}</span>}
+                  ) : <span style={{ color: "#c2410c" }}>{c("missing")}</span>}
                 </td>
                 <td className="px-3 py-4 text-end">
                   <span className="block whitespace-nowrap font-semibold" style={{ fontFeatureSettings: '"tnum" 1' }}>{r.moq ?? "-"}</span>

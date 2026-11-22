@@ -79,7 +79,7 @@ export default async function RfqDetailPage({
           <nav aria-label={t("breadcrumb")} className="mb-2 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase" style={{ ...caps, color: "var(--muted)" }}>
             <Link href="/rfq" className="hover:underline">{t("navList")}</Link>
             <span aria-hidden="true" style={{ color: HAIR }}>/</span>
-            <span dir="ltr" style={{ color: "#059669" }}>{rfq.reference}</span>
+            <span dir="ltr" style={{ color: "#065f46" }}>{rfq.reference}</span>
           </nav>
           <h1 className="font-extrabold" style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", lineHeight: 1.15, letterSpacing: "-0.025em" }}>{rfq.title}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -98,11 +98,11 @@ export default async function RfqDetailPage({
             const state = n < stage || (n === stage && n === 5) ? "done" : n === stage ? "current" : "todo";
             return (
               <li key={key} className="flex items-center gap-3 p-3" style={{ borderInlineEnd: i < 4 ? `1px solid ${HAIR}` : undefined, background: state === "current" ? "#fff7ed" : "transparent", borderBottom: state === "current" ? "3px solid #f97316" : "3px solid transparent" }}>
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center text-xs font-bold" style={state === "done" ? { background: "#059669", color: "white" } : state === "current" ? { background: "#f97316", color: "white" } : { border: `1px solid ${HAIR}`, color: "var(--muted)" }}>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center text-xs font-bold" style={state === "done" ? { background: "#065f46", color: "white" } : state === "current" ? { background: "#c2410c", color: "white" } : { border: `1px solid ${HAIR}`, color: "var(--muted)" }}>
                   {state === "done" ? "✓" : n}
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[10px] font-bold uppercase" style={{ ...caps, color: state === "todo" ? "var(--muted)" : state === "current" ? "#c2410c" : "#059669" }}>{t(`stageState_${state}`)}</span>
+                  <span className="block text-[10px] font-bold uppercase" style={{ ...caps, color: state === "todo" ? "var(--muted)" : state === "current" ? "#c2410c" : "#065f46" }}>{t(`stageState_${state}`)}</span>
                   <span className="block text-xs font-semibold" style={{ color: state === "todo" ? "var(--muted)" : "var(--ink)" }}>{t(`milestone_${key}`)}</span>
                 </span>
               </li>

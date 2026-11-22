@@ -308,7 +308,7 @@ export function RfqForm({ context }: { context: RfqFormContext | null }) {
       </Section>
 
       <p className="p-4 text-sm" style={{ background: "#fff8f3", border: `1px solid ${HAIR}` }}>{t("privacyNote")}</p>
-      <button type="submit" disabled={pending || preparing} className="w-full py-4 text-sm font-bold uppercase disabled:opacity-60 sm:w-auto sm:self-end sm:px-10" style={{ background: "#10b981", color: "white", ...caps }}>
+      <button type="submit" disabled={pending || preparing} className="w-full py-4 text-sm font-bold uppercase disabled:opacity-60 sm:w-auto sm:self-end sm:px-10" style={{ background: "#047857", color: "white", ...caps }}>
         {pending ? t("sending") : t("submit")}
       </button>
     </form>

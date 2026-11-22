@@ -103,7 +103,7 @@ export default async function AdminProducerPage({
                     {d.expires_on ? ` · ${d.expires_on}` : ""} · <strong>{td(`status_${d.review_status}`)}</strong>
                   </span>
                   <span className="flex flex-wrap items-center gap-3">
-                    <a href={`/api/documents/${d.id}`} target="_blank" rel="noopener" className="text-xs font-bold uppercase underline" style={{ color: "var(--accent)" }}>{td("open")}</a>
+                    <a href={`/api/documents/${d.id}`} target="_blank" rel="noopener" className="text-xs font-bold uppercase underline" style={{ color: "var(--accent-text)" }}>{td("open")}</a>
                     {d.review_status !== "accepted" && (
                       <form action={adminProducerAction}>
                         <input type="hidden" name="locale" value={locale} />
@@ -111,7 +111,7 @@ export default async function AdminProducerPage({
                         <input type="hidden" name="op" value="acceptDoc" />
                         <input type="hidden" name="docId" value={d.id} />
                         <input type="hidden" name="back" value="edit" />
-                        <button type="submit" className="text-xs font-bold uppercase" style={{ color: "var(--accent)" }}>{t("docAccept")}</button>
+                        <button type="submit" className="text-xs font-bold uppercase" style={{ color: "var(--accent-text)" }}>{t("docAccept")}</button>
                       </form>
                     )}
                     {d.review_status !== "rejected" && (

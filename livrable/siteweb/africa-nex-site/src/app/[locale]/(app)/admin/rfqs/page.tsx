@@ -69,8 +69,8 @@ export default async function AdminRfqsPage({ params, searchParams }: { params: 
                   <span className="text-xs font-semibold" dir="ltr" style={{ color: "var(--muted)" }}>{r.reference}</span>
                   <StatusBadge status={r.status} label={tr(`status_${r.status}`)} />
                 </span>
-                <span className="font-bold" style={{ color: "#059669" }}>{r.title}</span>
-                {unreadOf(r.messages, "admin") > 0 && <span className="w-fit px-2 py-0.5 text-[10px] font-bold uppercase" style={{ letterSpacing: "0.08em", background: "#f97316", color: "white" }} data-unread={unreadOf(r.messages, "admin")}>{t("rfqUnread", { count: unreadOf(r.messages, "admin") })}</span>}
+                <span className="font-bold" style={{ color: "#065f46" }}>{r.title}</span>
+                {unreadOf(r.messages, "admin") > 0 && <span className="w-fit px-2 py-0.5 text-[10px] font-bold uppercase" style={{ letterSpacing: "0.08em", background: "#c2410c", color: "white" }} data-unread={unreadOf(r.messages, "admin")}>{t("rfqUnread", { count: unreadOf(r.messages, "admin") })}</span>}
                 {currencyAsked(r) && <span className="w-fit px-2 py-0.5 text-[10px] font-bold uppercase" style={{ letterSpacing: "0.08em", background: "#fff7ed", color: "#c2410c" }} data-currency-asked="">{t("rfqCurrencyAsked")}</span>}
                 <span className="text-sm">{[buyer?.company_name, buyer?.country ? countryName(buyer.country, locale) : null].filter(Boolean).join(" · ")}</span>
                 <span className="text-sm" style={{ color: "var(--muted)" }}>
@@ -109,7 +109,7 @@ export default async function AdminRfqsPage({ params, searchParams }: { params: 
               return (
                 <tr key={r.id} style={{ borderBottom: "1px solid var(--field-b)" }}>
                   <td className={cell}>
-                    <Link href={`/admin/rfqs/${r.id}`} className="font-semibold underline" style={{ color: "#059669", textUnderlineOffset: "3px" }}>{r.title}</Link>
+                    <Link href={`/admin/rfqs/${r.id}`} className="font-semibold underline" style={{ color: "#065f46", textUnderlineOffset: "3px" }}>{r.title}</Link>
                     <span className="block text-xs" dir="ltr" style={{ color: "var(--muted)", textAlign: "start" }}>{r.reference}</span>
                   </td>
                   <td className={cell}>
@@ -123,7 +123,7 @@ export default async function AdminRfqsPage({ params, searchParams }: { params: 
                   <td className={`${cell} whitespace-nowrap`}>{format.dateTime(new Date(r.created_at), { dateStyle: "medium" })}</td>
                   <td className={cell}>
                     <StatusBadge status={r.status} label={tr(`status_${r.status}`)} />
-                    {unreadOf(r.messages, "admin") > 0 && <span className="mt-1 block w-fit px-2 py-0.5 text-[10px] font-bold uppercase" style={{ letterSpacing: "0.08em", background: "#f97316", color: "white" }} data-unread={unreadOf(r.messages, "admin")}>{t("rfqUnread", { count: unreadOf(r.messages, "admin") })}</span>}
+                    {unreadOf(r.messages, "admin") > 0 && <span className="mt-1 block w-fit px-2 py-0.5 text-[10px] font-bold uppercase" style={{ letterSpacing: "0.08em", background: "#c2410c", color: "white" }} data-unread={unreadOf(r.messages, "admin")}>{t("rfqUnread", { count: unreadOf(r.messages, "admin") })}</span>}
                     {currencyAsked(r) && <span className="mt-1 block w-fit px-2 py-0.5 text-[10px] font-bold uppercase" style={{ letterSpacing: "0.08em", background: "#fff7ed", color: "#c2410c" }} data-currency-asked="">{t("rfqCurrencyAsked")}</span>}
                   </td>
                   <td className={`${cell} whitespace-nowrap`}>{dispatches.length ? t("rfqDispatchCount", { sent: dispatches.length, quoted }) : "-"}</td>

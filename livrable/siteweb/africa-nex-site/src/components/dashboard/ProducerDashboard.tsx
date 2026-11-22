@@ -119,7 +119,7 @@ export async function ProducerDashboard({ locale, firstName, companyName, publis
               <h2 className="text-xs font-bold uppercase" style={caps}>{t("completionTitle")}</h2>
               <p className="font-extrabold" style={{ fontSize: "1.8rem", lineHeight: 1, ...tnum }}>{data.completion.percent} %</p>
               <div className="h-2 w-full" style={{ background: "#f5efe6", border: `1px solid ${HAIR}` }} role="progressbar" aria-valuenow={data.completion.percent} aria-valuemin={0} aria-valuemax={100}>
-                <div className="h-full" style={{ width: `${data.completion.percent}%`, background: "#059669" }} />
+                <div className="h-full" style={{ width: `${data.completion.percent}%`, background: "#065f46" }} />
               </div>
               <Link href="/company" className="text-xs font-bold uppercase underline" style={caps}>{t("completionCta")}</Link>
             </section>

@@ -7,7 +7,7 @@ type Variant = "primary" | "secondary" | "outline" | "light";
 
 const VARIANTS: Record<Variant, { bg: string; color: string; border?: string; arrowBg: string; arrowColor: string }> = {
   primary: {
-    bg: "var(--accent)",
+    bg: "var(--accent-strong)",
     color: "white",
     arrowBg: "rgba(255,255,255,0.2)",
     arrowColor: "white",

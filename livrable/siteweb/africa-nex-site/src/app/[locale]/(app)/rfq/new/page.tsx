@@ -47,7 +47,7 @@ export default async function NewRfqPage({
         <nav aria-label={t("breadcrumb")} className="mb-2 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase" style={{ ...caps, color: "var(--muted)" }}>
           <Link href="/rfq" className="hover:underline">{t("navList")}</Link>
           <span aria-hidden="true" style={{ color: HAIR }}>/</span>
-          <span style={{ color: "#059669" }}>{t("newTitle")}</span>
+          <span style={{ color: "#065f46" }}>{t("newTitle")}</span>
         </nav>
         <h1 className="font-extrabold" style={{ fontSize: "clamp(1.5rem, 3vw, 2.1rem)", lineHeight: 1.15, letterSpacing: "-0.025em" }}>{t("newTitle")}</h1>
         <p className="mt-2 text-sm" style={{ color: "var(--muted)", maxWidth: "65ch" }}>{t("newIntro")}</p>

@@ -58,7 +58,7 @@ export function ImportForm() {
             {pending ? t("importChecking") : t("importCheck")}
           </button>
           {s && (s.updates > 0 || s.creates > 0) && (
-            <button type="button" onClick={() => send("apply")} disabled={pending} className="px-6 py-3 text-xs font-bold uppercase disabled:opacity-50" style={{ ...caps, background: "#10b981", color: "white" }}>
+            <button type="button" onClick={() => send("apply")} disabled={pending} className="px-6 py-3 text-xs font-bold uppercase disabled:opacity-50" style={{ ...caps, background: "#047857", color: "white" }}>
               {t("importApply", { count: s.updates + s.creates })}
             </button>
           )}
@@ -68,7 +68,7 @@ export function ImportForm() {
       {s && (
         <section className="flex flex-col gap-4" aria-live="polite" data-import-summary="">
           <div className="grid gap-3 sm:grid-cols-4">
-            {([["importUpdates", s.updates, "#059669"], ["importCreates", s.creates, "#059669"], ["importUnchanged", s.unchanged, "var(--muted)"], ["importIssues", s.issues.length, s.issues.length ? "#dc2626" : "var(--muted)"]] as const).map(([k, n, color]) => (
+            {([["importUpdates", s.updates, "#065f46"], ["importCreates", s.creates, "#065f46"], ["importUnchanged", s.unchanged, "var(--muted)"], ["importIssues", s.issues.length, s.issues.length ? "#dc2626" : "var(--muted)"]] as const).map(([k, n, color]) => (
               <div key={k} className="p-4" style={{ background: "white", border: `1px solid ${HAIR}` }} data-count={k}>
                 <p className="text-[11px] font-bold uppercase" style={{ ...caps, color: "var(--muted)" }}>{t(k)}</p>
                 <p className="font-extrabold" style={{ fontSize: "1.8rem", color }}>{n}</p>

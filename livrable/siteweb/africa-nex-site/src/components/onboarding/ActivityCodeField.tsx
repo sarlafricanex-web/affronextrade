@@ -81,7 +81,7 @@ export function ActivityCodeField({
                   type="button"
                   onClick={() => { setConfirmed(true); setDescription((cur) => cur || cap(a.label_fr)); }}
                   className="w-fit px-5 py-2.5 text-xs font-bold uppercase"
-                  style={{ background: "#10b981", color: "white", letterSpacing: "0.08em" }}
+                  style={{ background: "#047857", color: "white", letterSpacing: "0.08em" }}
                 >
                   {t("activityConfirm")}
                 </button>

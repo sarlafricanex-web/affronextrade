@@ -32,13 +32,13 @@ export function StatusBadge({ status, label }: { status: string; label: string }
 }
 
 function Unread({ n, label }: { n: number; label: string }) {
-  return n > 0 ? <span className="inline-block px-2 py-1 text-[10px] font-bold uppercase" style={{ ...caps, background: "#f97316", color: "white" }} data-unread={n}>{label}</span> : null;
+  return n > 0 ? <span className="inline-block px-2 py-1 text-[10px] font-bold uppercase" style={{ ...caps, background: "#c2410c", color: "white" }} data-unread={n}>{label}</span> : null;
 }
 
 export function Progress({ stage, label }: { stage: number; label: string }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-xs font-semibold" style={{ color: stage === 4 ? "#c2410c" : stage === 0 ? "var(--muted)" : "#059669" }}>{label}</span>
+      <span className="text-xs font-semibold" style={{ color: stage === 4 ? "#c2410c" : stage === 0 ? "var(--muted)" : "#065f46" }}>{label}</span>
       <div className="grid grid-cols-5 gap-1" aria-hidden="true">
         {[1, 2, 3, 4, 5].map((s) => (
           <span key={s} className="h-1.5" style={{ background: s <= stage ? (s === 4 && stage === 4 ? "#f97316" : "#10b981") : "#e5d8c8" }} />
@@ -60,7 +60,7 @@ export function RfqList({ rows }: { rows: RfqRow[] }) {
 
   const action = (r: RfqRow) =>
     r.status === "offered" ? (
-      <Link href={`/rfq/${r.id}`} className="block px-4 py-2.5 text-center text-xs font-bold uppercase" style={{ ...caps, background: "#f97316", color: "white" }}>{t("actionCompare")}</Link>
+      <Link href={`/rfq/${r.id}`} className="block px-4 py-2.5 text-center text-xs font-bold uppercase" style={{ ...caps, background: "#c2410c", color: "white" }}>{t("actionCompare")}</Link>
     ) : (
       <Link href={`/rfq/${r.id}`} className="block px-4 py-2.5 text-center text-xs font-bold uppercase" style={{ ...caps, border: "1px solid var(--ink)", color: "var(--ink)" }}>{t("actionView")}</Link>
     );

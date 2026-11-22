@@ -35,9 +35,9 @@ function Sheet({ title, aside, children }: { title: string; aside?: ReactNode; c
 
 type StepState = "done" | "current" | "todo" | "refused";
 const STEP_STYLE: Record<StepState, { border: string; bg: string; color: string; badgeBg: string }> = {
-  done: { border: "#10b981", bg: "#ecfdf5", color: "#065f46", badgeBg: "#10b981" },
-  current: { border: "#f97316", bg: "#fff7ed", color: "#9a3412", badgeBg: "#f97316" },
-  todo: { border: HAIR, bg: "#f5efe6", color: "var(--muted)", badgeBg: "#c6c6cd" },
+  done: { border: "#10b981", bg: "#ecfdf5", color: "#065f46", badgeBg: "#047857" },
+  current: { border: "#f97316", bg: "#fff7ed", color: "#9a3412", badgeBg: "#c2410c" },
+  todo: { border: HAIR, bg: "#f5efe6", color: "var(--muted)", badgeBg: "#5c5347" },
   refused: { border: "#dc2626", bg: "#fef2f2", color: "#991b1b", badgeBg: "#dc2626" },
 };
 
@@ -138,7 +138,7 @@ export default async function ClaimPage({
               <h3 className="font-extrabold" style={{ fontSize: "1.25rem" }}>{notice.title}</h3>
               <p style={{ color: "var(--muted)" }}>{notice.text}</p>
               <div className="flex flex-wrap gap-4">
-                <Link href={`/producers/${company.slug}`} className="text-sm font-bold uppercase" style={{ ...caps, color: "#059669" }}>{t("backToProfile")}</Link>
+                <Link href={`/producers/${company.slug}`} className="text-sm font-bold uppercase" style={{ ...caps, color: "#065f46" }}>{t("backToProfile")}</Link>
                 <Link href="/contact" className="text-sm font-bold uppercase" style={{ ...caps, color: "var(--muted)" }}>{t("contactUs")}</Link>
               </div>
             </div>
@@ -169,7 +169,7 @@ export default async function ClaimPage({
             <ul className="flex flex-col gap-4">
               {(["why1", "why2", "why3"] as const).map((k) => (
                 <li key={k} className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center text-[10px] font-bold" style={{ border: "1px solid #10b981", color: "#10b981" }} aria-hidden="true">✓</span>
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center text-[10px] font-bold" style={{ border: "1px solid #10b981", color: "#065f46" }} aria-hidden="true">✓</span>
                   <span>
                     <span className="block font-bold">{t(`${k}Title`)}</span>
                     <span className="block text-sm" style={{ color: "var(--muted)" }}>{t(`${k}Text`)}</span>

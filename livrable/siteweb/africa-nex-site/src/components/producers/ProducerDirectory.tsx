@@ -98,7 +98,7 @@ export function ProducerDirectory({ producers, unavailable = false }: { producer
               style={{ border: 0, outline: "none" }}
             />
           </label>
-          <button type="submit" className={`flex items-center justify-center gap-2 px-8 py-3 font-bold text-white ${caps}`} style={{ background: "var(--accent)", letterSpacing: "0.08em" }}>
+          <button type="submit" className={`flex items-center justify-center gap-2 px-8 py-3 font-bold text-white ${caps}`} style={{ background: "var(--accent-strong)", letterSpacing: "0.08em" }}>
             {t("searchButton")}
             <Icon d={ARROW} size={16} />
           </button>
@@ -234,7 +234,7 @@ export function ProducerDirectory({ producers, unavailable = false }: { producer
 
       <section className="flex flex-col items-start justify-between gap-6 p-8 md:flex-row md:items-center" style={{ background: "#fff2e2", border: `1px solid ${HAIR}` }}>
         <div className="flex items-start gap-5">
-          <div className="hidden h-14 w-14 shrink-0 items-center justify-center sm:flex" style={{ background: "white", border: `1px solid ${HAIR}`, color: "var(--accent)" }}>
+          <div className="hidden h-14 w-14 shrink-0 items-center justify-center sm:flex" style={{ background: "white", border: `1px solid ${HAIR}`, color: "var(--accent-text)" }}>
             <Icon d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M9 10h.01M15 10h.01" size={26} />
           </div>
           <div>
@@ -242,7 +242,7 @@ export function ProducerDirectory({ producers, unavailable = false }: { producer
             <p className="mt-1" style={{ color: "var(--muted)", maxWidth: "60ch" }}>{t("ctaProducerText")}</p>
           </div>
         </div>
-        <Link href="/register" className={`shrink-0 px-6 py-3 font-bold ${caps}`} style={{ background: "var(--accent)", color: "white", letterSpacing: "0.08em" }}>{t("ctaProducerButton")}</Link>
+        <Link href="/register" className={`shrink-0 px-6 py-3 font-bold ${caps}`} style={{ background: "var(--accent-strong)", color: "white", letterSpacing: "0.08em" }}>{t("ctaProducerButton")}</Link>
       </section>
     </div>
   );

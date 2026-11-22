@@ -90,7 +90,7 @@ export function DispatchForm({ rfqId, lineId, defaults, producers, preselected }
               <label className={`flex items-start gap-3 px-3 py-2.5 text-sm ${p.sent ? "opacity-60" : "cursor-pointer"}`}>
                 <input type="checkbox" name="companies" value={p.id} disabled={p.sent} checked={p.sent || selected.has(p.id)} onChange={() => toggle(p.id)} className="mt-1" />
                 <span className="min-w-0">
-                  <span className="block font-semibold">{p.name}{p.sent && <span className="ms-2 text-xs font-bold" style={{ color: "#059669" }}>{t("rfqAlreadySent")}</span>}</span>
+                  <span className="block font-semibold">{p.name}{p.sent && <span className="ms-2 text-xs font-bold" style={{ color: "#065f46" }}>{t("rfqAlreadySent")}</span>}</span>
                   <span className="block text-xs" style={{ color: "var(--muted)" }}>{[p.place, p.sector].filter(Boolean).join(" · ")}</span>
                   {!p.claimed && <span className="block text-xs font-semibold" style={{ color: "#c2410c" }}>{t("rfqOffline")}</span>}
                 </span>
@@ -101,7 +101,7 @@ export function DispatchForm({ rfqId, lineId, defaults, producers, preselected }
         {err("companies")}
       </fieldset>
 
-      <button type="submit" disabled={pending || selected.size === 0} className="w-fit px-8 py-3 text-sm font-bold uppercase disabled:opacity-50" style={{ background: "#10b981", color: "white", letterSpacing: "0.08em" }}>
+      <button type="submit" disabled={pending || selected.size === 0} className="w-fit px-8 py-3 text-sm font-bold uppercase disabled:opacity-50" style={{ background: "#047857", color: "white", letterSpacing: "0.08em" }}>
         {pending ? t("rfqSending") : t("rfqSend", { count: selected.size })}
       </button>
     </form>

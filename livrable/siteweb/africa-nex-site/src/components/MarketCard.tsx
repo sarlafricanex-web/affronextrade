@@ -10,7 +10,7 @@ const MARKET_KEYS = [
 type MarketKey = (typeof MARKET_KEYS)[number];
 
 const MARKET_META: Record<MarketKey, { flag: string; imports: string; growth: string; population: string; color: string; productCount: number }> = {
-  nigeria:      { flag: "NG", imports: "41",   growth: "+6.2%", population: "230 M", color: "#059669", productCount: 4 },
+  nigeria:      { flag: "NG", imports: "41",   growth: "+6.2%", population: "230 M", color: "#065f46", productCount: 4 },
   cotedivoire:  { flag: "CI", imports: "17",   growth: "+7.1%", population: "30 M",  color: "#f97316", productCount: 4 },
   senegal:      { flag: "SN", imports: "14",   growth: "+8.3%", population: "18 M",  color: "#2563eb", productCount: 4 },
   ethiopie:     { flag: "ET", imports: "20",   growth: "+7.8%", population: "130 M", color: "#7c3aed", productCount: 4 },

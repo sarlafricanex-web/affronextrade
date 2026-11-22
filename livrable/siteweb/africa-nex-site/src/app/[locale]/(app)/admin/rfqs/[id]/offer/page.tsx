@@ -79,7 +79,7 @@ export default async function AdminOfferPage({
           <span aria-hidden="true">/</span>
           <Link href={`/admin/rfqs/${rfq.id}`} className="hover:underline" dir="ltr">{rfq.reference}</Link>
           <span aria-hidden="true">/</span>
-          <span style={{ color: "#059669" }}>{t("offerCrumb")}</span>
+          <span style={{ color: "#065f46" }}>{t("offerCrumb")}</span>
         </nav>
         <h1 className="font-extrabold" style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", lineHeight: 1.15 }}>{t("offerTitle", { label: defaults.label })}</h1>
         <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>

@@ -54,7 +54,7 @@ export default function ContactPage() {
           <Reveal>
             <div
               className="w-16 h-16 flex items-center justify-center mb-6 mx-auto"
-              style={{ background: "var(--accent)", borderRadius: "50%" }}
+              style={{ background: "var(--accent-strong)", borderRadius: "50%" }}
             >
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />

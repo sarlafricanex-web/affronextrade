@@ -69,9 +69,9 @@ export default async function AdminProducersPage({
                 <tr key={p.id} style={{ borderBottom: "1px solid var(--field-b)" }}>
                   <td className={cell}>
                     <Link href={`/admin/producers/${p.id}`} className="font-semibold hover:underline">{p.company_name}</Link>
-                    {p.verified && <span className="ms-2 text-xs font-bold" style={{ color: "var(--accent)" }}>✓ {t("badgeVerified")}</span>}
+                    {p.verified && <span className="ms-2 text-xs font-bold" style={{ color: "var(--accent-text)" }}>✓ {t("badgeVerified")}</span>}
                     {p.docsPending > 0 && (
-                      <Link href={`/admin/producers/${p.id}`} className="ms-2 px-2 py-0.5 text-xs font-bold" style={{ background: "#f97316", color: "white" }}>
+                      <Link href={`/admin/producers/${p.id}`} className="ms-2 px-2 py-0.5 text-xs font-bold" style={{ background: "#c2410c", color: "white" }}>
                         {t("docsPending", { count: p.docsPending })}
                       </Link>
                     )}

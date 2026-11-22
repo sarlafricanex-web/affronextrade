@@ -25,7 +25,7 @@ export async function BuyerDashboard({ locale, firstName, data }: { locale: stri
   const kpis = [
     { key: "inProgress", value: data.inProgress, color: "var(--ink)" },
     { key: "toDecide", value: data.offersToDecide, color: "#c2410c" },
-    { key: "accepted", value: data.accepted, color: "#059669" },
+    { key: "accepted", value: data.accepted, color: "#065f46" },
   ];
 
   return (
@@ -48,7 +48,7 @@ export async function BuyerDashboard({ locale, firstName, data }: { locale: stri
                   <span className="px-2 py-1 text-[10px] font-bold uppercase" style={{ ...caps, background: "#fff7ed", border: "1px solid #fdba74", color: "#c2410c" }}>{a.tag}</span>
                   <span className="text-sm">{a.text}</span>
                 </span>
-                <Link href={a.href} className="shrink-0 px-4 py-2.5 text-center text-xs font-bold uppercase" style={{ ...caps, ...(a.strong ? { background: "#f97316", color: "white" } : { background: "var(--ink)", color: "white" }) }}>{a.cta}</Link>
+                <Link href={a.href} className="shrink-0 px-4 py-2.5 text-center text-xs font-bold uppercase" style={{ ...caps, ...(a.strong ? { background: "#c2410c", color: "white" } : { background: "var(--ink)", color: "white" }) }}>{a.cta}</Link>
               </li>
             ))}
           </ul>

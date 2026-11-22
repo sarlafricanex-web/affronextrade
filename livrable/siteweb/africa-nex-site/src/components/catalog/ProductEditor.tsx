@@ -482,7 +482,7 @@ export function ProductEditor({ product: initial, defaultTiers }: { product: Edi
             ))}
             {preview && (
               <div className="flex flex-col" style={{ border: "2px solid #10b981" }}>
-                <span className="px-2 py-1 text-[10px] font-bold uppercase text-white" style={{ background: "#10b981", letterSpacing: "0.08em" }}>{c("newPhoto")}</span>
+                <span className="px-2 py-1 text-[10px] font-bold uppercase text-white" style={{ background: "#047857", letterSpacing: "0.08em" }}>{c("newPhoto")}</span>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={preview} alt={c("photoAlt")} className="aspect-square w-full object-cover" />
               </div>
@@ -517,11 +517,11 @@ export function ProductEditor({ product: initial, defaultTiers }: { product: Edi
       <aside className="flex flex-col gap-4 p-5 lg:sticky lg:top-20" style={{ background: "white", border: `1px solid ${HAIR}` }}>
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="font-extrabold uppercase">{c("readyTitle")}</h2>
-          <span className="font-extrabold" style={{ color: "#059669", fontFeatureSettings: '"tnum" 1' }}>{done}/{total}</span>
+          <span className="font-extrabold" style={{ color: "#065f46", fontFeatureSettings: '"tnum" 1' }}>{done}/{total}</span>
         </div>
         <p className="text-sm" style={{ color: "var(--muted)" }}>{c("readyText")}</p>
         <div className="h-2 w-full" style={{ background: "#f5efe6", border: `1px solid ${HAIR}` }} role="progressbar" aria-valuenow={done} aria-valuemin={0} aria-valuemax={total}>
-          <div className="h-full" style={{ width: `${(done / total) * 100}%`, background: "#059669" }} />
+          <div className="h-full" style={{ width: `${(done / total) * 100}%`, background: "#065f46" }} />
         </div>
         <ul className="flex flex-col gap-1.5 text-sm">
           {(Object.keys(current) as (keyof Checks)[]).map((k) => {
@@ -530,10 +530,10 @@ export function ProductEditor({ product: initial, defaultTiers }: { product: Edi
             return (
               <li key={k} className="flex items-center justify-between gap-2 px-1 py-1" style={!ok && required ? { background: "#fff7ed" } : undefined}>
                 <span className="flex items-center gap-2" style={{ color: !ok && required ? "#c2410c" : "var(--ink)" }}>
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center text-[10px] font-bold" style={ok ? { background: "#059669", color: "white" } : { background: required ? "#f97316" : "white", border: `1px solid ${required ? "#f97316" : HAIR}` }} aria-hidden="true">{ok ? "✓" : ""}</span>
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center text-[10px] font-bold" style={ok ? { background: "#065f46", color: "white" } : { background: required ? "#f97316" : "white", border: `1px solid ${required ? "#f97316" : HAIR}` }} aria-hidden="true">{ok ? "✓" : ""}</span>
                   {c(`check_${k}`)}
                 </span>
-                <span className="text-[10px] font-bold uppercase" style={{ letterSpacing: "0.06em", color: ok ? "#059669" : required ? "#c2410c" : "var(--muted)" }}>
+                <span className="text-[10px] font-bold uppercase" style={{ letterSpacing: "0.06em", color: ok ? "#065f46" : required ? "#c2410c" : "var(--muted)" }}>
                   {ok ? c("checkOk") : required ? c("checkRequired") : c("checkOptional")}
                 </span>
               </li>
@@ -549,7 +549,7 @@ export function ProductEditor({ product: initial, defaultTiers }: { product: Edi
         <button type="submit" name="status" value="draft" disabled={pending} className="w-full py-3 text-sm font-bold uppercase disabled:opacity-60" style={{ border: "1px solid var(--ink)", background: "white", color: "var(--ink)", letterSpacing: "0.08em" }}>
           {pending ? t("saving") : isPublished ? c("saveAsDraft") : c("saveDraft")}
         </button>
-        <button type="submit" name="status" value="published" disabled={pending || missing > 0} className="w-full py-3 text-sm font-bold uppercase disabled:opacity-50" style={{ background: "#10b981", color: "white", letterSpacing: "0.08em" }}>
+        <button type="submit" name="status" value="published" disabled={pending || missing > 0} className="w-full py-3 text-sm font-bold uppercase disabled:opacity-50" style={{ background: "#047857", color: "white", letterSpacing: "0.08em" }}>
           {isPublished ? c("savePublished") : c("publish")}
         </button>
         <Link href="/catalog" className="text-center text-xs font-bold uppercase" style={{ color: "var(--muted)", letterSpacing: "0.08em" }}>{c("cancel")}</Link>

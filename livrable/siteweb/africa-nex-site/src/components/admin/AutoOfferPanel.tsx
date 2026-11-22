@@ -101,7 +101,7 @@ function OfferBlock({ o, t, money, qty, unit, date }: { o: AutoOffer; t: T; mone
   return (
     <div className="flex flex-col gap-3 px-5 py-4" style={{ borderTop: `1px solid ${HAIR}` }} data-auto-offer={`${o.mode}-${o.currency}`} data-incoterm={o.incoterm ?? ""}>
       <p className="flex flex-wrap items-center gap-2">
-        <span className="px-2 py-0.5 text-xs font-bold" style={{ background: o.mode === "self" ? "var(--ink)" : "#059669", color: "white" }}>{t(`autoMode_${o.mode}`)}</span>
+        <span className="px-2 py-0.5 text-xs font-bold" style={{ background: o.mode === "self" ? "var(--ink)" : "#065f46", color: "white" }}>{t(`autoMode_${o.mode}`)}</span>
         <span className="font-bold" dir="ltr">{o.currency}{o.incoterm ? ` · ${o.incoterm}` : ""}</span>
         {o.fxRate && <span className="text-xs" style={{ color: PRIVATE }} dir="ltr">{t("autoFxRate", { currency: o.currency, rate: o.fxRate.toLocaleString() })}</span>}
       </p>

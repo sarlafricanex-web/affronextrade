@@ -47,10 +47,10 @@ export function PricingPlans() {
               data-plan={plan}
             >
               {featured && (
-                <span className="absolute -top-3 start-6 px-2 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, background: "#10b981", color: "white" }}>{t("featured")}</span>
+                <span className="absolute -top-3 start-6 px-2 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, background: "#047857", color: "white" }}>{t("featured")}</span>
               )}
               <div className="flex flex-col gap-2 p-6">
-                <span className="text-[10px] font-bold uppercase" style={{ ...caps, color: featured ? "#059669" : "var(--muted)" }}>{t(`kicker_${plan}`)}</span>
+                <span className="text-[10px] font-bold uppercase" style={{ ...caps, color: featured ? "#065f46" : "var(--muted)" }}>{t(`kicker_${plan}`)}</span>
                 <h2 className="font-extrabold uppercase" style={{ fontSize: "1.6rem" }}>{t(`plan_${plan}`)}</h2>
                 <p className="text-sm" style={{ color: "var(--muted)" }}>{t(`pitch_${plan}`)}</p>
               </div>
@@ -69,7 +69,7 @@ export function PricingPlans() {
                 {PLAN_FEATURES[plan].map((f) => (
                   <li key={f} className="flex gap-2">
                     <span aria-hidden="true" className="mt-1.5 h-2 w-2 shrink-0" style={{ background: f.startsWith("featureAll") ? "transparent" : "#0f172a", border: f.startsWith("featureAll") ? "none" : undefined }} />
-                    <span className={f.startsWith("featureAll") ? "text-xs font-bold uppercase" : ""} style={f.startsWith("featureAll") ? { ...caps, color: "#059669" } : undefined}>{t(f)}</span>
+                    <span className={f.startsWith("featureAll") ? "text-xs font-bold uppercase" : ""} style={f.startsWith("featureAll") ? { ...caps, color: "#065f46" } : undefined}>{t(f)}</span>
                   </li>
                 ))}
                 <li className="flex items-center justify-between gap-2">
@@ -78,7 +78,7 @@ export function PricingPlans() {
                 </li>
               </ul>
               <div className="p-6 pt-0">
-                <Link href="/contact" className="block px-4 py-3 text-center text-xs font-bold uppercase" style={{ ...caps, ...(featured ? { background: "#10b981", color: "white" } : { border: "1px solid var(--ink)" }) }}>
+                <Link href="/contact" className="block px-4 py-3 text-center text-xs font-bold uppercase" style={{ ...caps, ...(featured ? { background: "#047857", color: "white" } : { border: "1px solid var(--ink)" }) }}>
                   {t("contactCta")}
                 </Link>
               </div>

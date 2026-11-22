@@ -221,7 +221,7 @@ export default async function OpportunitiesPage({
                 </div>
                 <span
                   className="font-extrabold"
-                  style={{ fontSize: "var(--step-body)", color: "var(--accent)" }}
+                  style={{ fontSize: "var(--step-body)", color: "var(--accent-text)" }}
                 >
                   {sector.value} Md
                 </span>

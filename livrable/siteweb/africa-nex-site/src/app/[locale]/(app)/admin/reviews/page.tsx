@@ -8,7 +8,7 @@ import { moderateReview } from "./actions";
 
 export const instant = false;
 
-const COLOR = { pending: "#f97316", approved: "var(--accent)", rejected: "#dc2626" } as const;
+const COLOR = { pending: "#c2410c", approved: "var(--accent-text)", rejected: "#dc2626" } as const;
 
 export default async function AdminReviewsPage({
   params,
@@ -69,7 +69,7 @@ export default async function AdminReviewsPage({
               <form action={moderateReview} className="flex flex-wrap gap-3">
                 <input type="hidden" name="locale" value={locale} />
                 <input type="hidden" name="id" value={r.id} />
-                <button type="submit" name="decision" value="approved" className="px-4 py-2 text-xs font-bold uppercase" style={{ background: "var(--accent)", color: "white", letterSpacing: "0.08em" }}>{t("reviewPublish")}</button>
+                <button type="submit" name="decision" value="approved" className="px-4 py-2 text-xs font-bold uppercase" style={{ background: "var(--accent-strong)", color: "white", letterSpacing: "0.08em" }}>{t("reviewPublish")}</button>
                 <button type="submit" name="decision" value="rejected" className="px-4 py-2 text-xs font-bold uppercase" style={{ border: "1px solid #dc2626", color: "#dc2626", letterSpacing: "0.08em" }}>{t("reviewRejectBtn")}</button>
               </form>
             )}

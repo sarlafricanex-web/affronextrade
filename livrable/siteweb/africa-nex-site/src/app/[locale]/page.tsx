@@ -255,7 +255,7 @@ export default async function HomePage({
           {(["benefit1", "benefit2", "benefit3", "benefit4"] as const).map((key, i) => (
             <Reveal key={key} delay={(i + 1) as 1 | 2 | 3 | 4}>
               <div className="grid grid-cols-[3rem_1fr] gap-6 items-baseline">
-                <p className="text-right font-extrabold" style={{ fontSize: "1.5rem", color: "var(--accent)" }}>
+                <p className="text-right font-extrabold" style={{ fontSize: "1.5rem", color: "var(--accent-text)" }}>
                   {i + 1}
                 </p>
                 <div>
@@ -320,7 +320,7 @@ export default async function HomePage({
             <div
               className="w-11 h-11 flex items-center justify-center font-extrabold text-sm"
               style={{
-                background: "var(--accent)",
+                background: "var(--accent-strong)",
                 color: "white",
                 borderRadius: "50%",
               }}
@@ -407,7 +407,7 @@ export default async function HomePage({
             <div
               className="flex items-center justify-between"
               style={{
-                background: "var(--accent)",
+                background: "var(--accent-strong)",
                 padding: "0 var(--page-margin)",
                 height: "clamp(5rem, 10vw, 9.5rem)",
               }}

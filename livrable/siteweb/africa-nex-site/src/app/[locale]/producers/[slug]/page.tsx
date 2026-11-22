@@ -177,7 +177,7 @@ export default async function ProducerProfilePage({ params }: { params: Params }
                     <span className="flex items-center gap-1.5">
                       {avgText ? (
                         <>
-                          <span className="font-extrabold" style={{ color: "#f97316", fontFeatureSettings: '"tnum" 1' }}>★ {avgText} / 5</span>
+                          <span className="font-extrabold" style={{ color: "#c2410c", fontFeatureSettings: '"tnum" 1' }}>★ {avgText} / 5</span>
                           <span>({t("reviewsCount", { count: profile.reviews.length })})</span>
                         </>
                       ) : (
@@ -226,7 +226,7 @@ export default async function ProducerProfilePage({ params }: { params: Params }
             <Sheet
               icon="box"
               title={t("productsTitle", { count: profile.products.length })}
-              aside={profile.products.length > 0 ? <span className="text-[11px] font-bold uppercase" style={{ ...capsStyle, color: "#10b981" }}>{t("catalogActive")}</span> : null}
+              aside={profile.products.length > 0 ? <span className="text-[11px] font-bold uppercase" style={{ ...capsStyle, color: "#065f46" }}>{t("catalogActive")}</span> : null}
             >
               {profile.products.length === 0 ? (
                 <p style={{ color: "var(--muted)" }}>{t("noProducts")}</p>
@@ -298,7 +298,7 @@ export default async function ProducerProfilePage({ params }: { params: Params }
                           </div>
                         </div>
                         <div className="mt-4 flex items-center justify-between gap-2 pt-3" style={{ borderTop: `1px solid ${HAIR}` }}>
-                          <span className="text-[10px] font-bold uppercase" style={{ ...capsStyle, color: "#10b981" }}>
+                          <span className="text-[10px] font-bold uppercase" style={{ ...capsStyle, color: "#065f46" }}>
                             {d.expires_on
                               ? td("validUntil", { date: format.dateTime(new Date(`${d.expires_on}T12:00:00`), { dateStyle: "medium" }) })
                               : td("status_accepted")}
@@ -362,14 +362,14 @@ export default async function ProducerProfilePage({ params }: { params: Params }
           {/* Sur telephone, le bloc devis passe juste sous l'en-tete (sinon il arrive apres les avis). */}
           <aside className="order-first flex flex-col gap-6 lg:sticky lg:top-20 lg:order-none lg:col-span-4">
             <div id="devis" className="p-6" style={{ background: "var(--ink)", color: "white", scrollMarginTop: "5rem" }}>
-              <p className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase" style={{ ...capsStyle, color: "#10b981" }}>
+              <p className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase" style={{ ...capsStyle, color: "#065f46" }}>
                 <Icon name="lock" size={16} />
                 {t("channelLabel")}
               </p>
               <h2 className="mb-2 font-extrabold" style={{ fontSize: "1.75rem", lineHeight: 1.2, letterSpacing: "-0.025em" }}>{t("quoteTitle")}</h2>
               <p className="mb-6 leading-relaxed" style={{ color: "#f4e6d6" }}>{t("quoteText")}</p>
               {/* Visiteur : inscription acheteur puis formulaire ; deja connecte : le proxy l'envoie directement au formulaire. */}
-              <Link href={`/register?role=buyer&next=${encodeURIComponent(`/${locale}/rfq/new?producer=${profile.slug}`)}`} className="mb-4 block w-full px-4 py-3.5 text-center font-bold uppercase" style={{ background: "#10b981", color: "white", letterSpacing: "0.04em" }}>
+              <Link href={`/register?role=buyer&next=${encodeURIComponent(`/${locale}/rfq/new?producer=${profile.slug}`)}`} className="mb-4 block w-full px-4 py-3.5 text-center font-bold uppercase" style={{ background: "#047857", color: "white", letterSpacing: "0.04em" }}>
                 {t("requestQuote")}
               </Link>
               <ul className="space-y-2 pt-4 text-sm" style={{ borderTop: "1px solid #334155", color: "#cbd5e1" }}>
@@ -414,7 +414,7 @@ export default async function ProducerProfilePage({ params }: { params: Params }
             )}
 
             <div className="flex items-start gap-3 p-5" style={{ background: "#faecdc", border: `1px solid ${HAIR}` }}>
-              <span className="p-2" style={{ background: "var(--ink)", color: "#10b981" }}><Icon name="seal" size={22} /></span>
+              <span className="p-2" style={{ background: "var(--ink)", color: "#065f46" }}><Icon name="seal" size={22} /></span>
               <div>
                 <h2 className="mb-1 text-xs font-bold uppercase" style={capsStyle}>{t("integrityTitle")}</h2>
                 <p className="text-sm leading-snug">{t("integrityText")}</p>

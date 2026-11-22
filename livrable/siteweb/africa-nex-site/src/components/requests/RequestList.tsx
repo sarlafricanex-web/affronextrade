@@ -39,7 +39,7 @@ export function RequestList({ rows }: { rows: RequestRow[] }) {
     <>
       <span className="block font-semibold">{r.respondBy ?? "-"}</span>
       {r.group === "quoted" ? (
-        <span className="block text-xs font-semibold" style={{ color: "#059669" }}>{t("quoteSent")}</span>
+        <span className="block text-xs font-semibold" style={{ color: "#065f46" }}>{t("quoteSent")}</span>
       ) : r.group === "todo" && r.hoursLeft !== null ? (
         <span className="block text-xs font-semibold" style={{ color: r.hoursLeft < 72 ? "#c2410c" : "var(--muted)" }}>
           {r.hoursLeft < 72 ? t("hoursLeftUrgent", { hours: Math.max(r.hoursLeft, 0) }) : t("daysLeft", { days: Math.floor(r.hoursLeft / 24) })}
@@ -54,7 +54,7 @@ export function RequestList({ rows }: { rows: RequestRow[] }) {
         {GROUPS.map((g) => (
           <button key={g} type="button" role="tab" aria-selected={group === g} onClick={() => setGroup(g)} className="flex items-center gap-2 px-4 py-3 text-sm font-semibold" style={{ background: group === g ? "white" : "transparent", borderTop: `3px solid ${group === g ? "var(--ink)" : "transparent"}`, borderInlineEnd: `1px solid ${HAIR}` }}>
             {t(`tab_${g}`)}
-            <span className="px-1.5 text-xs font-bold" style={{ background: g === "todo" && counts[g] ? "#f97316" : "#e5d8c8", color: g === "todo" && counts[g] ? "white" : "var(--ink)" }}>{counts[g]}</span>
+            <span className="px-1.5 text-xs font-bold" style={{ background: g === "todo" && counts[g] ? "#c2410c" : "#e5d8c8", color: g === "todo" && counts[g] ? "white" : "var(--ink)" }}>{counts[g]}</span>
           </button>
         ))}
       </div>
@@ -82,7 +82,7 @@ export function RequestList({ rows }: { rows: RequestRow[] }) {
                   <td className="px-4 py-4 align-top">
                     <Link href={`/requests/${r.id}`} className="font-bold hover:underline" dir="ltr">{r.reference}</Link>
                     {r.isNew && <span className="ms-2 px-1.5 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, background: "#ecfdf5", border: "1px solid #10b981", color: "#065f46" }}>{t("new")}</span>}
-                    {r.unread > 0 && <span className="ms-2 px-1.5 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, background: "#f97316", color: "white" }} data-unread={r.unread}>{t("unreadMessages", { count: r.unread })}</span>}
+                    {r.unread > 0 && <span className="ms-2 px-1.5 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, background: "#c2410c", color: "white" }} data-unread={r.unread}>{t("unreadMessages", { count: r.unread })}</span>}
                   </td>
                   <td className="px-4 py-4 align-top">
                     <Link href={`/requests/${r.id}`} className="font-bold hover:underline">{r.title}</Link>

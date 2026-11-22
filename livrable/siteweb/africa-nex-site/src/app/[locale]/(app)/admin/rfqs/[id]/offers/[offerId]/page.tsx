@@ -65,11 +65,11 @@ export default async function AutoOfferPage({ params }: { params: Promise<{ loca
           <span aria-hidden="true">/</span>
           <Link href={`/admin/rfqs/${rfq.id}`} className="hover:underline" dir="ltr">{rfq.reference}</Link>
           <span aria-hidden="true">/</span>
-          <span style={{ color: "#059669" }}>{t("offerName", { label: offer.label })}</span>
+          <span style={{ color: "#065f46" }}>{t("offerName", { label: offer.label })}</span>
         </nav>
         <h1 className="font-extrabold" style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", lineHeight: 1.15 }}>{t("autoEditTitle", { label: offer.label })}</h1>
         <p className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-          <span className="px-2 py-0.5 text-xs font-bold" style={{ background: mode === "self" ? "var(--ink)" : "#059669", color: "white" }}>{t(`autoMode_${mode}`)}</span>
+          <span className="px-2 py-0.5 text-xs font-bold" style={{ background: mode === "self" ? "var(--ink)" : "#065f46", color: "white" }}>{t(`autoMode_${mode}`)}</span>
           <span className="font-bold" dir="ltr">{offer.currency}{offer.incoterm ? ` · ${offer.incoterm}` : ""}</span>
           <span className="px-2 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, border: `1px solid ${HAIR}` }}>{t(`offerStatus_${offer.status}`)}</span>
           {m.fx_rate && <span className="text-xs" style={{ color: "#c2410c" }} dir="ltr">{t("autoFxRate", { currency: offer.currency, rate: Number(m.fx_rate).toLocaleString() })}</span>}

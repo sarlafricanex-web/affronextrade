@@ -47,7 +47,7 @@ export default async function MyRfqsPage({ params }: { params: Promise<{ locale:
           <h1 className="mt-1 font-extrabold" style={{ fontSize: "clamp(1.75rem, 3vw, 2.25rem)", lineHeight: 1.15, letterSpacing: "-0.025em" }}>{t("listTitle")}</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>{t("listIntro")}</p>
         </div>
-        <Link href="/rfq/new" className="px-6 py-3.5 text-center text-xs font-bold uppercase" style={{ ...caps, background: "#10b981", color: "white" }}>+ {t("newButton")}</Link>
+        <Link href="/rfq/new" className="px-6 py-3.5 text-center text-xs font-bold uppercase" style={{ ...caps, background: "#047857", color: "white" }}>+ {t("newButton")}</Link>
       </header>
 
       <section className="flex gap-4 p-5" style={{ background: "white", border: `1px solid ${HAIR}` }}>

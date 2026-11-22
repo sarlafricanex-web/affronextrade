@@ -14,7 +14,7 @@ const HAIR = "#d8cebb";
 const caps = { letterSpacing: "0.08em" } as const;
 
 function Tile({ label, value, unit, hint, tone = "ink" }: { label: string; value: string | number; unit?: string; hint: string; tone?: "ink" | "accent" | "warn" }) {
-  const color = tone === "accent" ? "#059669" : tone === "warn" ? "#f97316" : "var(--ink)";
+  const color = tone === "accent" ? "#065f46" : tone === "warn" ? "#c2410c" : "var(--ink)";
   return (
     <div className="flex flex-col gap-2 p-5" style={{ background: "white", border: `1px solid ${HAIR}` }}>
       <p className="text-[11px] font-bold uppercase" style={{ ...caps, color: "var(--muted)" }}>{label}</p>
@@ -87,7 +87,7 @@ export default async function CatalogPage({
           <nav aria-label={c("breadcrumb")} className="mb-3 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase" style={{ ...caps, color: "var(--muted)" }}>
             <Link href="/dashboard" className="hover:underline">{c("eyebrow")}</Link>
             <span aria-hidden="true" style={{ color: HAIR }}>/</span>
-            <span style={{ color: "#059669" }}>{c("title")}</span>
+            <span style={{ color: "#065f46" }}>{c("title")}</span>
           </nav>
           <h1 className="font-extrabold uppercase" style={{ fontSize: "clamp(1.6rem, 3vw, 2.25rem)", lineHeight: 1.1, letterSpacing: "-0.025em", borderInlineStart: "4px solid #10b981", paddingInlineStart: "0.75rem" }}>{c("pageTitle")}</h1>
           <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>{c("summary", { total: products.length, published })}</p>

@@ -5,7 +5,7 @@ import { deleteDocument } from "@/app/[locale]/(app)/company/document-actions";
 import { MAX_DOCUMENTS } from "@/lib/documents";
 import { DocumentUpload } from "./DocumentUpload";
 
-const STATUS_COLOR = { pending: "#f97316", accepted: "var(--accent)", rejected: "#dc2626" } as const;
+const STATUS_COLOR = { pending: "#c2410c", accepted: "var(--accent-text)", rejected: "#dc2626" } as const;
 
 // Onglet "Documents" de Mon entreprise : liste, statut de verification, depot.
 export async function DocumentsPanel({ client, companyId, locale, notice }: { client: SupabaseClient<Database>; companyId: string; locale: string; notice?: string }) {
@@ -47,7 +47,7 @@ export async function DocumentsPanel({ client, companyId, locale, notice }: { cl
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <a href={`/api/documents/${d.id}`} target="_blank" rel="noopener" className="text-xs font-bold uppercase" style={{ color: "var(--accent)", letterSpacing: "0.08em" }}>{t("open")}</a>
+                  <a href={`/api/documents/${d.id}`} target="_blank" rel="noopener" className="text-xs font-bold uppercase" style={{ color: "var(--accent-text)", letterSpacing: "0.08em" }}>{t("open")}</a>
                   <form action={deleteDocument}>
                     <input type="hidden" name="locale" value={locale} />
                     <input type="hidden" name="id" value={d.id} />

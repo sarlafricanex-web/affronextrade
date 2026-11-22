@@ -96,14 +96,14 @@ export async function BuyerOffers({
             >
               <header className="flex flex-wrap items-start justify-between gap-3 px-5 py-4">
                 <div>
-                  <p className="text-[10px] font-bold uppercase" style={{ ...caps, color: "#059669" }}>{t("offerKicker")}</p>
+                  <p className="text-[10px] font-bold uppercase" style={{ ...caps, color: "#065f46" }}>{t("offerKicker")}</p>
                   <h3 className="font-extrabold" style={{ fontSize: "1.6rem", lineHeight: 1.1 }}>{t("offerName", { label: o.label })}</h3>
                   {ls.length > 0 && lines.length > 1 && (
                     <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>{t("offerCovers", { count: ls.length, lines: ls.map((l) => (l.rfq_line_id ? linePosition.get(l.rfq_line_id) : null) ?? l.position).join(", ") })}</p>
                   )}
                 </div>
                 <div className="flex flex-col items-end gap-1 text-end">
-                  <span className="px-2 py-1 text-[10px] font-bold uppercase" style={{ ...caps, ...(statusKey === "accepted" ? { background: "#10b981", color: "white" } : statusKey === "published" ? { background: "#fff7ed", color: "#c2410c", border: "1px solid #fdba74" } : { background: "#f5efe6", color: "var(--muted)" }) }}>
+                  <span className="px-2 py-1 text-[10px] font-bold uppercase" style={{ ...caps, ...(statusKey === "accepted" ? { background: "#047857", color: "white" } : statusKey === "published" ? { background: "#fff7ed", color: "#c2410c", border: "1px solid #fdba74" } : { background: "#f5efe6", color: "var(--muted)" }) }}>
                     {t(`offerStatus_${statusKey}`)}
                   </span>
                   {o.valid_until && o.status === "published" && !expired && <span className="text-xs" style={{ color: "var(--muted)" }}>{t("offerValidity", { date: date(o.valid_until), days: days ?? 0 })}</span>}
@@ -111,7 +111,7 @@ export async function BuyerOffers({
                 </div>
               </header>
 
-              <div className="px-5 py-4" style={{ background: "#ecfdf5", borderTop: `1px solid ${HAIR}`, borderInlineStart: "4px solid #059669" }}>
+              <div className="px-5 py-4" style={{ background: "#ecfdf5", borderTop: `1px solid ${HAIR}`, borderInlineStart: "4px solid #065f46" }}>
                 {single || !ls.length ? (
                   <>
                     <p className="text-[10px] font-bold uppercase" style={{ ...caps, color: "#065f46" }}>{t("offerUnitPrice", { place })}</p>
@@ -180,7 +180,7 @@ export async function BuyerOffers({
                       <input type="hidden" name="op" value="accept" />
                       <p>{t("offerAcceptConfirm", { label: o.label, total: money(o.total_amount, o.currency) })}</p>
                       {alternatives.length > 0 && <p className="text-xs font-semibold" style={{ color: "#92400e" }}>{t("offerAcceptAlternatives", { labels: alternatives.map((x) => x.label).join(", ") })}</p>}
-                      <button type="submit" className="px-4 py-2.5 text-xs font-bold uppercase" style={{ ...caps, background: "#10b981", color: "white" }}>{t("offerAcceptSubmit")}</button>
+                      <button type="submit" className="px-4 py-2.5 text-xs font-bold uppercase" style={{ ...caps, background: "#047857", color: "white" }}>{t("offerAcceptSubmit")}</button>
                     </form>
                   </details>
                   <div className="grid gap-2 sm:grid-cols-2">

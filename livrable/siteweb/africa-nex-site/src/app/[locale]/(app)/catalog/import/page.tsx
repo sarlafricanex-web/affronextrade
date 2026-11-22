@@ -26,7 +26,7 @@ export default async function CatalogImportPage({ params }: { params: Promise<{ 
         <nav className="mb-2 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase" style={{ ...caps, color: "var(--muted)" }}>
           <Link href="/catalog" className="hover:underline">{c("title")}</Link>
           <span aria-hidden="true">/</span>
-          <span style={{ color: "#059669" }}>{c("importCrumb")}</span>
+          <span style={{ color: "#065f46" }}>{c("importCrumb")}</span>
         </nav>
         <h1 className="font-extrabold" style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", lineHeight: 1.15 }}>{c("importTitle")}</h1>
         <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>{c("importIntro")}</p>

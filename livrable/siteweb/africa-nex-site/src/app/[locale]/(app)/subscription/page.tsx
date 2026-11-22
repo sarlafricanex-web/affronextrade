@@ -50,7 +50,7 @@ export default async function SubscriptionPage({ params }: { params: Promise<{ l
             <ul className="flex flex-col gap-2 text-sm">
               {PLANS.slice(0, PLANS.indexOf(tier) + 1).flatMap((p) => PLAN_FEATURES[p]).filter((f) => !f.startsWith("featureAll")).map((f) => (
                 <li key={f} className="flex gap-2">
-                  <span aria-hidden="true" className="flex h-5 w-5 shrink-0 items-center justify-center text-xs font-bold" style={{ border: "1px solid #10b981", color: "#059669" }}>✓</span>
+                  <span aria-hidden="true" className="flex h-5 w-5 shrink-0 items-center justify-center text-xs font-bold" style={{ border: "1px solid #10b981", color: "#065f46" }}>✓</span>
                   {t(f)}
                 </li>
               ))}
@@ -76,7 +76,7 @@ export default async function SubscriptionPage({ params }: { params: Promise<{ l
                 <ol className="flex flex-col gap-2">
                   {PLAN_FEATURES[next].filter((f) => !f.startsWith("featureAll")).map((f, i) => (
                     <li key={f} className="flex gap-3 p-3 text-sm" style={{ border: `1px solid ${HAIR}`, background: "#fffdf9" }}>
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center text-xs font-bold" style={{ background: "#10b981", color: "white" }}>{i + 1}</span>
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center text-xs font-bold" style={{ background: "#047857", color: "white" }}>{i + 1}</span>
                       {t(f)}
                     </li>
                   ))}

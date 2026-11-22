@@ -51,7 +51,7 @@ export function AppNav({ role, name, badges = {} }: { role: string; name: string
       style={{ background: "white", borderInlineEnd: "1px solid var(--field-b)", borderBottom: "1px solid var(--field-b)" }}
     >
       <div style={{ padding: "1.5rem 1.25rem", borderBottom: "1px solid var(--field-b)" }}>
-        <p className="text-xs font-semibold uppercase" style={{ letterSpacing: "0.08em", color: "var(--accent)" }}>
+        <p className="text-xs font-semibold uppercase" style={{ letterSpacing: "0.08em", color: "var(--accent-text)" }}>
           {t(SPACE_KEY[space])}
         </p>
         {name && <p className="mt-1 font-bold truncate">{name}</p>}
@@ -76,7 +76,7 @@ export function AppNav({ role, name, badges = {} }: { role: string; name: string
             >
               {t(link.key)}
               {badge > 0 && (
-                <span className="flex h-5 min-w-5 items-center justify-center px-1.5 text-[11px] font-bold" style={{ background: "#f97316", color: "white" }} aria-label={t("badgeLabel", { count: badge })}>
+                <span className="flex h-5 min-w-5 items-center justify-center px-1.5 text-[11px] font-bold" style={{ background: "#c2410c", color: "white" }} aria-label={t("badgeLabel", { count: badge })}>
                   {badge}
                 </span>
               )}

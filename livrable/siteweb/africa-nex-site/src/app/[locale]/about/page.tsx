@@ -13,9 +13,9 @@ export async function generateMetadata({
 }
 
 const TEAM = [
-  { name: "ZEMOULI Adlene", roleKey: "ceo", initial: "A", color: "var(--accent)" },
+  { name: "ZEMOULI Adlene", roleKey: "ceo", initial: "A", color: "var(--accent-text)" },
   { name: "KHOUADER Omar", roleKey: "cto", initial: "O", color: "var(--ink)" },
-  { name: "KHOUADER Hamza", roleKey: "cco", initial: "H", color: "var(--accent-warm)" },
+  { name: "KHOUADER Hamza", roleKey: "cco", initial: "H", color: "var(--warm-strong)" },
   { name: "IDRI Mehdi Malek", roleKey: "cfo", initial: "M", color: "var(--muted)" },
 ] as const;
 
@@ -44,7 +44,7 @@ export default async function AboutPage({
         <div className="grid md:grid-cols-2 gap-16 mt-16">
           <Reveal delay={1}>
             <div>
-              <h2 className="font-extrabold" style={{ fontSize: "var(--step-heading)", color: "var(--accent)" }}>
+              <h2 className="font-extrabold" style={{ fontSize: "var(--step-heading)", color: "var(--accent-text)" }}>
                 {t("mission")}
               </h2>
               <p className="mt-4" style={{ color: "var(--muted)", lineHeight: 1.6 }}>

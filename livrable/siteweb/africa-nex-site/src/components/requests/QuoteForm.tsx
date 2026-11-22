@@ -162,7 +162,7 @@ export function QuoteForm({
 
       <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between" style={{ borderTop: `1px solid ${HAIR}` }}>
         <p className="text-xs" style={{ color: "var(--muted)", maxWidth: "48ch" }}>{labels?.note ?? t("submitNote")}</p>
-        <button type="submit" disabled={pending || preparing} className="mt-4 px-8 py-4 text-sm font-bold uppercase disabled:opacity-60" style={{ ...caps, background: "#10b981", color: "white" }}>
+        <button type="submit" disabled={pending || preparing} className="mt-4 px-8 py-4 text-sm font-bold uppercase disabled:opacity-60" style={{ ...caps, background: "#047857", color: "white" }}>
           {pending ? t("sending") : labels?.submit ?? (update ? t("submitUpdate") : t("submit"))}
         </button>
       </div>

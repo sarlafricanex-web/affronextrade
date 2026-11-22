@@ -49,9 +49,9 @@ export default async function PricingPage({ params }: { params: Promise<{ locale
           <div className="grid sm:grid-cols-3" style={{ border: `1px solid ${HAIR}` }}>
             {tiers.map((tier, i) => (
               <div key={tier.rate} className="flex flex-col gap-2 p-4" style={{ borderInlineStart: i ? `1px solid ${HAIR}` : undefined, borderTop: undefined, background: i === 1 ? "#f0fdf4" : "white" }}>
-                <span className="text-[10px] font-bold uppercase" style={{ ...caps, color: i === 1 ? "#059669" : "var(--muted)" }}>{t("tierLabel", { n: i + 1 })}</span>
+                <span className="text-[10px] font-bold uppercase" style={{ ...caps, color: i === 1 ? "#065f46" : "var(--muted)" }}>{t("tierLabel", { n: i + 1 })}</span>
                 <span className="text-sm font-semibold">{tier.label}</span>
-                <span className="font-extrabold" style={{ fontSize: "2rem", lineHeight: 1, color: i === 1 ? "#059669" : "var(--ink)" }}>{tier.rate} %</span>
+                <span className="font-extrabold" style={{ fontSize: "2rem", lineHeight: 1, color: i === 1 ? "#065f46" : "var(--ink)" }}>{tier.rate} %</span>
               </div>
             ))}
           </div>
@@ -64,7 +64,7 @@ export default async function PricingPage({ params }: { params: Promise<{ locale
         <h2 className="font-extrabold uppercase" style={{ fontSize: "clamp(1.3rem, 3vw, 1.9rem)" }}>{t("faqTitle")}</h2>
         {[1, 2, 3].map((n) => (
           <details key={n} className="p-5" style={{ background: "white", border: `1px solid ${HAIR}` }} open={n === 1}>
-            <summary className="cursor-pointer font-bold"><span className="me-2" style={{ color: "#059669" }}>0{n}.</span>{t(`faq${n}Q`)}</summary>
+            <summary className="cursor-pointer font-bold"><span className="me-2" style={{ color: "#065f46" }}>0{n}.</span>{t(`faq${n}Q`)}</summary>
             <p className="mt-3 text-sm" style={{ color: "var(--muted)" }}>{t(`faq${n}A`)}</p>
           </details>
         ))}
@@ -75,7 +75,7 @@ export default async function PricingPage({ params }: { params: Promise<{ locale
           <h2 className="font-extrabold uppercase" style={{ fontSize: "clamp(1.3rem, 3vw, 1.9rem)" }}>{t("ctaTitle")}</h2>
           <p className="mt-2 text-sm" style={{ color: "#cbd5e1", maxWidth: "60ch" }}>{t("ctaText")}</p>
         </div>
-        <Link href="/contact" className="shrink-0 px-5 py-3 text-xs font-bold uppercase" style={{ ...caps, background: "#10b981", color: "white" }}>{t("contactCta")}</Link>
+        <Link href="/contact" className="shrink-0 px-5 py-3 text-xs font-bold uppercase" style={{ ...caps, background: "#047857", color: "white" }}>{t("contactCta")}</Link>
       </section>
     </div>
   );

@@ -141,7 +141,7 @@ export default async function AdminRfqPage({
           <nav className="mb-2 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase" style={{ ...caps, color: "var(--muted)" }}>
             <Link href="/admin/rfqs" className="hover:underline">{t("rfqsTitle")}</Link>
             <span aria-hidden="true">/</span>
-            <span dir="ltr" style={{ color: "#059669" }}>{rfq.reference}</span>
+            <span dir="ltr" style={{ color: "#065f46" }}>{rfq.reference}</span>
           </nav>
           <h1 className="font-extrabold" style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", lineHeight: 1.15 }}>{rfq.title}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -196,7 +196,7 @@ export default async function AdminRfqPage({
                       <td className="px-4 py-3" dir="ltr" style={{ textAlign: "start" }}>
                         <span className="block font-bold">{Number(q.unit_price_ht).toLocaleString(locale)} {q.currency} / {d.unit ? tc(`unitShort_${d.unit}`) : ""}</span>
                         <span className="block text-xs" style={{ color: "var(--muted)" }}>{[q.price_basis, q.port_of_loading].filter(Boolean).join(" · ")}</span>
-                        {best && <span className="mt-1 inline-block px-2 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, background: "#10b981", color: "white" }}>{t("compareBest")}</span>}
+                        {best && <span className="mt-1 inline-block px-2 py-0.5 text-[10px] font-bold uppercase" style={{ ...caps, background: "#047857", color: "white" }}>{t("compareBest")}</span>}
                       </td>
                       <td className="px-4 py-3" dir="ltr" style={{ textAlign: "start" }}>{Number(q.quantity).toLocaleString(locale)} {d.unit ? tc(`unitShort_${d.unit}`) : ""}</td>
                       <td className="px-4 py-3">{q.production_lead_days != null ? t("offerDays", { days: q.production_lead_days }) : "-"}</td>
@@ -319,7 +319,7 @@ export default async function AdminRfqPage({
                         <input type="hidden" name="locale" value={locale} />
                         <input type="hidden" name="id" value={o.id} />
                         <input type="hidden" name="op" value={op} />
-                        <button type="submit" className="px-3 py-2 text-xs font-bold uppercase" style={{ ...caps, ...(op === "publish" ? { background: "#10b981", color: "white" } : op === "delete" ? { border: "1px solid #dc2626", color: "#dc2626", background: "white" } : { border: "1px solid var(--ink)", background: "white" }) }}>
+                        <button type="submit" className="px-3 py-2 text-xs font-bold uppercase" style={{ ...caps, ...(op === "publish" ? { background: "#047857", color: "white" } : op === "delete" ? { border: "1px solid #dc2626", color: "#dc2626", background: "white" } : { border: "1px solid var(--ink)", background: "white" }) }}>
                           {t(`offerOp_${op}`)}
                         </button>
                       </form>
@@ -355,7 +355,7 @@ export default async function AdminRfqPage({
                   {th.sub && <span className="block text-xs" dir="ltr" style={{ color: "var(--muted)", textAlign: "start" }}>{th.sub}</span>}
                 </span>
                 <span className="flex items-center gap-2 text-xs">
-                  {unread > 0 && <span className="px-2 py-0.5 font-bold" style={{ background: "#f97316", color: "white" }} data-thread-unread={unread}>{tm("unreadCount", { count: unread })}</span>}
+                  {unread > 0 && <span className="px-2 py-0.5 font-bold" style={{ background: "#c2410c", color: "white" }} data-thread-unread={unread}>{tm("unreadCount", { count: unread })}</span>}
                   <span style={{ color: "var(--muted)" }}>{tm("messageCount", { count: msgs.length })}</span>
                 </span>
               </summary>

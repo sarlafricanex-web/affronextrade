@@ -19,7 +19,7 @@ export function ClaimDecision({ id, company, claimant }: { id: string; company: 
     >
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="id" value={id} />
-      <button type="submit" name="decision" value="approve" className="px-4 py-2 text-xs font-bold uppercase" style={{ background: "var(--accent)", color: "white", letterSpacing: "0.08em" }}>
+      <button type="submit" name="decision" value="approve" className="px-4 py-2 text-xs font-bold uppercase" style={{ background: "var(--accent-strong)", color: "white", letterSpacing: "0.08em" }}>
         {t("claimApprove")}
       </button>
       <button type="submit" name="decision" value="reject" className="px-4 py-2 text-xs font-bold uppercase" style={{ border: "1px solid #dc2626", color: "#dc2626", letterSpacing: "0.08em" }}>
