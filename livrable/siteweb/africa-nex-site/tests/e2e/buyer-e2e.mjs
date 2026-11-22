@@ -53,7 +53,8 @@ try {
   await send("Page.enable"); await send("Runtime.enable"); await send("Network.enable");
   await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 1300, deviceScaleFactor: 1, mobile: false });
   const SET = `const setV = (el, v) => { const p = el.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(p, "value").set.call(el, v); el.dispatchEvent(new Event("input", { bubbles: true })); el.dispatchEvent(new Event("change", { bubbles: true })); };`;
-  const submit = `[...document.querySelectorAll("main button[type=submit]")].at(-1).click();`;
+  // Bouton du formulaire principal (l'encart "Supprimer mon compte" a aussi un bouton d'envoi).
+  const submit = `[...document.querySelectorAll("main button[type=submit]")].filter((b) => !b.closest("#account-deletion")).at(-1).click();`;
 
   // Tableau de bord : invitation a completer le profil
   await loginAs(buyer);

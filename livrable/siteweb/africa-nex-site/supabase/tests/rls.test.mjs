@@ -817,6 +817,46 @@ await check("Retrait de l'accord : le fournisseur repasse en intermediation", as
   expect(mode === "self" && at === null, `mode ${mode}, date ${at}`);
 });
 
+// ---------------------------------------------------------------------------------------------
+// Audit legal, correction 3 (migration 37) : suppression de compte et durees de conservation
+// ---------------------------------------------------------------------------------------------
+await check("Suppression de compte : l'acheteur la demande, une seule demande en attente", async () => {
+  const id1 = await as(U.buyer2, () => one("select public.request_account_deletion('Plus besoin')"));
+  const id2 = await as(U.buyer2, () => one("select public.request_account_deletion()"));
+  const mine = await as(U.buyer2, () => rows("select status, reason, role from public.account_deletion_requests"));
+  const role = await one("select role from public.profiles where id = $1", [U.buyer2]);
+  expect(id1 === id2 && mine.length === 1 && mine[0].status === "pending" && mine[0].reason === "Plus besoin" && mine[0].role === role, JSON.stringify(mine));
+});
+
+await check("Suppression de compte : invisible des autres, statut non modifiable par l'utilisateur", async () => {
+  const seen = await as(U.prodA, () => rows("select id from public.account_deletion_requests"));
+  await as(U.buyer2, () => rows("update public.account_deletion_requests set status = 'done'"));
+  const status = await one("select status from public.account_deletion_requests where profile_id = $1", [U.buyer2]);
+  expect(seen.length === 0 && status === "pending", `vu par un autre : ${seen.length}, statut ${status}`);
+});
+
+await check("Suppression de compte : AFRICA NEX la voit ; l'utilisateur peut l'annuler", async () => {
+  const adminSees = await as(U.admin, () => rows("select id from public.account_deletion_requests where status = 'pending'"));
+  await as(U.buyer2, () => rows("select public.cancel_account_deletion()"));
+  const status = await one("select status from public.account_deletion_requests where profile_id = $1", [U.buyer2]);
+  expect(adminSees.length === 1 && status === "cancelled", `admin ${adminSees.length}, statut ${status}`);
+});
+
+await check("Suppression de compte : refusee pour un compte AFRICA NEX ou un visiteur", async () => {
+  await expectFail(as(U.admin, () => rows("select public.request_account_deletion()")), /admin account/);
+  await expectFail(as(null, () => rows("select public.request_account_deletion()")), /permission denied|not signed in/);
+});
+
+await check("Durees de conservation : purge des donnees expirees seulement", async () => {
+  await rows(`insert into public.submissions (name, email, created_at) values ('Ancien', 'a@x.dz', now() - interval '13 months'), ('Recent', 'r@x.dz', now() - interval '2 months')`);
+  await rows(`insert into public.profile_views (company_id, created_at) values ($1, now() - interval '14 months'), ($1, now() - interval '1 month')`, [companyA]);
+  await expectFail(as(U.admin, () => rows("select public.purge_expired_data()")), /permission denied/);
+  const [{ r }] = await rows("select public.purge_expired_data() as r");
+  const names = (await rows("select name from public.submissions where name in ('Ancien', 'Recent')")).map((x) => x.name).join();
+  const oldViews = await one("select count(*)::int from public.profile_views where company_id = $1 and created_at < now() - interval '13 months'", [companyA]);
+  expect(r.submissions >= 1 && r.views >= 1 && names === "Recent" && oldViews === 0, `${JSON.stringify(r)} restants : ${names}, anciennes vues ${oldViews}`);
+});
+
 console.log(`\n${passed} tests reussis, ${failures.length} en echec`);
 for (const f of failures) console.log(`  ECHEC  ${f}`);
 process.exit(failures.length ? 1 : 0);

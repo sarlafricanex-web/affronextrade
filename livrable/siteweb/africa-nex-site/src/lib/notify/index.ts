@@ -27,7 +27,8 @@ export type NotifyKind =
   | "admin_new_rfq"    // AFRICA NEX : nouvelle demande d'un acheteur
   | "admin_new_quote"  // AFRICA NEX : devis recu d'un producteur
   | "admin_decision"   // AFRICA NEX : decision de l'acheteur sur une offre
-  | "admin_new_message"; // AFRICA NEX : message d'un acheteur ou d'un producteur
+  | "admin_new_message" // AFRICA NEX : message d'un acheteur ou d'un producteur
+  | "admin_deletion_request"; // AFRICA NEX : demande de suppression de compte
 
 type Recipient = { profileId: string | null; email: string | null; locale: Locale; name: string | null };
 type Spec = { kind: NotifyKind; rfqId?: string | null; path: string; values: Values; rows?: [string, string][]; variant?: string };

@@ -919,7 +919,18 @@
     "rfqUnread": "{count, plural, one {# message non lu} other {# messages non lus}}",
     "settingsConsentYes": "Accord export AFRICA NEX",
     "settingsConsentNo": "Sans accord export",
-    "settingsModesRefused": "{count} fournisseur(s) non passé(s) en export AFRICA NEX : leur accord est nécessaire."
+    "settingsModesRefused": "{count} fournisseur(s) non passé(s) en export AFRICA NEX : leur accord est nécessaire.",
+    "deletionTitle": "Demandes de suppression de compte",
+    "deletionHelp": "À traiter sous un mois. La suppression efface le compte, son entreprise, ses produits, documents, demandes, messages et fichiers. Elle est définitive.",
+    "deletionEmpty": "Aucune demande en attente.",
+    "deletionRequestedOn": "Demandée le {date}",
+    "deletionNoReason": "Sans raison indiquée",
+    "deletionConfirm": "Je confirme la suppression définitive",
+    "deletionSubmit": "Supprimer le compte",
+    "deletionNotice_done": "Compte supprimé.",
+    "deletionNotice_gone": "Cette demande n'est plus en attente.",
+    "deletionNotice_error": "La suppression a échoué. Le compte n'a pas été effacé.",
+    "deletionNotice_confirm": "Cochez la case de confirmation pour supprimer."
   },
   "phone": {
     "countryCode": "Indicatif du pays : {code}. Changer de pays",
@@ -2332,6 +2343,25 @@
     "admin_new_message_subject": "Nouveau message de {who} ({reference})",
     "admin_new_message_title": "Nouveau message",
     "admin_new_message_intro": "{who} vous a écrit au sujet de {reference}.",
-    "admin_new_message_cta": "Lire le message"
+    "admin_new_message_cta": "Lire le message",
+    "admin_deletion_request_subject": "Demande de suppression de compte",
+    "admin_deletion_request_title": "Suppression de compte demandée",
+    "admin_deletion_request_intro": "Un compte ({role}) demande sa suppression. À traiter sous un mois.",
+    "admin_deletion_request_cta": "Voir les demandes"
+  },
+  "account": {
+    "deletionTitle": "Supprimer mon compte",
+    "deletionOpen": "Demander la suppression de mon compte",
+    "deletionText": "Votre compte, votre fiche entreprise, vos produits, vos documents, vos demandes et vos messages seront effacés sous un mois, sauf ce que la loi nous oblige à conserver. Une fois traitée, la suppression est définitive.",
+    "deletionPolicy": "Politique de confidentialité",
+    "deletionReason": "Raison (facultatif)",
+    "deletionConfirm": "Je comprends que la suppression est définitive.",
+    "deletionSubmit": "Demander la suppression",
+    "deletionPending": "Demande de suppression envoyée le {date}. AFRICA NEX la traite sous un mois ; vous pouvez l'annuler d'ici là.",
+    "deletionCancel": "Annuler ma demande",
+    "deletionNotice_requested": "Votre demande de suppression est enregistrée.",
+    "deletionNotice_cancelled": "Votre demande de suppression est annulée.",
+    "deletionNotice_error": "La demande n'a pas pu être enregistrée. Réessayez ou écrivez-nous.",
+    "deletionNotice_confirm": "Cochez la case de confirmation pour continuer."
   }
 }

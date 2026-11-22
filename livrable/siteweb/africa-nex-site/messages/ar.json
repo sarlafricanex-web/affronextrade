@@ -919,7 +919,18 @@
     "rfqUnread": "{count, plural, one {رسالة غير مقروءة} two {رسالتان غير مقروءتين} few {# رسائل غير مقروءة} many {# رسالة غير مقروءة} other {# رسالة غير مقروءة}}",
     "settingsConsentYes": "موافق على التصدير عبر AFRICA NEX",
     "settingsConsentNo": "دون موافقة على التصدير",
-    "settingsModesRefused": "{count} مورد(ين) لم يتم تحويلهم إلى التصدير عبر AFRICA NEX: موافقتهم مطلوبة."
+    "settingsModesRefused": "{count} مورد(ين) لم يتم تحويلهم إلى التصدير عبر AFRICA NEX: موافقتهم مطلوبة.",
+    "deletionTitle": "طلبات حذف الحسابات",
+    "deletionHelp": "تُعالج خلال شهر. يمحو الحذف الحساب ومؤسسته ومنتجاته ووثائقه وطلباته ورسائله وملفاته، وهو نهائي.",
+    "deletionEmpty": "لا توجد طلبات معلّقة.",
+    "deletionRequestedOn": "طُلب بتاريخ {date}",
+    "deletionNoReason": "دون سبب",
+    "deletionConfirm": "أؤكد الحذف النهائي",
+    "deletionSubmit": "حذف الحساب",
+    "deletionNotice_done": "تم حذف الحساب.",
+    "deletionNotice_gone": "لم يعد هذا الطلب معلّقًا.",
+    "deletionNotice_error": "فشل الحذف. لم يُمحَ الحساب.",
+    "deletionNotice_confirm": "ضع علامة في خانة التأكيد للحذف."
   },
   "phone": {
     "countryCode": "رمز البلد: {code}. تغيير البلد",
@@ -2332,6 +2343,25 @@
     "admin_new_message_subject": "رسالة جديدة من {who} ({reference})",
     "admin_new_message_title": "رسالة جديدة",
     "admin_new_message_intro": "راسلك {who} بخصوص {reference}.",
-    "admin_new_message_cta": "قراءة الرسالة"
+    "admin_new_message_cta": "قراءة الرسالة",
+    "admin_deletion_request_subject": "طلب حذف حساب",
+    "admin_deletion_request_title": "طلب حذف حساب",
+    "admin_deletion_request_intro": "حساب ({role}) يطلب حذفه. يُعالج خلال شهر.",
+    "admin_deletion_request_cta": "عرض الطلبات"
+  },
+  "account": {
+    "deletionTitle": "حذف حسابي",
+    "deletionOpen": "طلب حذف حسابي",
+    "deletionText": "سيُمحى حسابك وبطاقة مؤسستك ومنتجاتك ووثائقك وطلباتك ورسائلك خلال شهر، باستثناء ما يُلزمنا القانون بالاحتفاظ به. بعد المعالجة يصبح الحذف نهائيًا.",
+    "deletionPolicy": "سياسة الخصوصية",
+    "deletionReason": "السبب (اختياري)",
+    "deletionConfirm": "أفهم أن الحذف نهائي.",
+    "deletionSubmit": "طلب الحذف",
+    "deletionPending": "أُرسل طلب الحذف بتاريخ {date}. تعالجه AFRICA NEX خلال شهر، ويمكنك إلغاؤه قبل ذلك.",
+    "deletionCancel": "إلغاء طلبي",
+    "deletionNotice_requested": "تم تسجيل طلب الحذف.",
+    "deletionNotice_cancelled": "تم إلغاء طلب الحذف.",
+    "deletionNotice_error": "تعذّر تسجيل الطلب. أعد المحاولة أو راسلنا.",
+    "deletionNotice_confirm": "ضع علامة في خانة التأكيد للمتابعة."
   }
 }

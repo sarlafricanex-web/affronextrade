@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_requests: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          processed_at: string | null
+          processed_by: string | null
+          profile_id: string | null
+          reason: string | null
+          role: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          profile_id?: string | null
+          reason?: string | null
+          role: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          profile_id?: string | null
+          reason?: string | null
+          role?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_deletion_requests_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_deletion_requests_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -2394,6 +2445,7 @@ export type Database = {
           used: number
         }[]
       }
+      cancel_account_deletion: { Args: never; Returns: undefined }
       claim_founder_slot: { Args: { p_company: string }; Returns: boolean }
       compute_price: {
         Args: {
@@ -2485,11 +2537,13 @@ export type Database = {
           unit_price_ht: number
         }[]
       }
+      purge_expired_data: { Args: never; Returns: Json }
       quota_period_start: {
         Args: { p_period: Database["public"]["Enums"]["quota_period"] }
         Returns: string
       }
       reject_claim: { Args: { p_claim: string }; Returns: undefined }
+      request_account_deletion: { Args: { p_reason?: string }; Returns: string }
       request_offer_currency: {
         Args: { p_currency: string; p_note: string; p_offer_id: string }
         Returns: undefined

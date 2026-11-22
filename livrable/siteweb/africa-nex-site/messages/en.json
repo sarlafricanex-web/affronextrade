@@ -919,7 +919,18 @@
     "rfqUnread": "{count, plural, one {# unread message} other {# unread messages}}",
     "settingsConsentYes": "Agrees to AFRICA NEX export",
     "settingsConsentNo": "No export consent",
-    "settingsModesRefused": "{count} supplier(s) not switched to AFRICA NEX export: their consent is required."
+    "settingsModesRefused": "{count} supplier(s) not switched to AFRICA NEX export: their consent is required.",
+    "deletionTitle": "Account deletion requests",
+    "deletionHelp": "To be processed within one month. Deletion erases the account, its company, products, documents, requests, messages and files. It is permanent.",
+    "deletionEmpty": "No pending request.",
+    "deletionRequestedOn": "Requested on {date}",
+    "deletionNoReason": "No reason given",
+    "deletionConfirm": "I confirm permanent deletion",
+    "deletionSubmit": "Delete the account",
+    "deletionNotice_done": "Account deleted.",
+    "deletionNotice_gone": "This request is no longer pending.",
+    "deletionNotice_error": "Deletion failed. The account was not erased.",
+    "deletionNotice_confirm": "Tick the confirmation box to delete."
   },
   "phone": {
     "countryCode": "Country code: {code}. Change country",
@@ -2332,6 +2343,25 @@
     "admin_new_message_subject": "New message from {who} ({reference})",
     "admin_new_message_title": "New message",
     "admin_new_message_intro": "{who} wrote to you about {reference}.",
-    "admin_new_message_cta": "Read the message"
+    "admin_new_message_cta": "Read the message",
+    "admin_deletion_request_subject": "Account deletion request",
+    "admin_deletion_request_title": "Account deletion requested",
+    "admin_deletion_request_intro": "An account ({role}) is asking to be deleted. To be processed within one month.",
+    "admin_deletion_request_cta": "See requests"
+  },
+  "account": {
+    "deletionTitle": "Delete my account",
+    "deletionOpen": "Request deletion of my account",
+    "deletionText": "Your account, company profile, products, documents, requests and messages will be erased within one month, except what the law requires us to keep. Once processed, deletion is permanent.",
+    "deletionPolicy": "Privacy policy",
+    "deletionReason": "Reason (optional)",
+    "deletionConfirm": "I understand that deletion is permanent.",
+    "deletionSubmit": "Request deletion",
+    "deletionPending": "Deletion request sent on {date}. AFRICA NEX processes it within one month; you can cancel it until then.",
+    "deletionCancel": "Cancel my request",
+    "deletionNotice_requested": "Your deletion request has been recorded.",
+    "deletionNotice_cancelled": "Your deletion request has been cancelled.",
+    "deletionNotice_error": "The request could not be recorded. Try again or write to us.",
+    "deletionNotice_confirm": "Tick the confirmation box to continue."
   }
 }

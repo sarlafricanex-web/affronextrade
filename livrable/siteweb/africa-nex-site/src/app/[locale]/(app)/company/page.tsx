@@ -11,6 +11,7 @@ import { BuyerForm } from "@/components/onboarding/BuyerForm";
 import { buyerDefaults } from "@/lib/onboarding/buyer";
 import { countryName } from "@/lib/countries";
 import { DocumentsPanel } from "@/components/company/DocumentsPanel";
+import { AccountDeletion } from "@/components/account/AccountDeletion";
 
 export const instant = false;
 
@@ -21,13 +22,13 @@ export default async function CompanyPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ tab?: string; saved?: string; doc?: string }>;
+  searchParams: Promise<{ tab?: string; saved?: string; doc?: string; deletion?: string }>;
 }) {
   const { locale } = await params;
   const user = await getCurrentUser();
   if (!user) redirect(`/${locale}/login`);
   if (user.role === "buyer") {
-    const [t, defaults, { saved }] = await Promise.all([
+    const [t, defaults, { saved, deletion }] = await Promise.all([
       getTranslations({ locale, namespace: "onboarding" }),
       buyerDefaults(user.supabase, user.userId),
       searchParams,
@@ -46,12 +47,13 @@ export default async function CompanyPage({
         <section style={{ background: "white", border: "1px solid var(--field-b)", padding: "clamp(1.25rem, 3vw, 2rem)" }}>
           <BuyerForm defaults={defaults} mode="edit" />
         </section>
+        <AccountDeletion locale={locale} supabase={user.supabase} notice={deletion} />
       </div>
     );
   }
   if (user.role !== "producer") redirect(`/${locale}/dashboard`);
 
-  const [t, company, { tab, saved, doc }] = await Promise.all([
+  const [t, company, { tab, saved, doc, deletion }] = await Promise.all([
     getTranslations({ locale, namespace: "onboarding" }),
     getMyCompany(user.supabase, user.userId),
     searchParams,
@@ -282,6 +284,7 @@ export default async function CompanyPage({
             <p className="text-sm font-semibold" dir="ltr" style={{ textAlign: "start" }}>+213 770 96 02 70</p>
             <p className="mt-3 text-xs" style={{ color: "var(--muted)" }}>{t("sidePrivate")}</p>
           </section>
+          <AccountDeletion locale={locale} supabase={user.supabase} notice={deletion} />
         </aside>
       </div>
     </div>
