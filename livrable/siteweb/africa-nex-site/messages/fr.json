@@ -241,7 +241,8 @@
     "reviewRulesTitle": "Règles de publication",
     "reviewRule1": "Seuls les acheteurs inscrits peuvent laisser un avis, un seul par producteur.",
     "reviewRule2": "Votre entreprise et vos coordonnées ne sont jamais affichées.",
-    "reviewRule3": "Les avis injurieux, publicitaires ou contenant des coordonnées sont refusés."
+    "reviewRule3": "Les avis injurieux, publicitaires ou contenant des coordonnées sont refusés.",
+    "reviewsNotice": "Avis déposés par des acheteurs inscrits dont le profil est complet, relus par AFRICA NEX avant publication. AFRICA NEX ne vérifie pas qu'une commande a eu lieu entre l'auteur et le producteur."
   },
   "buyers": {
     "title": "Espace Acheteurs",

@@ -222,7 +222,7 @@ const ScrollExpandMedia = ({
           >
             <Image
               src={bgImageSrc}
-              alt="Background"
+              alt=""
               width={1920}
               height={1080}
               className="w-screen h-screen"

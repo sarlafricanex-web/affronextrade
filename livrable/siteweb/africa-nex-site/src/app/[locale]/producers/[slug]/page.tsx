@@ -332,6 +332,7 @@ export default async function ProducerProfilePage({ params }: { params: Params }
                 <a href="#laisser-un-avis" className={`px-4 py-2 ${CAPS}`} style={{ ...capsStyle, border: "1px solid var(--ink)", background: "white", color: "var(--ink)" }}>{t("leaveReview")}</a>
               </div>
               <div className="p-6">
+                <p className="mb-5 text-xs leading-relaxed" style={{ color: "var(--muted)" }} data-reviews-notice="">{t("reviewsNotice")}</p>
                 {profile.reviews.length > 0 && (
                   <ul>
                     {profile.reviews.map((r, i) => (
@@ -339,7 +340,7 @@ export default async function ProducerProfilePage({ params }: { params: Params }
                         <div className="mb-2 flex items-center justify-between gap-3">
                           <Stars rating={r.rating} size={14} />
                           <span className="text-[11px] font-semibold uppercase" style={{ ...capsStyle, color: "var(--muted)" }}>
-                            {format.dateTime(new Date(r.created_at), { month: "long", year: "numeric" })}
+                            {format.dateTime(new Date(r.created_at), { dateStyle: "long" })}
                           </span>
                         </div>
                         {r.comment && <p className="italic leading-relaxed">« {r.comment} »</p>}

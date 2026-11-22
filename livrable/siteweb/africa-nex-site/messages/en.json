@@ -241,7 +241,8 @@
     "reviewRulesTitle": "Publication rules",
     "reviewRule1": "Only registered buyers can leave a review, one per producer.",
     "reviewRule2": "Your company and contact details are never shown.",
-    "reviewRule3": "Abusive or promotional reviews, or reviews containing contact details, are declined."
+    "reviewRule3": "Abusive or promotional reviews, or reviews containing contact details, are declined.",
+    "reviewsNotice": "Reviews are posted by registered buyers with a complete profile and checked by AFRICA NEX before publication. AFRICA NEX does not verify that an order took place between the author and the producer."
   },
   "buyers": {
     "title": "Buyers Hub",

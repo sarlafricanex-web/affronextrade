@@ -92,11 +92,12 @@ export function Footer() {
             <p className="text-xs mt-3 leading-relaxed" style={{ color: "var(--on-ink-muted)" }}>
               Images: &ldquo;Olive Trees&rdquo; by Vincent van Gogh, 1889, public domain, via The Metropolitan Museum of Art.
               &ldquo;Boat in Harbor, Algeria&rdquo; by John Beasley Greene, 1853, public domain, via The Met.
-              &ldquo;Olives in olive oil&rdquo; by stu_spivack, CC BY-SA 2.0, via Wikimedia Commons.
-              &ldquo;Cherchell Harbour&rdquo; by Bernard Gagnon, CC BY 4.0, via Wikimedia Commons.
-              &ldquo;Ripe dates&rdquo; by Kerina yin, CC0, via Wikimedia Commons.
-              &ldquo;Sunrise from Algeria port&rdquo; by Fadi karim 7, CC BY-SA 4.0, via Wikimedia Commons.
+              &ldquo;Olives in olive oil&rdquo; by stu_spivack, <a href="https://creativecommons.org/licenses/by-sa/2.0/" target="_blank" rel="noopener license" className="underline">CC BY-SA 2.0</a>, via Wikimedia Commons.
+              &ldquo;Cherchell Harbour&rdquo; by Bernard Gagnon, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener license" className="underline">CC BY 4.0</a>, via Wikimedia Commons.
+              &ldquo;Ripe dates&rdquo; by Kerina yin, <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener license" className="underline">CC0</a>, via Wikimedia Commons.
+              &ldquo;Sunrise from Algeria port&rdquo; by Fadi karim 7, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener license" className="underline">CC BY-SA 4.0</a>, via Wikimedia Commons.
               &ldquo;Olive oil export&rdquo; generated with Canva AI.
+              &ldquo;New Inventions of Modern Times (Nova Reperta)&rdquo; after Jan van der Straet, about 1600, public domain.
             </p>
           </div>
         </div>
