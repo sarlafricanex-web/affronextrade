@@ -584,3 +584,23 @@ form textarea:focus {
   .dash-progress { width: 100%; }
 }
 @media (max-width: 600px) { .dash-kpis-3 { grid-template-columns: 1fr 1fr 1fr; } .dash-kpis-3 .dash-kpi:nth-child(3) { border-inline-start: 1px solid #efe9dd; padding-inline-start: 20px; } .dash-cardhead { flex-wrap: wrap; } }
+
+/* ── Espace connecte : harmonisation des pages avec les cartes Europages (24 novembre 2026) ──
+   Les pages existantes gardent leur structure ; leurs blocs blancs prennent des coins arrondis,
+   leurs titres une taille unique et leurs boutons des angles doux. Le site public n'est pas touche.
+   (Les styles en ligne sont ecrits sans espace au rendu serveur : "background:white".) */
+.app-content [style*="background:white"][style*="border"],
+.app-content [style*="background: white"][style*="border"],
+.app-content [style*="background:#fff"][style*="border"] { border-radius: 8px; }
+.app-content [style*="background:white"][style*="border"] > :first-child[style*="background"],
+.app-content [style*="background: white"][style*="border"] > :first-child[style*="background"] { border-start-start-radius: 7px; border-start-end-radius: 7px; }
+.app-content [style*="background:white"][style*="border"] > :last-child[style*="background"],
+.app-content [style*="background: white"][style*="border"] > :last-child[style*="background"] { border-end-start-radius: 7px; border-end-end-radius: 7px; }
+.app-content h1 { font-size: clamp(1.5rem, 2.4vw, 1.75rem) !important; line-height: 1.15 !important; letter-spacing: -0.02em !important; text-transform: none !important; }
+.app-content a[style*="background:var(--ink)"], .app-content a[style*="background: var(--ink)"],
+.app-content button[style*="background:var(--ink)"], .app-content button[style*="background: var(--ink)"],
+.app-content a[style*="border:1px solid var(--ink)"], .app-content a[style*="border: 1px solid var(--ink)"],
+.app-content button[style*="border:1px solid var(--ink)"], .app-content button[style*="border: 1px solid var(--ink)"],
+.app-content a[style*="background:#c2410c"], .app-content button[style*="background:#c2410c"],
+.app-content a[style*="background:#047857"], .app-content button[style*="background:#047857"],
+.app-content button[type="submit"] { border-radius: 6px; }
