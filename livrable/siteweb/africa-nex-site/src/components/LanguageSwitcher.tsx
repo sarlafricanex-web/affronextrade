@@ -8,9 +8,11 @@ import { usePathname, useRouter } from "@/i18n/navigation";
 // cours ; un clic deroule les trois langues avec une animation. Fermeture au clic exterieur,
 // avec Echap ou apres le choix. Clavier : fleches, Debut, Fin. Animation reduite si le systeme le demande.
 const LANGUAGES = [
-  { code: "fr", short: "FR", name: "Français" },
-  { code: "en", short: "EN", name: "English" },
-  { code: "ar", short: "AR", name: "العربية" },
+  // Une couleur par langue (demande d'Adlene du 24 novembre 2026) : vert pour le francais, emeraude
+  // du logo pour l'anglais, jaune sable pour l'arabe ; texte fonce lisible sur chaque teinte.
+  { code: "fr", short: "FR", name: "Français", bg: "#047857", fg: "#ffffff" },
+  { code: "en", short: "EN", name: "English", bg: "#10b981", fg: "#052e22" },
+  { code: "ar", short: "AR", name: "العربية", bg: "#e9c46a", fg: "#0f172a" },
 ] as const;
 
 export function LanguageSwitcher() {
@@ -50,6 +52,7 @@ export function LanguageSwitcher() {
         aria-label={`Langue : ${current.name}`}
         className="lang-switcher-button flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold"
         data-lang-button={current.code}
+        style={{ background: current.bg, color: current.fg, borderColor: current.bg }}
       >
         {current.short}
       </button>
@@ -77,7 +80,7 @@ export function LanguageSwitcher() {
             style={{ transitionDelay: open ? `${60 + i * 45}ms` : "0ms" }}
             data-lang={l.code}
           >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold" style={l.code === locale ? { background: "#047857", color: "white" } : { border: "1px solid var(--field-b)" }}>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold" style={{ background: l.bg, color: l.fg }}>
               {l.short}
             </span>
             {/* Meme alignement pour toutes les lignes ; seul le nom prend la langue et le sens. */}
