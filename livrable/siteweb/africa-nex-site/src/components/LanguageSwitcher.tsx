@@ -4,15 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 
-// Selecteur de langue (demande d'Adlene du 19 novembre 2026) : un bouton rond avec la langue en
-// cours ; un clic deroule les trois langues avec une animation. Fermeture au clic exterieur,
-// avec Echap ou apres le choix. Clavier : fleches, Debut, Fin. Animation reduite si le systeme le demande.
+// Selecteur de langue (demandes d'Adlene des 19 et 24 novembre 2026) : une bulle ronde metallisee
+// avec la langue en cours ; un clic fait descendre de la bulle un cylindre de la meme largeur qui
+// porte les deux autres langues. Une couleur par langue : bleu cristal (francais), emeraude du logo
+// (anglais), or sable (arabe), avec un texte fonce lisible sur chaque teinte.
+// Fermeture au clic exterieur, avec Echap ou apres le choix. Clavier : fleches, Debut, Fin.
 const LANGUAGES = [
-  // Une couleur par langue (demande d'Adlene du 24 novembre 2026) : bleu cristal pour le francais, emeraude
-  // du logo pour l'anglais, jaune sable pour l'arabe ; texte fonce lisible sur chaque teinte.
-  { code: "fr", short: "FR", name: "Français", bg: "#5bc0eb", fg: "#0f172a" },
-  { code: "en", short: "EN", name: "English", bg: "#10b981", fg: "#052e22" },
-  { code: "ar", short: "AR", name: "العربية", bg: "#e9c46a", fg: "#0f172a" },
+  { code: "fr", short: "FR", name: "Français" },
+  { code: "en", short: "EN", name: "English" },
+  { code: "ar", short: "AR", name: "العربية" },
 ] as const;
 
 export function LanguageSwitcher() {
@@ -23,6 +23,7 @@ export function LanguageSwitcher() {
   const root = useRef<HTMLDivElement>(null);
   const items = () => [...(root.current?.querySelectorAll<HTMLButtonElement>("[data-lang]") ?? [])];
   const current = LANGUAGES.find((l) => l.code === locale) ?? LANGUAGES[0];
+  const others = LANGUAGES.filter((l) => l.code !== current.code);
 
   useEffect(() => {
     if (!open) return;
@@ -30,8 +31,8 @@ export function LanguageSwitcher() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") { setOpen(false); root.current?.querySelector<HTMLButtonElement>("[data-lang-button]")?.focus(); }
     };
-    // Focus sur la langue en cours a l'ouverture (apres l'animation d'apparition).
-    const focusTimer = setTimeout(() => root.current?.querySelector<HTMLButtonElement>("[data-lang][aria-checked=true]")?.focus(), 30);
+    // Focus sur la premiere langue du cylindre, une fois qu'il est descendu.
+    const focusTimer = setTimeout(() => items()[0]?.focus(), 120);
     document.addEventListener("mousedown", onClick);
     document.addEventListener("keydown", onKey);
     return () => { clearTimeout(focusTimer); document.removeEventListener("mousedown", onClick); document.removeEventListener("keydown", onKey); };
@@ -43,23 +44,13 @@ export function LanguageSwitcher() {
   }
 
   return (
-    <div ref={root} className="lang-switcher relative" data-open={open || undefined}>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label={`Langue : ${current.name}`}
-        className="lang-switcher-button flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold"
-        data-lang-button={current.code}
-        style={{ background: current.bg, color: current.fg, borderColor: current.bg }}
-      >
-        {current.short}
-      </button>
+    <div ref={root} className="lang-switcher" data-open={open || undefined}>
+      {/* Le cylindre descend derriere la bulle : meme largeur, il part de son centre. */}
       <div
         role="menu"
+        aria-label="Langue"
         aria-hidden={!open}
-        className="lang-switcher-menu absolute end-0 top-9 flex flex-col p-1.5"
+        className="lang-cylinder"
         data-lang-menu=""
         onKeyDown={(e) => {
           const list = items();
@@ -68,27 +59,36 @@ export function LanguageSwitcher() {
           if (next >= 0) { e.preventDefault(); list[next]?.focus(); }
         }}
       >
-        {LANGUAGES.map((l, i) => (
+        {others.map((l, i) => (
           <button
             key={l.code}
             type="button"
             role="menuitemradio"
-            aria-checked={l.code === locale}
+            aria-checked={false}
+            aria-label={l.name}
+            title={l.name}
             tabIndex={open ? 0 : -1}
             onClick={() => choose(l.code)}
-            className="lang-switcher-item flex items-center gap-3 px-3 py-2 text-sm"
-            style={{ transitionDelay: open ? `${60 + i * 45}ms` : "0ms" }}
+            className={`lang-bubble lang-metal-${l.code}`}
+            style={{ transitionDelay: open ? `${80 + i * 60}ms` : "0ms" }}
             data-lang={l.code}
           >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold" style={{ background: l.bg, color: l.fg }}>
-              {l.short}
-            </span>
-            {/* Meme alignement pour toutes les lignes ; seul le nom prend la langue et le sens. */}
-            <span className="flex-1 text-start font-medium"><bdi lang={l.code}>{l.name}</bdi></span>
-            {l.code === locale && <span aria-hidden="true" style={{ color: "#065f46" }}>✓</span>}
+            {l.short}
           </button>
         ))}
       </div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Langue : ${current.name}`}
+        title={current.name}
+        className={`lang-bubble lang-switcher-button lang-metal-${current.code}`}
+        data-lang-button={current.code}
+      >
+        {current.short}
+      </button>
     </div>
   );
 }
