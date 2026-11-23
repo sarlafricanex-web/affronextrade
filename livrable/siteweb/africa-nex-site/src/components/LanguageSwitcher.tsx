@@ -8,9 +8,9 @@ import { usePathname, useRouter } from "@/i18n/navigation";
 // cours ; un clic deroule les trois langues avec une animation. Fermeture au clic exterieur,
 // avec Echap ou apres le choix. Clavier : fleches, Debut, Fin. Animation reduite si le systeme le demande.
 const LANGUAGES = [
-  // Une couleur par langue (demande d'Adlene du 24 novembre 2026) : vert pour le francais, emeraude
+  // Une couleur par langue (demande d'Adlene du 24 novembre 2026) : bleu cristal pour le francais, emeraude
   // du logo pour l'anglais, jaune sable pour l'arabe ; texte fonce lisible sur chaque teinte.
-  { code: "fr", short: "FR", name: "Français", bg: "#047857", fg: "#ffffff" },
+  { code: "fr", short: "FR", name: "Français", bg: "#5bc0eb", fg: "#0f172a" },
   { code: "en", short: "EN", name: "English", bg: "#10b981", fg: "#052e22" },
   { code: "ar", short: "AR", name: "العربية", bg: "#e9c46a", fg: "#0f172a" },
 ] as const;
