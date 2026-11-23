@@ -74,7 +74,7 @@ try {
 
   await loginAs(producer);
   await go("/fr/company?tab=documents", `return !!document.getElementById("doc-kind");`);
-  report("Onglet Documents dans Mon entreprise", await run(`return document.body.innerText.includes("Documents de l'entreprise") && document.body.innerText.includes("Aucun document");`));
+  report("Carte Documents dans Mon entreprise", await run(`return document.body.innerText.includes("Documents et certifications") && document.body.innerText.includes("Aucun document");`));
   // Photo lourde : reduite dans le navigateur avant l'envoi
   await run(`${SET} setV(document.getElementById("doc-kind"), "iso"); setV(document.getElementById("doc-title"), "ISO 22000:2018"); setV(document.getElementById("doc-expires"), "2028-06-30"); document.querySelector("input[name=isPublic]").click(); return true;`);
   await attach(BIG_JPG);
@@ -108,7 +108,9 @@ try {
   const { data: files } = await admin.storage.from("company-documents").list(`${companyId}/docs`);
   const isoFile = files?.find((f) => iso && iso.storage_path.endsWith(f.name));
   report("Fichier stocke sous 4 Mo", isoFile && isoFile.metadata.size < 4 * 1024 * 1024, isoFile ? `${(isoFile.metadata.size / 1048576).toFixed(2)} Mo` : "absent");
-  report("Completion : registre de commerce coche", await run(`return [...document.querySelectorAll("aside li")].some((li) => li.innerText.includes("Registre de commerce joint") && li.innerText.includes("✓"));`), await run(`return location.pathname + location.search + " | " + [...document.querySelectorAll("aside li")].map((li) => li.innerText.replace(/\\s+/g, " ")).filter((x) => /Registre/.test(x)).join(" / ");`));
+  // Bandeau du profil (structure Europages) : seuls les elements manquants sont listes.
+  await go("/fr/company", `return !!document.querySelector(".profile-missing");`);
+  report("Completion : registre de commerce n'est plus a completer", await run(`return ![...document.querySelectorAll(".profile-missing li")].some((li) => /Registre de commerce/.test(li.textContent));`), await run(`return [...document.querySelectorAll(".profile-missing li")].map((li) => li.textContent).join(" / ");`));
 
   // Regles de la base
   const forged = await producer.client.from("company_documents").insert({ company_id: companyId, kind: "halal", storage_path: `${companyId}/docs/x.pdf`, review_status: "accepted", is_public: true });
@@ -147,7 +149,7 @@ try {
   // Suppression par le producteur
   await loginAs(producer);
   await go("/fr/company?tab=documents", `return document.querySelectorAll("main li").length >= 2;`);
-  await run(`[...document.querySelectorAll("main li")].find((li) => li.innerText.includes("ISO 22000")).querySelector("button").click(); return true;`);
+  await run(`[...document.querySelectorAll("main li")].find((li) => li.innerText.includes("ISO 22000") && li.querySelector("button")).querySelector("button").click(); return true;`);
   report("Suppression : message", await waitFor(`return location.search.includes("doc=deleted");`));
   const { data: left } = await admin.storage.from("company-documents").list(`${companyId}/docs`);
   report("Fichier supprime du stockage", !left?.some((f) => iso.storage_path.endsWith(f.name)));
@@ -156,7 +158,7 @@ try {
   report("Fiche publique : document retire", await run(`return !document.body.innerText.includes("ISO 22000:2018");`));
   await loginAs(producer);
   await go("/ar/company?tab=documents", `return !!document.getElementById("doc-kind");`);
-  report("Onglet en arabe (RTL)", await run(`return document.documentElement.dir === "rtl" && document.body.innerText.includes("وثائق المؤسسة");`));
+  report("Carte en arabe (RTL)", await run(`return document.documentElement.dir === "rtl" && document.body.innerText.includes("الوثائق والشهادات");`));
   ws.close();
 } catch (e) {
   report("Execution du test", false, e.message);

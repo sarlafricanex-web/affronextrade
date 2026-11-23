@@ -20,10 +20,8 @@ export async function DocumentsPanel({ client, companyId, locale, notice }: { cl
   return (
     <div className="flex flex-col gap-8">
       {notice && <p role="status" className="p-4 font-semibold" style={{ background: "var(--ground)", borderInlineStart: "4px solid var(--accent)" }}>{t(notice === "deleted" ? "deletedNotice" : "addedNotice")}</p>}
-      <div>
-        <h2 className="font-extrabold" style={{ fontSize: "var(--step-heading)" }}>{t("listTitle")}</h2>
-        <p className="mt-2 text-sm" style={{ color: "var(--muted)", maxWidth: "65ch" }}>{t("intro")}</p>
-      </div>
+      {/* Le titre est porte par la carte "Documents et certifications" de Mon entreprise. */}
+      <p className="text-sm" style={{ color: "var(--muted)", maxWidth: "65ch" }}>{t("intro")}</p>
 
       {docs.length === 0 ? (
         <p className="text-sm" style={{ color: "var(--muted)" }}>{t("empty")}</p>

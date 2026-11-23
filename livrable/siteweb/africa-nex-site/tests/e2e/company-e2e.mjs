@@ -75,13 +75,16 @@ try {
   await go("/fr/company");
   await sleep(2000); const head = await run(`return { title: document.querySelector("h1")?.textContent, text: document.body.innerText };`);
   report("En-tete : nom, ville et wilaya, brouillon, non verifiee", head.title === "Conserverie Test Setif · fiche producteur" && /El Eulma, Sétif/.test(head.text) && /brouillon/i.test(head.text) && /non vérifiée/i.test(head.text) && /fiche non publiée/i.test(head.text), head.title);
-  const extra = await run(`const t = document.body.innerText; return { stats: /Vues \\(30 jours\\)/i.test(t) && /Produits en ligne/i.test(t), tabs: [...document.querySelectorAll("nav[aria-label] a")].map((a) => a.textContent).filter((x) => /^\\d\\./.test(x)).length, labels: /Aucun document vérifié/i.test(t), contact: /sarlafricanex@gmail\\.com/.test(t), invented: /ALGEX|ZLECAf|REG-|98 ?%/i.test(t), overflow: document.documentElement.scrollWidth > innerWidth };`);
-  report("Bandeau chiffres, 3 onglets numerotes, labels vides, contact reel", extra.stats && extra.tabs === 3 && extra.labels && extra.contact, JSON.stringify(extra));
+  const extra = await run(`const t = document.body.innerText; return { stats: /Vues \\(30 jours\\)/i.test(t) && /Produits en ligne/i.test(t), cards: document.querySelectorAll("[data-section]").length, labels: /Labels et accréditations · 0/.test(document.body.textContent), contact: /sarlafricanex@gmail\\.com/.test(t), invented: /ALGEX|ZLECAf|REG-|98 ?%/i.test(t), overflow: document.documentElement.scrollWidth > innerWidth };`);
+  report("Contact reel, 3 cartes (informations, a propos, documents), labels vides", extra.cards === 3 && extra.labels && extra.contact, JSON.stringify(extra));
   report("Aucun contenu invente par Stitch, pas de debordement", !extra.invented && !extra.overflow);
   report("Completion honnete : 2 elements sur 8 (identite, presentation FR)", head.text.includes("25 %"), (head.text.match(/\d+ %/) ?? [""])[0]);
   report("Lien Mon entreprise actif dans le menu", await run(`return [...document.querySelectorAll("aside a, nav a")].some((a) => a.getAttribute("href") === "/fr/company");`));
   writeFileSync(`${OUT}/company-presentation.png`, Buffer.from((await send("Page.captureScreenshot", { format: "png" })).data, "base64"));
 
+  // Les cartes se lisent ; "Modifier" ouvre le formulaire (structure Europages, 24 novembre 2026).
+  report("Carte A propos en lecture, lien Modifier", await run(`return !document.getElementById("ob-desc-en") && !!document.querySelector('#presentation a[href*="tab=presentation"]');`));
+  await go("/fr/company?tab=presentation"); for (let i = 0; i < 30 && !(await run(`return !!document.getElementById("ob-desc-en");`)); i++) await sleep(300);
   await run(`${SET} setV(document.getElementById("ob-desc-en"), "Family-run cannery of tomatoes and peppers exporting to West Africa."); save(); return true;`);
   for (let i = 0; i < 40; i++) { await sleep(500); if (await run(`return location.search.includes("saved=1");`)) break; }
   await sleep(1000);
