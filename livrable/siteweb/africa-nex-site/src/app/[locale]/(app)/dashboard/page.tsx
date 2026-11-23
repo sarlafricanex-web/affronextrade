@@ -35,7 +35,7 @@ export default async function DashboardPage({
   // AFRICA NEX : poste de pilotage (tout ce qui attend une action, chiffres du mois).
   if (user.role === "admin") {
     const data = await getAdminCockpit(user.supabase);
-    return <AdminDashboard data={data} firstName={firstName} now={Date.now()} />;
+    return <AdminDashboard data={data} firstName={firstName} />;
   }
   // Producteur : configuration a commencer, a reprendre, ou terminee (lien vers son entreprise).
   let action: { href: string; key: string } = ACTION[user.role];

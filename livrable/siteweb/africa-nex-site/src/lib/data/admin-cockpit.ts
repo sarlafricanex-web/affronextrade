@@ -76,6 +76,8 @@ export async function getAdminCockpit(client: Client) {
   const accepted = decidedRows.filter((o) => o.status === "accepted").length;
   const prod = producers.data ?? [];
   return {
+    // Heure du calcul : l'anciennete de chaque element est mesuree depuis ce moment.
+    generatedAt: Date.now(),
     queue,
     counts: {
       requests: queue.filter((q) => q.group === "requests").length,

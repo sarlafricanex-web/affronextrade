@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -78,8 +78,10 @@ export function AppShell({ role, name, badges = {}, initialTheme, children }: { 
   const pathname = usePathname();
   const router = useRouter();
   const [theme, setTheme] = useState<ShellTheme>(initialTheme);
-  const [menu, setMenu] = useState(false);
-  useEffect(() => setMenu(false), [pathname]);
+  // Menu sur telephone : ouvert pour la page ou on l'a ouvert, donc referme des qu'on change de page.
+  const [openAt, setOpenAt] = useState<string | null>(null);
+  const menu = openAt === pathname;
+  const setMenu = (open: boolean) => setOpenAt(open ? pathname : null);
 
   const initials = name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("") || "AN";
   const total = Object.values(badges).reduce((a, b) => a + b, 0);
@@ -99,7 +101,7 @@ export function AppShell({ role, name, badges = {}, initialTheme, children }: { 
   return (
     <div className="app-shell" data-theme={theme}>
       <header className="app-top">
-        <button type="button" className="app-burger" aria-label={t("menu")} aria-expanded={menu} aria-controls="app-side" onClick={() => setMenu((m) => !m)}>
+        <button type="button" className="app-burger" aria-label={t("menu")} aria-expanded={menu} aria-controls="app-side" onClick={() => setMenu(!menu)}>
           <AppIcon name="menu" />
         </button>
         <Link href="/" className="app-logo" aria-label={t("homeLink")}>

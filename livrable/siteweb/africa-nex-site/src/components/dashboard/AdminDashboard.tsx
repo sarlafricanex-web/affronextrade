@@ -18,7 +18,8 @@ const ICON: Record<QueueKind, IconName> = {
 const GROUPS: (QueueGroup | "all")[] = ["all", "requests", "moderation", "accounts"];
 const LATE_DAYS = 3;
 
-export function AdminDashboard({ data, firstName, now }: { data: AdminCockpit; firstName: string; now: number }) {
+export function AdminDashboard({ data, firstName }: { data: AdminCockpit; firstName: string }) {
+  const now = data.generatedAt;
   const t = useTranslations("cockpit");
   const locale = useLocale();
   const [group, setGroup] = useState<QueueGroup | "all">("all");
