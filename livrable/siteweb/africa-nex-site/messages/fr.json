@@ -486,7 +486,21 @@
     "navAdminRfqs": "Demandes de devis",
     "navRequests": "Demandes reçues",
     "navSettings": "Réglages",
-    "navSubscription": "Mon abonnement"
+    "navSubscription": "Mon abonnement",
+    "navContact": "Formulaire de contact",
+    "groupActivity": "Activité",
+    "groupDirectory": "Annuaire",
+    "groupAdministration": "Administration",
+    "groupPurchases": "Achats",
+    "groupCompany": "Mon entreprise",
+    "groupAccount": "Compte",
+    "menu": "Menu",
+    "closeMenu": "Fermer le menu",
+    "shortcuts": "Raccourcis",
+    "homeLink": "AFRICA NEX, site public",
+    "toProcess": "{count, plural, =0 {Rien à traiter} one {# élément à traiter} other {# éléments à traiter}}",
+    "themeToLight": "Menu clair",
+    "themeToEmerald": "Menu émeraude"
   },
   "admin": {
     "eyebrow": "Formulaire de contact",

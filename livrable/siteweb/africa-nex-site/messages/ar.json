@@ -486,7 +486,21 @@
     "navAdminRfqs": "طلبات عروض الأسعار",
     "navRequests": "الطلبات الواردة",
     "navSettings": "الإعدادات",
-    "navSubscription": "اشتراكي"
+    "navSubscription": "اشتراكي",
+    "navContact": "نموذج الاتصال",
+    "groupActivity": "النشاط",
+    "groupDirectory": "الدليل",
+    "groupAdministration": "الإدارة",
+    "groupPurchases": "المشتريات",
+    "groupCompany": "مؤسستي",
+    "groupAccount": "الحساب",
+    "menu": "القائمة",
+    "closeMenu": "إغلاق القائمة",
+    "shortcuts": "اختصارات",
+    "homeLink": "AFRICA NEX، الموقع العام",
+    "toProcess": "{count, plural, =0 {لا شيء للمعالجة} one {عنصر واحد للمعالجة} other {# عناصر للمعالجة}}",
+    "themeToLight": "قائمة فاتحة",
+    "themeToEmerald": "قائمة زمردية"
   },
   "admin": {
     "eyebrow": "استمارة الاتصال",

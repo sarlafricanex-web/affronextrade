@@ -486,7 +486,21 @@
     "navAdminRfqs": "Quote requests",
     "navRequests": "Requests received",
     "navSettings": "Settings",
-    "navSubscription": "My subscription"
+    "navSubscription": "My subscription",
+    "navContact": "Contact form",
+    "groupActivity": "Activity",
+    "groupDirectory": "Directory",
+    "groupAdministration": "Administration",
+    "groupPurchases": "Purchasing",
+    "groupCompany": "My company",
+    "groupAccount": "Account",
+    "menu": "Menu",
+    "closeMenu": "Close menu",
+    "shortcuts": "Shortcuts",
+    "homeLink": "AFRICA NEX, public site",
+    "toProcess": "{count, plural, =0 {Nothing to handle} one {# item to handle} other {# items to handle}}",
+    "themeToLight": "Light menu",
+    "themeToEmerald": "Emerald menu"
   },
   "admin": {
     "eyebrow": "Contact form",

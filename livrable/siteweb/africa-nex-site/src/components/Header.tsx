@@ -1,5 +1,6 @@
 "use client";
 
+import { isAppPath } from "@/lib/app-routes";
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -8,7 +9,13 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const NAV_KEYS = ["about", "opportunities", "services", "producers", "buyers", "pricing", "contact"] as const;
 
+// Rien sur les pages de l'espace connecte : elles ont leur propre barre (AppShell).
 export function Header() {
+  const pathname = usePathname();
+  return isAppPath(pathname) ? null : <SiteHeader />;
+}
+
+function SiteHeader() {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);

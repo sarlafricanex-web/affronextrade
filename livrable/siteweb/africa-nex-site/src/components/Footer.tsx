@@ -1,11 +1,18 @@
 "use client";
 
+import { isAppPath } from "@/lib/app-routes";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 
 const FOOTER_LINKS = ["about", "opportunities", "services", "producers", "buyers", "pricing", "contact"] as const;
 
+// Rien sur les pages de l'espace connecte : elles ont leur propre barre (AppShell).
 export function Footer() {
+  const pathname = usePathname();
+  return isAppPath(pathname) ? null : <SiteFooter />;
+}
+
+function SiteFooter() {
   const t = useTranslations("footer");
   const nav = useTranslations("nav");
 

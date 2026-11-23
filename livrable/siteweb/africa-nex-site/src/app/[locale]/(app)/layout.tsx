@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { AppNav } from "@/components/app/AppNav";
+import { cookies } from "next/headers";
+import { AppShell as Shell, SHELL_COOKIE, type ShellTheme } from "@/components/app/AppShell";
 import { countOffersReady } from "@/lib/data/rfq";
 import { countRfqsToQualify } from "@/lib/data/admin-rfqs";
 import { countNewRequests } from "@/lib/data/requests";
@@ -29,11 +30,9 @@ export default function AppLayout({
   params: Promise<{ locale: string }>;
 }) {
   return (
-    <div style={{ paddingTop: "3.5rem" }}>
-      <Suspense fallback={<div style={{ minHeight: "70svh" }} />}>
-        <AppShell params={params}>{children}</AppShell>
-      </Suspense>
-    </div>
+    <Suspense fallback={<div style={{ minHeight: "100svh", background: "#0b3a2c" }} />}>
+      <AppShell params={params}>{children}</AppShell>
+    </Suspense>
   );
 }
 
@@ -51,10 +50,11 @@ async function AppShell({ children, params }: { children: React.ReactNode; param
     : user.role === "producer" ? await producerBadges(user.supabase, user.userId)
     : {};
 
+  // Couleur du menu choisie par l'utilisateur (vert emeraude par defaut, ou clair).
+  const theme: ShellTheme = (await cookies()).get(SHELL_COOKIE)?.value === "light" ? "light" : "emerald";
   return (
-    <div className="mx-auto md:grid md:grid-cols-[240px_1fr]" style={{ maxWidth: 1280, minHeight: "70svh" }}>
-      <AppNav role={user.role} name={user.fullName} badges={badges} />
-      <div style={{ padding: "2.5rem var(--page-margin)", minWidth: 0 }}>{children}</div>
-    </div>
+    <Shell role={user.role} name={user.fullName} badges={badges} initialTheme={theme}>
+      {children}
+    </Shell>
   );
 }
