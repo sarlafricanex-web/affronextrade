@@ -4,10 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 
-// Selecteur de langue (demandes d'Adlene des 19 et 24 novembre 2026) : une bulle ronde metallisee
-// avec la langue en cours ; un clic fait descendre de la bulle un cylindre de la meme largeur qui
-// porte les deux autres langues. Une couleur par langue : bleu cristal (francais), emeraude du logo
-// (anglais), or sable (arabe), avec un texte fonce lisible sur chaque teinte.
+// Selecteur de langue (demandes d'Adlene des 19 et 24 novembre 2026) : une bulle blanche, texte noir,
+// sans rebord ; un clic fait descendre de la bulle un cylindre blanc de meme largeur qui porte les
+// deux autres langues.
 // Fermeture au clic exterieur, avec Echap ou apres le choix. Clavier : fleches, Debut, Fin.
 const LANGUAGES = [
   { code: "fr", short: "FR", name: "Français" },
@@ -69,7 +68,7 @@ export function LanguageSwitcher() {
             title={l.name}
             tabIndex={open ? 0 : -1}
             onClick={() => choose(l.code)}
-            className={`lang-bubble lang-metal-${l.code}`}
+            className={`lang-bubble`}
             style={{ transitionDelay: open ? `${80 + i * 60}ms` : "0ms" }}
             data-lang={l.code}
           >
@@ -84,7 +83,7 @@ export function LanguageSwitcher() {
         aria-expanded={open}
         aria-label={`Langue : ${current.name}`}
         title={current.name}
-        className={`lang-bubble lang-switcher-button lang-metal-${current.code}`}
+        className={`lang-bubble lang-switcher-button`}
         data-lang-button={current.code}
       >
         {current.short}
