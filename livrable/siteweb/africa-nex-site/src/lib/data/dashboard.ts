@@ -18,14 +18,14 @@ export async function getProducerDashboard(client: Client, company: MyCompany) {
   const today = new Date(now).toISOString().slice(0, 10);
   const since30 = new Date(now - 30 * DAY).toISOString();
   const since60 = new Date(now - 60 * DAY).toISOString();
-  const [requests, { data: views }, { count: productCount }, { count: publishedCount }, { count: registrationCount }, { data: prices }, { data: tierRow }] = await Promise.all([
+  const [requests, { data: views }, { count: productCount }, { count: publishedCount }, { count: registrationCount }, { data: prices }, { data: plan }] = await Promise.all([
     listMyRequests(client, company.id),
     client.from("profile_views").select("viewer_country, created_at").eq("company_id", company.id).gte("created_at", since60).limit(5000),
     client.from("products").select("id", { count: "exact", head: true }).eq("company_id", company.id),
     client.from("products").select("id", { count: "exact", head: true }).eq("company_id", company.id).eq("status", "published"),
     client.from("company_documents").select("id", { count: "exact", head: true }).eq("company_id", company.id).eq("kind", "registration"),
     client.rpc("product_prices", { p_company: company.id }),
-    client.from("companies").select("subscription_tier").eq("id", company.id).maybeSingle(),
+    client.rpc("current_plan", { p_company: company.id }),
   ]);
 
   // Vues de la fiche : 30 derniers jours, comparees aux 30 jours precedents ; pays des visiteurs.
@@ -58,7 +58,8 @@ export async function getProducerDashboard(client: Client, company: MyCompany) {
     productCount: productCount ?? 0,
     publishedCount: publishedCount ?? 0,
     expiredPrices,
-    tier: tierRow?.subscription_tier ?? "starter",
+    // Forfait en cours (Vitrine, Essentiel, Croissance, Export Pro), Vitrine sans abonnement actif.
+    tier: typeof plan === "string" && plan ? plan : "vitrine",
     completion: companyChecks({ company, productCount: productCount ?? 0, registrationCount: registrationCount ?? 0 }),
   };
 }

@@ -4,13 +4,11 @@ import type { BuyerDashboard as Data } from "@/lib/data/dashboard";
 import { Progress, StatusBadge } from "@/components/rfq/RfqList";
 import { stageOf } from "@/lib/data/rfq";
 import { isSector } from "@/lib/sectors";
+import { AppIcon } from "@/components/app/icons";
 
-const HAIR = "#d8cebb";
-const caps = { letterSpacing: "0.08em" } as const;
-const tnum = { fontFeatureSettings: '"tnum" 1' } as const;
-
-// Semaine 6 : tableau de bord acheteur (maquette 18). Action requise (offres a decider, messages),
-// trois indicateurs, dernieres demandes, producteurs de ses secteurs. Rien d'invente.
+// Tableau de bord acheteur, structure Europages (24 novembre 2026) : bandeau (offres a decider ou
+// accueil), puis une colonne de cartes (a faire, chiffres, dernieres demandes, producteurs de ses
+// secteurs). Rien d'invente.
 export async function BuyerDashboard({ locale, firstName, data }: { locale: string; firstName: string; data: Data }) {
   const [t, tr, ts, format] = await Promise.all([
     getTranslations({ locale, namespace: "dashboard" }),
@@ -19,75 +17,83 @@ export async function BuyerDashboard({ locale, firstName, data }: { locale: stri
     getFormatter({ locale }),
   ]);
   const actions = [
-    ...data.toDecide.map((x) => ({ key: `o-${x.rfq.id}`, tag: t("buyerTagOffers"), text: t("buyerActionOffers", { count: x.count, reference: x.rfq.reference, title: x.rfq.title }), href: `/rfq/${x.rfq.id}#offers`, cta: t("buyerActionOffersCta"), strong: true })),
-    ...data.unread.map((x) => ({ key: `m-${x.rfq.id}`, tag: t("buyerTagMessage"), text: t("buyerActionMessage", { count: x.count, reference: x.rfq.reference }), href: `/rfq/${x.rfq.id}#messages`, cta: t("actionMessageCta"), strong: false })),
+    ...data.toDecide.map((x) => ({ key: `o-${x.rfq.id}`, offers: true, tag: t("buyerTagOffers"), text: t("buyerActionOffers", { count: x.count, reference: x.rfq.reference, title: x.rfq.title }), href: `/rfq/${x.rfq.id}#offers` })),
+    ...data.unread.map((x) => ({ key: `m-${x.rfq.id}`, offers: false, tag: t("buyerTagMessage"), text: t("buyerActionMessage", { count: x.count, reference: x.rfq.reference }), href: `/rfq/${x.rfq.id}#messages` })),
   ];
+  const firstOffer = data.toDecide[0];
   const kpis = [
-    { key: "inProgress", value: data.inProgress, color: "var(--ink)" },
-    { key: "toDecide", value: data.offersToDecide, color: "#c2410c" },
-    { key: "accepted", value: data.accepted, color: "#065f46" },
+    { key: "inProgress", value: data.inProgress },
+    { key: "toDecide", value: data.offersToDecide },
+    { key: "accepted", value: data.accepted },
   ];
 
   return (
-    <div className="flex flex-col gap-6" data-dashboard="buyer">
-      <header className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-        <div>
-          <p className="text-xs font-semibold uppercase" style={{ ...caps, color: "var(--muted)" }}>{t("buyerEyebrow")}</p>
-          <h1 className="mt-2 font-extrabold" style={{ fontSize: "clamp(1.6rem, 3.5vw, 2.4rem)", lineHeight: 1.1 }}>{firstName ? t("hello", { name: firstName }) : t("helloNoName")}</h1>
-        </div>
-        <Link href="/rfq/new" className="px-5 py-3 text-xs font-bold uppercase" style={{ ...caps, background: "var(--ink)", color: "white" }}>+ {t("buyerNewRequest")}</Link>
-      </header>
+    <div className="dash" data-dashboard="buyer">
+      <section className="dash-banner" aria-labelledby="dash-hello">
+        <h1 id="dash-hello">{firstName ? t("hello", { name: firstName }) : t("helloNoName")}</h1>
+        {firstOffer ? (
+          <>
+            <p>{t("buyerBannerOffers", { count: data.offersToDecide })}</p>
+            <Link href={`/rfq/${firstOffer.rfq.id}#offers`} className="dash-banner-btn">{t("buyerActionOffersCta")}</Link>
+          </>
+        ) : (
+          <>
+            <p>{t("buyerBannerIdle")}</p>
+            <Link href="/rfq/new" className="dash-banner-btn">{t("buyerNewRequest")}</Link>
+          </>
+        )}
+      </section>
 
       {actions.length > 0 && (
-        <section className="flex flex-col p-5" style={{ background: "white", border: `1px solid ${HAIR}`, borderInlineStart: "4px solid #f97316" }} data-buyer-actions={actions.length}>
-          <h2 className="flex items-center gap-2 text-xs font-bold uppercase" style={caps}><span aria-hidden="true" className="inline-block h-2.5 w-2.5" style={{ background: "#f97316" }} />{t("buyerActionsTitle")}</h2>
-          <ul>
-            {actions.map((a, i) => (
-              <li key={a.key} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between" style={{ borderTop: i ? `1px solid ${HAIR}` : undefined }}>
-                <span className="flex min-w-0 flex-wrap items-center gap-3">
-                  <span className="px-2 py-1 text-[10px] font-bold uppercase" style={{ ...caps, background: "#fff7ed", border: "1px solid #fdba74", color: "#c2410c" }}>{a.tag}</span>
-                  <span className="text-sm">{a.text}</span>
-                </span>
-                <Link href={a.href} className="shrink-0 px-4 py-2.5 text-center text-xs font-bold uppercase" style={{ ...caps, ...(a.strong ? { background: "#c2410c", color: "white" } : { background: "var(--ink)", color: "white" }) }}>{a.cta}</Link>
+        <section className="dash-card" aria-labelledby="dash-todo" data-buyer-actions={actions.length}>
+          <div className="dash-cardhead"><div><h2 id="dash-todo">{t("buyerActionsTitle")}</h2><p>{t("buyerActionsHelp")}</p></div></div>
+          <ul className="dash-list">
+            {actions.map((a) => (
+              <li key={a.key}>
+                <Link href={a.href} className="dash-row" data-action-item={a.key}>
+                  <span className={`dash-kind ${a.offers ? "dash-kind-moderation" : "dash-kind-requests"}`}><AppIcon name={a.offers ? "file" : "chat"} size={18} /></span>
+                  <span className="dash-rowtext"><small data-urgent={a.offers || undefined}>{a.tag}</small><b className="dash-wrap">{a.text}</b></span>
+                  <span className="dash-chev" aria-hidden="true"><AppIcon name="chevron" size={18} /></span>
+                </Link>
               </li>
             ))}
           </ul>
         </section>
       )}
 
-      <section className="grid gap-3 sm:grid-cols-3" aria-label={t("kpisLabel")}>
-        {kpis.map((k) => (
-          <div key={k.key} className="flex flex-col gap-2 p-5" style={{ background: "white", border: `1px solid ${HAIR}` }} data-kpi={k.key}>
-            <span className="text-[10px] font-bold uppercase" style={{ ...caps, color: k.color === "var(--ink)" ? "var(--muted)" : k.color }}>{t(`buyerKpi_${k.key}`)}</span>
-            <span className="font-extrabold" style={{ fontSize: "2.4rem", lineHeight: 1, color: k.color, ...tnum }} data-kpi-value={k.value}>{k.value}</span>
-          </div>
-        ))}
+      <section className="dash-card" aria-labelledby="dash-figures">
+        <div className="dash-cardhead"><div><h2 id="dash-figures">{t("buyerFiguresTitle")}</h2></div></div>
+        <div className="dash-kpis dash-kpis-3" aria-label={t("kpisLabel")}>
+          {kpis.map((k) => (
+            <div key={k.key} className="dash-kpi" data-kpi={k.key}>
+              <small>{t(`buyerKpi_${k.key}`)}</small>
+              <b data-kpi-value={k.value} data-tone={k.key === "toDecide" && k.value > 0 ? "warm" : undefined}>{format.number(k.value)}</b>
+            </div>
+          ))}
+        </div>
       </section>
 
-      <section style={{ background: "white", border: `1px solid ${HAIR}` }}>
-        <div className="flex items-center justify-between gap-3 px-5 py-4" style={{ borderBottom: `1px solid ${HAIR}` }}>
-          <h2 className="font-extrabold" style={{ fontSize: "1.15rem" }}>{t("buyerRecentTitle")}</h2>
-          <Link href="/rfq" className="text-sm font-semibold underline">{t("buyerAllRequests")}</Link>
+      <section className="dash-card" aria-labelledby="dash-recent">
+        <div className="dash-cardhead">
+          <div><h2 id="dash-recent">{t("buyerRecentTitle")}</h2></div>
+          <Link href="/rfq" className="dash-btn">{t("buyerAllRequests")}</Link>
         </div>
         {data.recent.length === 0 ? (
-          <div className="flex flex-col items-start gap-3 px-5 py-6">
-            <p className="text-sm" style={{ color: "var(--muted)" }}>{t("buyerRecentEmpty")}</p>
-            <Link href="/producers" className="text-xs font-bold uppercase underline" style={caps}>{t("buyerBrowse")}</Link>
+          <div className="dash-empty">
+            <span className="dash-empty-ico"><AppIcon name="filePlus" size={22} /></span>
+            <p><b>{t("buyerRecentEmpty")}</b><br /><Link href="/producers" className="underline">{t("buyerBrowse")}</Link></p>
           </div>
         ) : (
-          <ul>
+          <ul className="dash-list">
             {data.recent.map((r) => (
-              <li key={r.id} style={{ borderTop: `1px solid ${HAIR}` }}>
-                <Link href={`/rfq/${r.id}`} className="grid gap-3 px-5 py-4 md:grid-cols-[minmax(0,1fr)_220px] md:items-center">
-                  <span className="min-w-0">
-                    <span className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-bold" dir="ltr">{r.reference}</span>
-                      <StatusBadge status={r.status} label={tr(`status_${r.status}`)} />
-                    </span>
-                    <span className="mt-1 block font-semibold">{r.title}</span>
-                    <span className="block text-xs" style={{ color: "var(--muted)" }}>{format.dateTime(new Date(r.created_at), { dateStyle: "medium" })}</span>
+              <li key={r.id}>
+                <Link href={`/rfq/${r.id}`} className="dash-row dash-row-rfq">
+                  <span className="dash-rowtext">
+                    <span className="dash-rfqhead"><small dir="ltr">{r.reference}</small><StatusBadge status={r.status} label={tr(`status_${r.status}`)} /></span>
+                    <b>{r.title}</b>
+                    <span>{format.dateTime(new Date(r.created_at), { dateStyle: "medium" })}</span>
                   </span>
-                  <Progress stage={stageOf(r.status)} label={tr(`stage_${r.status}`, { count: (r.offers ?? []).filter((o) => o.status === "published").length })} />
+                  <span className="dash-progress"><Progress stage={stageOf(r.status)} label={tr(`stage_${r.status}`, { count: (r.offers ?? []).filter((o) => o.status === "published").length })} /></span>
                 </Link>
               </li>
             ))}
@@ -96,23 +102,26 @@ export async function BuyerDashboard({ locale, firstName, data }: { locale: stri
       </section>
 
       {data.producers.length > 0 && (
-        <section className="flex flex-col gap-4">
-          <h2 className="font-extrabold" style={{ fontSize: "1.15rem" }}>{data.matchesInterests ? t("buyerProducersTitle") : t("buyerProducersTitleAll")}</h2>
-          <div className="grid gap-4 md:grid-cols-3">
+        <section className="dash-card" aria-labelledby="dash-producers">
+          <div className="dash-cardhead">
+            <div><h2 id="dash-producers">{data.matchesInterests ? t("buyerProducersTitle") : t("buyerProducersTitleAll")}</h2></div>
+            <Link href="/producers" className="dash-btn">{t("buyerBrowse")}</Link>
+          </div>
+          <div className="dash-producers">
             {data.producers.map((p) => (
-              <article key={p.id} className="flex flex-col gap-3 p-5" style={{ background: "white", border: `1px solid ${HAIR}` }} data-producer={p.slug}>
+              <article key={p.id} className="dash-producer" data-producer={p.slug}>
                 {p.logo ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.logo} alt="" width={56} height={56} className="h-14 w-14 object-contain" style={{ border: `1px solid ${HAIR}` }} />
+                  <img src={p.logo} alt="" width={48} height={48} className="dash-producer-logo" />
                 ) : (
-                  <span className="flex h-14 w-14 items-center justify-center text-sm font-bold" style={{ background: p.color, color: "white" }}>{p.initials}</span>
+                  <span className="dash-producer-logo" style={{ background: p.color, color: "white" }}>{p.initials}</span>
                 )}
-                <div>
+                <div className="min-w-0">
                   <Link href={`/producers/${p.slug}`} className="font-bold hover:underline">{p.name}</Link>
-                  <p className="text-sm" style={{ color: "var(--muted)" }}>{[p.location, p.wilaya].filter(Boolean).join(", ")}</p>
+                  <p className="dash-muted" style={{ margin: 0 }}>{[p.location, p.wilaya].filter(Boolean).join(", ")}</p>
+                  {isSector(p.sector) && <span className="dash-tag" style={{ marginTop: 8 }}>{ts(p.sector)}</span>}
                 </div>
-                {isSector(p.sector) && <span className="w-fit px-2 py-1 text-xs font-semibold" style={{ background: "#f5efe6", border: `1px solid ${HAIR}` }}>{ts(p.sector)}</span>}
-                <Link href={`/rfq/new?producer=${p.slug}`} className="mt-auto block px-4 py-2.5 text-center text-xs font-bold uppercase" style={{ ...caps, border: "1px solid var(--ink)" }}>{t("buyerAskQuote")}</Link>
+                <Link href={`/rfq/new?producer=${p.slug}`} className="dash-btn dash-btn-full">{t("buyerAskQuote")}</Link>
               </article>
             ))}
           </div>

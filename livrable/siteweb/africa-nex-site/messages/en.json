@@ -2229,7 +2229,22 @@
     "buyerBrowse": "Browse the directory",
     "buyerProducersTitle": "Producers in your sectors",
     "buyerProducersTitleAll": "Producers to discover",
-    "buyerAskQuote": "Request a quote"
+    "buyerAskQuote": "Request a quote",
+    "bannerCompletion": "Your profile is {percent}% complete. Complete it to be presented to buyers.",
+    "bannerWhy1": "More trust from buyers",
+    "bannerWhy2": "Better-targeted requests",
+    "actionsHelp": "What needs your action, most urgent first.",
+    "statsTitle": "Your profile statistics",
+    "statsHelp": "Over the last 30 days, compared with the previous 30 days.",
+    "recentHelp": "Quote requests forwarded to you by AFRICA NEX.",
+    "plan_vitrine": "Showcase",
+    "plan_essentiel": "Essential",
+    "plan_croissance": "Growth",
+    "plan_export_pro": "Export Pro",
+    "buyerBannerOffers": "{count, plural, one {One offer is waiting for your decision.} other {# offers are waiting for your decision.}}",
+    "buyerBannerIdle": "Describe what you are looking for: AFRICA NEX consults producers and presents offers to you.",
+    "buyerActionsHelp": "Offers to compare and messages from AFRICA NEX.",
+    "buyerFiguresTitle": "My figures"
   },
   "pricing": {
     "eyebrow": "Producer plans",
