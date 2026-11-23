@@ -9,7 +9,13 @@ type Client = SupabaseClient<Database>;
 
 export type QueueKind = "rfq" | "quote" | "currency" | "message" | "claim" | "review" | "document" | "deletion" | "subscription" | "contact";
 export type QueueGroup = "requests" | "moderation" | "accounts";
-export type QueueItem = { kind: QueueKind; group: QueueGroup; title: string; detail: string; href: string; at: string };
+// title : nom principal (demande, entreprise, email) ; ref : reference de la demande ; country,
+// count, role, rating, from, to, plan, amount : elements que l'affichage traduit.
+export type QueueItem = {
+  kind: QueueKind; group: QueueGroup; href: string; at: string;
+  title?: string; ref?: string; country?: string | null; count?: number; role?: string; rating?: number;
+  label?: string; from?: string; to?: string; plan?: string; amount?: number;
+};
 
 export const QUEUE_GROUP: Record<QueueKind, QueueGroup> = {
   rfq: "requests", quote: "requests", currency: "requests", message: "requests",
@@ -39,14 +45,16 @@ export async function getAdminCockpit(client: Client) {
   ]);
 
   const queue: QueueItem[] = [];
-  const push = (kind: QueueKind, title: string, detail: string, href: string, at: string) => queue.push({ kind, group: QUEUE_GROUP[kind], title, detail, href, at });
+  const push = (kind: QueueKind, href: string, at: string, fields: Partial<QueueItem>) => queue.push({ kind, group: QUEUE_GROUP[kind], href, at, ...fields });
+  const nameOf = (c: unknown) => one(c as { company_name: string } | null)?.company_name;
+  const refOf = (r: unknown) => one(r as { reference: string } | null)?.reference;
 
-  for (const r of rfqs.data ?? []) push("rfq", r.title, `${r.reference}${r.destination_country ? ` · ${r.destination_country}` : ""}`, `/admin/rfqs/${r.id}`, r.created_at);
+  for (const r of rfqs.data ?? []) push("rfq", `/admin/rfqs/${r.id}`, r.created_at, { title: r.title, ref: r.reference, country: r.destination_country });
   for (const q of quotes.data ?? []) {
     const d = one(q.dispatch as { rfq_id: string; rfq: { reference: string } | null } | null);
-    if (d) push("quote", one(q.company as { company_name: string } | null)?.company_name ?? "Producteur", one(d.rfq)?.reference ?? "", `/admin/rfqs/${d.rfq_id}`, q.created_at);
+    if (d) push("quote", `/admin/rfqs/${d.rfq_id}`, q.created_at, { title: nameOf(q.company), ref: refOf(d.rfq) });
   }
-  for (const o of currency.data ?? []) push("currency", `Offre ${o.label} : ${o.currency} vers ${o.currency_change_to}`, one(o.rfq as { reference: string } | null)?.reference ?? "", `/admin/rfqs/${o.rfq_id}`, o.currency_change_at ?? new Date().toISOString());
+  for (const o of currency.data ?? []) push("currency", `/admin/rfqs/${o.rfq_id}`, o.currency_change_at ?? new Date().toISOString(), { label: o.label, from: o.currency, to: o.currency_change_to ?? "", ref: refOf(o.rfq) });
   // Messages non lus : un element par demande et par expediteur, date du plus ancien.
   const threads = new Map<string, { rfq: string; role: string; ref: string; at: string; n: number }>();
   for (const m of messages.data ?? []) {
@@ -55,13 +63,13 @@ export async function getAdminCockpit(client: Client) {
     if (t) t.n++;
     else threads.set(key, { rfq: m.rfq_id, role: m.sender_role, ref: one(m.rfq as { reference: string } | null)?.reference ?? "", at: m.created_at, n: 1 });
   }
-  for (const t of threads.values()) push("message", `${t.n} message${t.n > 1 ? "s" : ""} ${t.role === "buyer" ? "de l'acheteur" : "d'un producteur"}`, t.ref, `/admin/rfqs/${t.rfq}`, t.at);
-  for (const c of claims.data ?? []) push("claim", one(c.company as { company_name: string } | null)?.company_name ?? "Fiche", "Revendication de fiche", "/admin/claims", c.created_at);
-  for (const r of reviews.data ?? []) push("review", one(r.producer as { company_name: string } | null)?.company_name ?? "Producteur", `Avis ${r.rating}/5 à modérer`, "/admin/reviews", r.created_at);
-  for (const d of documents.data ?? []) push("document", d.title || d.kind, one(d.company as { company_name: string } | null)?.company_name ?? "", `/admin/producers/${d.company_id}`, d.created_at);
-  for (const d of deletions.data ?? []) push("deletion", d.email, d.role === "producer" ? "Producteur" : "Acheteur", "/admin/accounts#deletion-requests", d.created_at);
-  for (const s of subs.data ?? []) push("subscription", one(s.company as { company_name: string } | null)?.company_name ?? "Fournisseur", `${s.plan_code} · ${Number(s.price_charged_dzd).toLocaleString("fr-FR")} DZD`, "/admin/accounts", s.created_at);
-  for (const s of contacts.data ?? []) push("contact", s.company || s.name, "Formulaire de contact", "/admin", s.created_at);
+  for (const t of threads.values()) push("message", `/admin/rfqs/${t.rfq}`, t.at, { count: t.n, role: t.role, ref: t.ref });
+  for (const c of claims.data ?? []) push("claim", "/admin/claims", c.created_at, { title: nameOf(c.company) });
+  for (const r of reviews.data ?? []) push("review", "/admin/reviews", r.created_at, { title: nameOf(r.producer), rating: r.rating });
+  for (const d of documents.data ?? []) push("document", `/admin/producers/${d.company_id}`, d.created_at, { title: d.title || undefined, label: d.kind, ref: nameOf(d.company) });
+  for (const d of deletions.data ?? []) push("deletion", "/admin/accounts#deletion-requests", d.created_at, { title: d.email, role: d.role });
+  for (const s of subs.data ?? []) push("subscription", "/admin/accounts", s.created_at, { title: nameOf(s.company), plan: s.plan_code, amount: Number(s.price_charged_dzd) });
+  for (const s of contacts.data ?? []) push("contact", "/admin", s.created_at, { title: s.company || s.name });
   queue.sort((a, b) => a.at.localeCompare(b.at));
 
   const decidedRows = decided.data ?? [];

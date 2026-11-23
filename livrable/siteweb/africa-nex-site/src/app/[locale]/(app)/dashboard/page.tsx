@@ -5,6 +5,8 @@ import { getMyCompany } from "@/lib/data/company";
 import { getBuyerDashboard, getProducerDashboard } from "@/lib/data/dashboard";
 import { ProducerDashboard } from "@/components/dashboard/ProducerDashboard";
 import { BuyerDashboard } from "@/components/dashboard/BuyerDashboard";
+import { AdminDashboard } from "@/components/dashboard/AdminDashboard";
+import { getAdminCockpit } from "@/lib/data/admin-cockpit";
 
 export const instant = false;
 
@@ -30,6 +32,11 @@ export default async function DashboardPage({
 
   const firstName = user.fullName.trim().split(/\s+/)[0];
   const { configured } = await searchParams;
+  // AFRICA NEX : poste de pilotage (tout ce qui attend une action, chiffres du mois).
+  if (user.role === "admin") {
+    const data = await getAdminCockpit(user.supabase);
+    return <AdminDashboard data={data} firstName={firstName} now={Date.now()} />;
+  }
   // Producteur : configuration a commencer, a reprendre, ou terminee (lien vers son entreprise).
   let action: { href: string; key: string } = ACTION[user.role];
   if (user.role === "producer") {

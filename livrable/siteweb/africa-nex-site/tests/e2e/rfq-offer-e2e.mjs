@@ -156,7 +156,7 @@ try {
   report("Producteur : ni offre ni marge visibles", prodOffers?.length === 0 && prodMargins?.length === 0);
   await loginAs(buyer);
   await go("/fr/rfq", `return !!document.querySelector("aside");`);
-  report("Acheteur : compteur 'offre prete' dans le menu", await waitFor(`const a = [...document.querySelectorAll("aside a")].find((x) => x.getAttribute("href") === "/fr/rfq"); return a?.querySelector("span")?.textContent === "1";`, 20));
+  report("Acheteur : compteur 'offre prete' dans le menu", await waitFor(`const a = [...document.querySelectorAll("aside a")].find((x) => x.getAttribute("href") === "/fr/rfq"); return a?.querySelector(".app-count")?.textContent === "1";`, 20));
 
   // Retrait
   await loginAs(boss);

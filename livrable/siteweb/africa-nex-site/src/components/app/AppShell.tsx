@@ -6,14 +6,13 @@ import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { AppIcon, type IconName } from "./icons";
+import { SHELL_COOKIE, type ShellTheme } from "@/lib/app-routes";
 
 // Espace connecte, structure inspiree d'Europages (validee par Adlene le 23 novembre 2026) :
 // barre du haut de 60 px, menu de gauche de 264 px regroupe par themes, contenu en cartes sur un
 // panneau clair, une ligne de liens legaux. Deux couleurs de menu, au choix de l'utilisateur :
 // "emerald" (vert fonce, par defaut) et "light" (blanc). Le choix est garde dans un cookie.
 
-export type ShellTheme = "emerald" | "light";
-export const SHELL_COOKIE = "anx-shell";
 
 type Role = "producer" | "buyer" | "admin";
 type NavItem = { href: string; key: string; icon: IconName; nested?: boolean };

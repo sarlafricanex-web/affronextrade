@@ -74,7 +74,7 @@ try {
   await loginAs(boss);
   await go("/fr/admin/rfqs?f=todo", `return !!document.querySelector("main table");`);
   report("File : demande a qualifier visible avec l'acheteur", await run(`return document.body.innerText.includes(${JSON.stringify(`Huile d'olive 5 L ${TAG}`)}) && document.body.innerText.includes(${JSON.stringify(buyerName)});`));
-  report("Menu admin : compteur des demandes a qualifier", await run(`const a = [...document.querySelectorAll("aside a")].find((x) => x.getAttribute("href") === "/fr/admin/rfqs"); return Number(a?.querySelector("span")?.textContent) >= 1;`));
+  report("Menu admin : compteur des demandes a qualifier", await run(`const a = [...document.querySelectorAll("aside a")].find((x) => x.getAttribute("href") === "/fr/admin/rfqs"); return Number(a?.querySelector(".app-count")?.textContent) >= 1;`));
   await go(`/fr/admin/rfqs/${rfq.id}`, `return !!document.getElementById("d-title");`);
   report("Fiche : acheteur et contact visibles par AFRICA NEX, marques confidentiels", await run(`const t = document.body.innerText; return t.includes(${JSON.stringify(buyerName)}) && t.includes("+2348031234567") && /jamais communiqué aux producteurs/i.test(t);`));
   report("Brief prerempli sans le nom de l'acheteur", await run(`return !document.getElementById("d-specs").value.includes(${JSON.stringify(buyerName)}) && document.getElementById("d-title").value.includes("Huile d'olive");`));

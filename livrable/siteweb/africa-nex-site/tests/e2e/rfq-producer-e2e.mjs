@@ -82,7 +82,7 @@ try {
   // Liste et compteur
   await loginAs(producer);
   await go("/fr/requests", `return !!document.querySelector("main table");`);
-  report("Menu producteur : compteur 1 nouvelle demande", await run(`const a = [...document.querySelectorAll("aside a")].find((x) => x.getAttribute("href") === "/fr/requests"); return a?.querySelector("span")?.textContent === "1";`));
+  report("Menu producteur : compteur 1 nouvelle demande", await run(`const a = [...document.querySelectorAll("aside a")].find((x) => x.getAttribute("href") === "/fr/requests"); return a?.querySelector(".app-count")?.textContent === "1";`));
   report("Liste : reference, Nouvelle, delai urgent", await run(`const t = document.body.innerText; return t.includes(${JSON.stringify(d1.reference)}) && /nouvelle/i.test(t) && /reste \\d+ h \\(urgent\\)/i.test(t);`));
   report("Liste : aucune trace de l'acheteur", await run(`return !document.body.innerText.includes(${JSON.stringify(buyerName)});`));
   await shot("requests-list");
@@ -121,7 +121,7 @@ try {
   report("Email a AFRICA NEX : devis mis a jour", updateMails.length === 2 && updateMails[1].subject.startsWith("Devis mis à jour"), JSON.stringify(updateMails.map((m) => m.subject)));
   report("En base : prix mis a jour 4,70", Number(q2.unit_price_ht) === 4.7);
   await go("/fr/requests", `return !!document.querySelector("main [role=tablist]");`);
-  report("Compteur disparu apres ouverture", await run(`const a = [...document.querySelectorAll("aside a")].find((x) => x.getAttribute("href") === "/fr/requests"); return !a?.querySelector("span");`));
+  report("Compteur disparu apres ouverture", await run(`const a = [...document.querySelectorAll("aside a")].find((x) => x.getAttribute("href") === "/fr/requests"); return !a?.querySelector(".app-count");`));
 
   // Cloisonnement
   const { data: rivalSees } = await rival.client.from("quotes").select("id");

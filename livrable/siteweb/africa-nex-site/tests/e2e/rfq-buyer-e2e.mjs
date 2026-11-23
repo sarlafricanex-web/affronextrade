@@ -151,10 +151,10 @@ try {
   // Liste, filtres, compteur dans le menu
   await go("/fr/rfq", `return !!document.querySelector("main table, main ul");`);
   report("Mes demandes : 2 demandes", await run(`return document.querySelectorAll("main tbody tr").length === 2;`));
-  report("Menu : pas de compteur sans offre prete", await run(`return ![...document.querySelectorAll("aside a")].find((a) => a.getAttribute("href") === "/fr/rfq")?.querySelector("span");`));
+  report("Menu : pas de compteur sans offre prete", await run(`return ![...document.querySelectorAll("aside a")].find((a) => a.getAttribute("href") === "/fr/rfq")?.querySelector(".app-count");`));
   await admin.from("rfqs").update({ status: "offered" }).eq("id", rfq2Id);
   await go("/fr/rfq", `return !!document.querySelector("main table");`);
-  report("Offre prete : compteur 1 dans le menu et bouton Comparer", await run(`const a = [...document.querySelectorAll("aside a")].find((x) => x.getAttribute("href") === "/fr/rfq"); return a?.querySelector("span")?.textContent === "1" && document.body.innerText.includes("COMPARER LES OFFRES".toLowerCase()) || [...document.querySelectorAll("main a")].some((x) => /comparer les offres/i.test(x.textContent));`));
+  report("Offre prete : compteur 1 dans le menu et bouton Comparer", await run(`const a = [...document.querySelectorAll("aside a")].find((x) => x.getAttribute("href") === "/fr/rfq"); return a?.querySelector(".app-count")?.textContent === "1" && document.body.innerText.includes("COMPARER LES OFFRES".toLowerCase()) || [...document.querySelectorAll("main a")].some((x) => /comparer les offres/i.test(x.textContent));`));
   await run(`[...document.querySelectorAll("button[aria-pressed]")].find((b) => b.textContent.startsWith("Offres prêtes")).click(); return true;`);
   await sleep(300);
   report("Filtre Offres pretes : 1 demande", await run(`return document.querySelectorAll("main tbody tr").length === 1;`));
