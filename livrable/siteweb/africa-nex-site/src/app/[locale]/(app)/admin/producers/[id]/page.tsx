@@ -34,7 +34,7 @@ export default async function AdminProducerPage({
   return (
     <div className="flex flex-col gap-8">
       {done && <p role="status" className="p-4 font-semibold" style={{ background: "white", borderInlineStart: "4px solid var(--accent)" }}>{t(`opDone_${done}`)}</p>}
-      {error && <p role="alert" className="p-4 font-semibold" style={{ background: "white", borderInlineStart: "4px solid #dc2626" }}>{t(error === "verifyUnclaimed" ? "opVerifyUnclaimed" : "claimErrorGeneric")}</p>}
+      {error && <p role="alert" className="p-4 font-semibold" style={{ background: "white", borderInlineStart: "4px solid #dc2626" }}>{t(error === "verifyUnclaimed" ? "opVerifyUnclaimed" : ["trialNoSlot", "trialUsed", "trialSubscribed"].includes(error) ? `opError_${error}` : "claimErrorGeneric")}</p>}
       <header>
         <Link href="/admin/producers" className="text-sm font-semibold" style={{ color: "var(--muted)" }}>← {t("producersTitle")}</Link>
         <h1 className="mt-3 font-extrabold" style={{ fontSize: "var(--step-title)", lineHeight: 1 }}>{producer?.company_name ?? t("apNewTitle")}</h1>
@@ -47,6 +47,30 @@ export default async function AdminProducerPage({
           </div>
         )}
       </header>
+
+      {producer && (
+        <section className="flex flex-wrap items-center justify-between gap-4 p-5" style={{ background: "white", border: "1px solid var(--field-b)" }} data-admin-plan={producer.billing.plan}>
+          <div>
+            <h2 className="font-bold">{t("apPlanTitle")}</h2>
+            <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
+              {t(`apPlan_${producer.billing.plan}`)}
+              {producer.billing.activeTrialEnd ? ` · ${t("apTrialUntil", { date: producer.billing.activeTrialEnd })}` : ""}
+            </p>
+          </div>
+          {producer.billing.plan === "vitrine" && !producer.billing.trialUsed ? (
+            <form action={adminProducerAction} className="flex flex-col items-end gap-1">
+              <input type="hidden" name="locale" value={locale} />
+              <input type="hidden" name="id" value={producer.id} />
+              <input type="hidden" name="op" value="startTrial" />
+              <input type="hidden" name="back" value="edit" />
+              <button type="submit" disabled={producer.billing.trialSlotsLeft === 0} className="px-4 py-2.5 text-xs font-bold uppercase disabled:opacity-50" style={{ background: "#047857", color: "white", letterSpacing: "0.08em" }}>{t("apStartTrial")}</button>
+              <span className="text-xs" style={{ color: "var(--muted)" }}>{t("apTrialSlots", { count: producer.billing.trialSlotsLeft })}</span>
+            </form>
+          ) : producer.billing.trialUsed && !producer.billing.activeTrialEnd ? (
+            <p className="text-xs" style={{ color: "var(--muted)" }}>{t("apTrialDone")}</p>
+          ) : null}
+        </section>
+      )}
 
       <div className="grid items-start gap-8 lg:grid-cols-[1fr_320px]">
         <section style={{ background: "white", border: "1px solid var(--field-b)", padding: "clamp(1.25rem, 3vw, 2rem)" }}>

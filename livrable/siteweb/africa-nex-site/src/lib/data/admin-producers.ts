@@ -27,7 +27,7 @@ export type AdminProducer = Awaited<ReturnType<typeof listAdminProducers>>[numbe
 
 export async function getAdminProducer(client: Client, id: string) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
-  const [{ data: company, error }, { data: priv }, { data: products }, { data: documents }] = await Promise.all([
+  const [{ data: company, error }, { data: priv }, { data: products }, { data: documents }, { data: plan }, { data: subs }, { data: trialsUsed }, { data: trialSlots }] = await Promise.all([
     client
       .from("companies")
       .select("id, slug, kind, company_name, sector, wilaya, city, description_fr, description_en, description_ar, website, visibility, verified, claim_status")
@@ -36,8 +36,19 @@ export async function getAdminProducer(client: Client, id: string) {
     client.from("company_private").select("tax_id, nis, tax_article, contact_email, contact_phone").eq("company_id", id).maybeSingle(),
     client.from("products").select("id, product_name, status, source").eq("company_id", id).order("sort_order").order("created_at"),
     client.from("company_documents").select("id, kind, title, is_public, review_status, expires_on, created_at").eq("company_id", id).order("created_at", { ascending: false }),
+    client.rpc("current_plan", { p_company: id }),
+    client.from("subscriptions").select("plan_code, status, is_trial, current_period_end").eq("company_id", id).order("created_at", { ascending: false }),
+    client.rpc("trial_slots_used"),
+    client.from("billing_settings").select("value").eq("key", "trial_slots").maybeSingle(),
   ]);
   if (error) throw error;
   if (!company || company.kind !== "producer") return null;
-  return { ...company, private: priv, products: products ?? [], documents: documents ?? [] };
+  const active = (subs ?? []).find((s) => s.status === "active" && s.plan_code === plan);
+  const billing = {
+    plan: typeof plan === "string" ? plan : "vitrine",
+    activeTrialEnd: active?.is_trial ? active.current_period_end : null,
+    trialUsed: (subs ?? []).some((s) => s.is_trial),
+    trialSlotsLeft: Math.max(Number(trialSlots?.value ?? 0) - Number(trialsUsed ?? 0), 0),
+  };
+  return { ...company, private: priv, products: products ?? [], documents: documents ?? [], billing };
 }

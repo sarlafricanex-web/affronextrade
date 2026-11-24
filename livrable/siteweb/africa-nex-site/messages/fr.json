@@ -945,7 +945,20 @@
     "deletionNotice_done": "Compte supprimé.",
     "deletionNotice_gone": "Cette demande n'est plus en attente.",
     "deletionNotice_error": "La suppression a échoué. Le compte n'a pas été effacé.",
-    "deletionNotice_confirm": "Cochez la case de confirmation pour supprimer."
+    "deletionNotice_confirm": "Cochez la case de confirmation pour supprimer.",
+    "rfqOpensAt": "Passeport : s'ouvre au producteur le {date}",
+    "apPlanTitle": "Offre",
+    "apPlan_vitrine": "Passeport (gratuit)",
+    "apPlan_agent_export": "Agent Export",
+    "apPlan_ambassadeur": "Ambassadeur",
+    "apTrialUntil": "essai gratuit jusqu'au {date}",
+    "apStartTrial": "Ouvrir un essai gratuit de l'Agent Export (60 jours)",
+    "apTrialSlots": "{count, plural, =0 {Plus de place d'essai} one {# place d'essai restante} other {# places d'essai restantes}}",
+    "apTrialDone": "Essai gratuit déjà utilisé",
+    "opDone_startTrial": "Essai gratuit de l'Agent Export ouvert pour 60 jours. Ses demandes en attente lui sont ouvertes.",
+    "opError_trialNoSlot": "Plus de place d'essai : les 3 essais sont déjà attribués.",
+    "opError_trialUsed": "Ce producteur a déjà eu son essai gratuit.",
+    "opError_trialSubscribed": "Ce producteur a déjà une offre payante active."
   },
   "phone": {
     "countryCode": "Indicatif du pays : {code}. Changer de pays",

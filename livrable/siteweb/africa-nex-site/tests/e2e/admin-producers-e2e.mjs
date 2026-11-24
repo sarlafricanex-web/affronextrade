@@ -149,6 +149,14 @@ try {
   const { count: audits } = await admin.from("audit_log").select("id", { count: "exact", head: true }).eq("actor_profile_id", boss.id);
   report("Actions tracees dans le journal", audits >= 9, `${audits} entrees`);
 
+  // Essai gratuit de l'Agent Export ouvert depuis la fiche (migration 38).
+  await go(`/fr/admin/producers/${dattes.id}`, `return !!document.querySelector("[data-admin-plan]");`);
+  report("Fiche : offre Passeport et bouton d'essai", await run(`return document.querySelector("[data-admin-plan]").dataset.adminPlan === "vitrine" && !!document.querySelector('input[name=op][value=startTrial]');`));
+  await run(`document.querySelector('input[name=op][value=startTrial]').form.querySelector("button").click(); return true;`);
+  const trialOk = await waitFor(`return location.search.includes("done=startTrial") || location.search.includes("error=");`);
+  const { data: trial } = await admin.from("subscriptions").select("plan_code, status, is_trial, price_charged_dzd").eq("company_id", dattes.id);
+  report("Essai ouvert : Agent Export actif, gratuit, marque essai", trialOk && trial?.length === 1 && trial[0].plan_code === "agent_export" && trial[0].status === "active" && trial[0].is_trial && trial[0].price_charged_dzd === 0, await run("return location.search;") + " " + JSON.stringify(trial));
+  report("Fiche : offre Agent Export, plus de bouton d'essai", await run(`return document.querySelector("[data-admin-plan]")?.dataset.adminPlan === "agent_export" && !document.querySelector('input[name=op][value=startTrial]');`));
   await go("/ar/admin/producers", `return !!document.querySelector("h1");`);
   report("Console en arabe (RTL)", await run(`return document.documentElement.dir === "rtl" && document.body.innerText.includes("المنتجون");`));
   ws.close();

@@ -945,7 +945,20 @@
     "deletionNotice_done": "تم حذف الحساب.",
     "deletionNotice_gone": "لم يعد هذا الطلب معلّقًا.",
     "deletionNotice_error": "فشل الحذف. لم يُمحَ الحساب.",
-    "deletionNotice_confirm": "ضع علامة في خانة التأكيد للحذف."
+    "deletionNotice_confirm": "ضع علامة في خانة التأكيد للحذف.",
+    "rfqOpensAt": "جواز السفر: يُفتح للمنتج في {date}",
+    "apPlanTitle": "العرض",
+    "apPlan_vitrine": "جواز السفر (مجاني)",
+    "apPlan_agent_export": "وكيل التصدير",
+    "apPlan_ambassadeur": "السفير",
+    "apTrialUntil": "تجربة مجانية حتى {date}",
+    "apStartTrial": "فتح تجربة مجانية لوكيل التصدير (60 يومًا)",
+    "apTrialSlots": "{count, plural, =0 {لا مكان متبقٍ للتجربة} one {مكان واحد متبقٍ للتجربة} other {# أماكن متبقية للتجربة}}",
+    "apTrialDone": "استُعملت التجربة المجانية",
+    "opDone_startTrial": "فُتحت تجربة مجانية لوكيل التصدير لمدة 60 يومًا. فُتحت له طلباته المنتظرة.",
+    "opError_trialNoSlot": "لا مكان متبقٍ للتجربة: التجارب الثلاث مُسندة.",
+    "opError_trialUsed": "سبق لهذا المنتج أن استفاد من التجربة المجانية.",
+    "opError_trialSubscribed": "لدى هذا المنتج عرض مدفوع نشط."
   },
   "phone": {
     "countryCode": "رمز البلد: {code}. تغيير البلد",

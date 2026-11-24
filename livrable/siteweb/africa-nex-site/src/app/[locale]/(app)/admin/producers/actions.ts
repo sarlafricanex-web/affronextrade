@@ -174,6 +174,14 @@ export async function adminProducerAction(formData: FormData) {
         .eq("id", docId)
         .eq("company_id", id));
     }
+  } else if (op === "startTrial") {
+    // Essai gratuit de l'Agent Export (60 jours, 3 producteurs au plus, un par producteur : migration 38).
+    const { error: trialError } = await supabase.rpc("start_trial", { p_company: id, p_plan: "agent_export" });
+    if (trialError) {
+      const reason = /no trial slot/.test(trialError.message) ? "trialNoSlot" : /trial already used/.test(trialError.message) ? "trialUsed" : /already subscribed/.test(trialError.message) ? "trialSubscribed" : "generic";
+      if (reason === "generic") console.error("Admin producer action failed:", op, trialError.message);
+      redirect(`${back}?error=${reason}`);
+    }
   } else if (op === "removeProduct") {
     const productId = text(formData, "productId");
     if (UUID.test(productId)) ({ error } = await supabase.from("products").delete().eq("id", productId).eq("company_id", id));

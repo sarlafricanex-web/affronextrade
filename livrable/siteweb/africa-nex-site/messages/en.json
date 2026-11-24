@@ -945,7 +945,20 @@
     "deletionNotice_done": "Account deleted.",
     "deletionNotice_gone": "This request is no longer pending.",
     "deletionNotice_error": "Deletion failed. The account was not erased.",
-    "deletionNotice_confirm": "Tick the confirmation box to delete."
+    "deletionNotice_confirm": "Tick the confirmation box to delete.",
+    "rfqOpensAt": "Passport: opens to the producer on {date}",
+    "apPlanTitle": "Plan",
+    "apPlan_vitrine": "Passport (free)",
+    "apPlan_agent_export": "Export Agent",
+    "apPlan_ambassadeur": "Ambassador",
+    "apTrialUntil": "free trial until {date}",
+    "apStartTrial": "Start a free Export Agent trial (60 days)",
+    "apTrialSlots": "{count, plural, =0 {No trial slot left} one {# trial slot left} other {# trial slots left}}",
+    "apTrialDone": "Free trial already used",
+    "opDone_startTrial": "Free Export Agent trial started for 60 days. Its pending requests are now open.",
+    "opError_trialNoSlot": "No trial slot left: all 3 trials are taken.",
+    "opError_trialUsed": "This producer has already had a free trial.",
+    "opError_trialSubscribed": "This producer already has an active paid plan."
   },
   "phone": {
     "countryCode": "Country code: {code}. Change country",

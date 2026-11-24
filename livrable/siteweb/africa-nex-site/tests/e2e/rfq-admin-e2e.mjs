@@ -128,6 +128,7 @@ try {
   report("Passeport : demande pas encore visible du producteur gratuit", (early ?? []).length === 0, String(early?.length));
   const { data: timing } = await admin.from("rfq_dispatches").select("id, created_at, visible_from").eq("rfq_id", rfq.id);
   report("En base : visible 48 h apres l'envoi", timing?.length === 2 && timing.every((d) => Math.abs(new Date(d.visible_from) - new Date(d.created_at) - 48 * 3600e3) < 120e3), JSON.stringify(timing?.[0]));
+  report("Console : date d'ouverture affichee pour les 2 producteurs gratuits", await run(`return document.querySelectorAll("[data-opens-at]").length === 2;`));
   await openDispatches(admin, (timing ?? []).map((d) => d.id));
 
   // Ce que voit chaque partie

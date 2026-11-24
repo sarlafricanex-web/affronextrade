@@ -35,7 +35,7 @@ export async function getAdminRfq(client: Client, id: string) {
     rfq.buyer_company_id ? client.from("company_private").select("contact_phone, contact_whatsapp").eq("company_id", rfq.buyer_company_id).maybeSingle() : Promise.resolve({ data: null }),
     client
       .from("rfq_dispatches")
-      .select(`id, reference, status, respond_by, viewed_at, created_at, brief_title, unit, rfq_line_id, company:companies(id, company_name, slug, claim_status, owner_profile_id, wilaya, city), quotes(${QUOTE_COLUMNS})`)
+      .select(`id, reference, status, respond_by, viewed_at, created_at, visible_from, brief_title, unit, rfq_line_id, company:companies(id, company_name, slug, claim_status, owner_profile_id, wilaya, city), quotes(${QUOTE_COLUMNS})`)
       .eq("rfq_id", id)
       .order("created_at"),
     client.from("offers").select(`${OFFER_COLUMNS}, freight_amount, offer_margins(${MARGIN_COLUMNS}), offer_lines(count)`).eq("rfq_id", id).order("label"),
@@ -44,7 +44,9 @@ export async function getAdminRfq(client: Client, id: string) {
   const now = Date.now();
   const defaultRespondBy = new Date(now + 7 * 864e5).toISOString().slice(0, 10);
   const today = new Date(now).toISOString().slice(0, 10);
-  return { ...rfq, buyerProfile: profile, buyerContact: contact, dispatches: dispatches ?? [], offers: offers ?? [], defaultRespondBy, today };
+  // Passeport (migration 39) : envois encore fermes au producteur, avec leur date d'ouverture.
+  const opensLater = new Map((dispatches ?? []).filter((d) => new Date(d.visible_from).getTime() > now).map((d) => [d.id, d.visible_from]));
+  return { ...rfq, buyerProfile: profile, buyerContact: contact, dispatches: dispatches ?? [], offers: offers ?? [], defaultRespondBy, today, opensLater };
 }
 
 const QUOTE_COLUMNS =

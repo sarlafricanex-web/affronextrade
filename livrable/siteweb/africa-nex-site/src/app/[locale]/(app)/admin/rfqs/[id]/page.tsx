@@ -404,6 +404,7 @@ export default async function AdminRfqPage({
                         <span className="block font-semibold">{c.company_name}</span>
                         <span className="block text-xs" dir="ltr" style={{ color: "var(--muted)", textAlign: "start" }}>{d.reference} · {t("rfqRespondBy", { date: date(d.respond_by) ?? "-" })}</span>
                         {!c.owner_profile_id && <span className="block text-xs font-semibold" style={{ color: "#c2410c" }}>{t("rfqOffline")}</span>}
+                        {rfq.opensLater.has(d.id) && <span className="block text-xs font-semibold" style={{ color: "#92400e" }} data-opens-at="">{t("rfqOpensAt", { date: format.dateTime(new Date(rfq.opensLater.get(d.id)!), { dateStyle: "medium", timeStyle: "short" }) })}</span>}
                         {[d.quotes].flat().filter(Boolean).map((q, qi) => q && (
                           <span key={qi} className="mt-1 block text-xs font-semibold" dir="ltr" style={{ color: "#065f46", textAlign: "start" }}>
                             {t("rfqQuoteSummary", { price: Number(q.unit_price_ht).toLocaleString(locale), currency: q.currency, basis: q.price_basis ?? "", quantity: Number(q.quantity).toLocaleString(locale), unit: d.unit ? tc(`unitShort_${d.unit}`) : "", days: q.production_lead_days ?? 0, valid: date(q.valid_until) ?? "-" })}
