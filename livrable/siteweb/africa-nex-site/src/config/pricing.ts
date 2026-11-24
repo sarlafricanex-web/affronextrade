@@ -1,34 +1,44 @@
-// Forfaits des producteurs (decision d'Adlene du 19 novembre 2026) : prix du cahier des charges,
-// sans "success fee" (remplace par la commission AFRICA NEX ajoutee au prix acheteur, lot 5d) et
-// sans les services qui n'existent pas encore. Aucun paiement en ligne en v1 : "Nous contacter".
-// Les prix vivent dans le code, pas en base (plan de la plateforme).
-export const PLANS = ["starter", "pro", "enterprise"] as const;
+// Offres des producteurs (decisions d'Adlene du 24 novembre 2026) : Passeport gratuit, Agent Export,
+// Ambassadeur. Les prix, la remise annuelle et les quotas vivent en base (migration 38, lus par
+// src/lib/data/plans.ts) ; ce fichier ne decrit que la presentation de chaque offre.
+// Un point "soon" est un service pas encore construit : il s'affiche « Bientôt ».
+export const PLANS = ["vitrine", "agent_export", "ambassadeur"] as const;
 export type Plan = (typeof PLANS)[number];
 
-// Zones de facturation : chaque zone a sa devise.
-export const ZONES = [
-  { key: "dz", currency: "DZD" },
-  { key: "eu", currency: "EUR" },
-  { key: "intl", currency: "USD" },
-] as const;
-export type Zone = (typeof ZONES)[number]["key"];
+export type PlanItem = { key: string; problem?: boolean; soon?: boolean };
 
-// Prix mensuel par forfait et par devise ; null = sur devis.
-export const MONTHLY_PRICE: Record<Plan, Record<"DZD" | "EUR" | "USD", number | null>> = {
-  starter: { DZD: 20_000, EUR: 290, USD: 350 },
-  pro: { DZD: 50_000, EUR: 790, USD: 950 },
-  enterprise: { DZD: 120_000, EUR: null, USD: null },
+// Cles de traduction de l'espace "pricing" : item_<key> (et problem_<key> quand problem = true).
+export const PLAN_ITEMS: Record<Plan, PlanItem[]> = {
+  vitrine: [
+    { key: "profile" },
+    { key: "products10" },
+    { key: "requestsDelayed" },
+    { key: "confidential" },
+    { key: "noFee" },
+  ],
+  agent_export: [
+    { key: "requestsFirst", problem: true },
+    { key: "tenders", problem: true, soon: true },
+    { key: "translation", problem: true, soon: true },
+    { key: "answers", problem: true, soon: true },
+    { key: "report", problem: true, soon: true },
+    { key: "catalog1000", problem: true },
+  ],
+  ambassadeur: [
+    { key: "videos", problem: true, soon: true },
+    { key: "campaigns", problem: true, soon: true },
+    { key: "customs", problem: true, soon: true },
+    { key: "watch", problem: true, soon: true },
+    { key: "featured", problem: true, soon: true },
+    { key: "unlimited" },
+  ],
 };
 
-// Ce que chaque forfait inclut (cles de traduction de l'espace "pricing"). Uniquement des services
-// qui existent ; la traduction automatique est annoncee "Bientot" (quotas a confirmer).
-export const PLAN_FEATURES: Record<Plan, string[]> = {
-  starter: ["featureProfile", "featureCatalog", "featureRequests", "featureMessages", "featureDocuments", "featureStarterPrice"],
-  pro: ["featureAllStarter", "featureProPrice", "featureFreight", "featureDetailedExcel"],
-  enterprise: ["featureAllPro", "featureDedicated"],
+// Lancement : seul le Passeport est ouvert ; l'Agent Export s'ouvre apres la phase d'essai.
+export const PLAN_CTA: Record<Plan, { href: string; key: string }> = {
+  vitrine: { href: "/register?role=producer", key: "cta_vitrine" },
+  agent_export: { href: "/contact", key: "cta_agent_export" },
+  ambassadeur: { href: "/contact", key: "cta_ambassadeur" },
 };
-
-// Quotas de traduction FR vers EN et AR, par mois (proposition du plan, a confirmer par Adlene).
-export const TRANSLATION_QUOTA: Record<Plan, number> = { starter: 30, pro: 150, enterprise: 1000 };
 
 export const isPlan = (x: unknown): x is Plan => typeof x === "string" && (PLANS as readonly string[]).includes(x);

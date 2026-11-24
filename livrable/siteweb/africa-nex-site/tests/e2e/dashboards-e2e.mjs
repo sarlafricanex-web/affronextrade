@@ -105,11 +105,11 @@ try {
   report("Producteur : variation des vues (+100 % sur les 30 jours precedents)", await run(`return document.querySelector('[data-kpi="views"]').innerText.includes("+100 %");`));
   report("Producteur : actions (demande urgente, message, prix expire, fiche a completer)", await run(`const ids = [...document.querySelectorAll("[data-action-item]")].map((e) => e.dataset.actionItem); return ids.some((i) => i.startsWith("req-")) && ids.some((i) => i.startsWith("msg-")) && ids.includes("prices") && ids.includes("profile") && document.querySelector('[data-action-item^="req-"]').textContent.includes("Urgent");`), await run(`return [...document.querySelectorAll("[data-action-item]")].map((e) => e.dataset.actionItem.slice(0, 4)).join(",");`));
   report("Producteur : pays des visiteurs (Cote d'Ivoire en tete, pas les vues de plus de 30 jours)", await run(`const c = document.querySelector("[data-countries]"); return c.dataset.countries === "2" && c.querySelector("li").innerText.includes("Côte d") && !c.innerText.includes("Nigeria") && !c.innerText.includes("Nigéria");`));
-  report("Producteur : forfait Vitrine (abonnements) et lien Mon abonnement", await run(`return document.querySelector("[data-tier]").dataset.tier === "vitrine" && !!document.querySelector('nav a[href$="/subscription"]');`));
+  report("Producteur : offre Passeport (code vitrine) et lien Mon abonnement", await run(`return document.querySelector("[data-tier]").dataset.tier === "vitrine" && document.querySelector("[data-tier]").innerText.includes("Passeport") && !!document.querySelector('nav a[href$="/subscription"]');`));
   report("Producteur : aucune mention inventee (ALGEX, ZLECAf, douane)", await run(`const t = document.body.innerText; return !/ALGEX|ZLECAf|douane/i.test(t);`));
   await shot("dashboard-producer");
   await go("/fr/subscription", `return !!document.querySelector("[data-subscription]");`);
-  report("Mon abonnement : forfait Starter, passage au Pro propose, pas de paiement en ligne", await run(`return document.querySelector("[data-current-plan]").dataset.currentPlan === "starter" && document.body.innerText.includes("Passer au forfait Pro") && document.body.innerText.includes("Aucun paiement en ligne") && !/renouvellement|actif/i.test(document.querySelector("main")?.innerText ?? document.body.innerText);`));
+  report("Mon abonnement : Passeport gratuit, passage a l'Agent Export propose (36 900 DZD), pas de paiement en ligne", await run(`const t = document.body.innerText; return document.querySelector("[data-current-plan]").dataset.currentPlan === "vitrine" && t.includes("Passer à l'offre Agent Export") && t.includes("36") && t.includes("900") && t.includes("Aucun paiement en ligne") && !/Starter|fondateur/.test(t);`));
   await shot("subscription");
   await loginAs(buyer);
   await go("/fr/subscription", `return document.readyState === "complete" && !!document.querySelector("h1");`);
@@ -136,9 +136,10 @@ try {
   await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 1300, deviceScaleFactor: 1, mobile: false });
   await go("/fr/pricing", `return document.querySelectorAll("[data-plan]").length === 3;`);
   const prices = () => run(`return [...document.querySelectorAll("[data-plan] [data-price]")].map((e) => e.dataset.price).join(",");`);
-  report("Tarifs : Algerie 20 000 / 50 000 / 120 000 DZD", (await prices()) === "20000,50000,120000", await prices());
-  await run(`document.querySelector('[data-zone="eu"]').click(); return true;`);
-  report("Tarifs : Europe 290 / 790 EUR / sur devis", await waitFor(`return [...document.querySelectorAll("[data-plan] [data-price]")].map((e) => e.dataset.price).join(",") === "290,790,quote" && document.body.innerText.includes("Sur devis");`, 10));
+  report("Tarifs : Passeport gratuit, Agent Export 36 900, Ambassadeur 59 600 DZD HT (lus en base)", (await prices()) === "0,36900,59600", await prices());
+  report("Tarifs : annuel paye d'avance -10 % (398 520 et 643 680)", await run(`return [...document.querySelectorAll("[data-annual]")].map((e) => e.dataset.annual).join(",") === "398520,643680";`));
+  report("Tarifs : noms, Passeport 10 produits et demandes a 48 h, services non construits marques Bientot", await run(`const t = document.body.innerText; return ["Passeport", "Agent Export", "Ambassadeur", "10 produits", "48 h", "1 000 produits"].every((x) => t.includes(x)) && document.querySelectorAll("[data-soon]").length >= 9 && !/Starter|Enterprise|fondateur/.test(t);`));
+  report("Tarifs : budget publicitaire a la charge du producteur, essai gratuit annonce", await run(`const t = document.body.innerText; return t.includes("budget publicitaire à votre charge") && t.includes("essai gratuit de 60 jours");`));
   report("Tarifs : commission 10 / 7 / 5 %, pas de success fee ni de studio packaging", await run(`const t = document.body.innerText; return t.includes("10 %") && t.includes("7 %") && t.includes("5 %") && !/success|1,5 %|packaging/i.test(t);`));
   report("Tarifs : lien dans l'en-tete du site", await run(`return [...document.querySelectorAll("header a")].some((a) => a.getAttribute("href")?.endsWith("/pricing") && a.innerText.trim() === "Tarifs");`));
   report("Ordinateur : l'en-tete a 7 liens ne deborde pas", await noOverflow());
@@ -148,7 +149,7 @@ try {
   report("Telephone : page Tarifs sans debordement", await noOverflow());
   await send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 1300, deviceScaleFactor: 1, mobile: false });
   await go("/ar/pricing", `return document.querySelectorAll("[data-plan]").length === 3;`);
-  report("Arabe : page Tarifs traduite", await run(`return document.documentElement.dir === "rtl" && document.body.innerText.includes("باقات للتصدير");`));
+  report("Arabe : page Tarifs traduite", await run(`return document.documentElement.dir === "rtl" && document.body.innerText.includes("الذكاء الاصطناعي في خدمة صادراتك");`));
   await shot("pricing-ar");
   await loginAs(producer);
   await go("/ar/dashboard", `return !!document.querySelector('[data-dashboard="producer"]');`);

@@ -218,18 +218,18 @@ export const en: LegalSet = {
         },
         {
           title: "3. Subscription and payment",
-          blocks: ["You subscribe from your space. Payment is made by bank transfer, monthly or yearly (annual prepayment, with two months free). The subscription is activated by AFRICA NEX on receipt of payment; an invoice is issued."],
+          blocks: ["You subscribe from your space. Payment is made by bank transfer, monthly or yearly (annual prepayment, with a 10% discount). The subscription is activated by AFRICA NEX on receipt of payment; an invoice is issued."],
         },
         {
-          title: "4. Founder offer",
-          blocks: ["The first 30 subscribers paying annually in advance get a 50% discount, as long as the subscription is renewed without interruption. The founder price is permanently lost if the subscription is cancelled."],
+          title: "4. Free trial",
+          blocks: ["AFRICA NEX may offer producers of its choice a free trial of a paid plan, lasting 60 days, once per producer. At the end of the trial, the account automatically returns to the free plan, with no commitment or payment."],
         },
         {
           title: "5. Term, renewal and cancellation",
           blocks: [
             [
               "Monthly subscription: no commitment. You can cancel at any time; it ends at the end of the paid month, with no refund for the month started.",
-              "Annual subscription: paid in advance and not refundable during the year, in return for the two free months, except in case of default by AFRICA NEX (promised service not provided), in which case the remaining period is refunded pro rata.",
+              "Annual subscription: paid in advance and not refundable during the year, in return for the 10% discount, except in case of default by AFRICA NEX (promised service not provided), in which case the remaining period is refunded pro rata.",
               "Change of plan: a higher plan applies as soon as it is paid; a lower plan applies at the end of the current period.",
             ],
           ],

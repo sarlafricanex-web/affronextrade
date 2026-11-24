@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { makePageMetadata } from "@/lib/seo";
 import { PricingPlans } from "@/components/pricing/PricingPlans";
 import { COMMISSION_TIERS } from "@/lib/offer-pricing";
+import { getPlanGrid } from "@/lib/data/plans";
 
 const HAIR = "#d8cebb";
 const caps = { letterSpacing: "0.08em" } as const;
@@ -13,12 +14,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return makePageMetadata({ locale, titleKey: "pricingTitle", descriptionKey: "pricingDescription", path: "/pricing" });
 }
 
-// Semaine 6 : tarifs des producteurs (maquette 19). Prix du cahier des charges, commission AFRICA NEX
-// ajoutee au prix acheteur (pas de "success fee"), aucun paiement en ligne.
+// Tarifs des producteurs (offres du 24 novembre 2026) : Passeport gratuit, Agent Export, Ambassadeur,
+// prix lus en base ; commission AFRICA NEX payee par l acheteur ; aucun paiement en ligne.
 export default async function PricingPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("pricing");
+  const [t, grid] = await Promise.all([getTranslations("pricing"), getPlanGrid()]);
   const tiers = [
     { rate: COMMISSION_TIERS[0].rate, label: t("tier1", { amount: (5000).toLocaleString(locale) }) },
     { rate: COMMISSION_TIERS[1].rate, label: t("tier2", { low: (5000).toLocaleString(locale), high: (500000).toLocaleString(locale) }) },
@@ -34,10 +35,11 @@ export default async function PricingPage({ params }: { params: Promise<{ locale
         </p>
         <h1 className="font-extrabold" style={{ fontSize: "clamp(2rem, 5vw, 3.2rem)", lineHeight: 1.05, letterSpacing: "-0.02em", maxWidth: "22ch" }}>{t("title")}</h1>
         <p style={{ color: "var(--muted)", maxWidth: "62ch" }}>{t("subtitle")}</p>
+        <p className="p-3 text-sm font-semibold" style={{ background: "white", border: `1px solid ${HAIR}`, borderInlineStart: "4px solid #10b981", maxWidth: "75ch" }} data-launch="">{t("launch", { days: grid.trialDays })}</p>
       </section>
 
       <section style={{ padding: "0 var(--page-margin) 3rem" }}>
-        <PricingPlans />
+        <PricingPlans grid={grid} locale={locale} />
       </section>
 
       <section style={{ padding: "0 var(--page-margin) 3rem" }}>

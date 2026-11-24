@@ -2040,9 +2040,8 @@ export type Database = {
           created_by: string | null
           current_period_end: string | null
           current_period_start: string | null
-          founder_testimonial_received: boolean
           id: string
-          is_founder: boolean
+          is_trial: boolean
           payment_reference: string | null
           plan_code: string
           price_charged_dzd: number
@@ -2059,9 +2058,8 @@ export type Database = {
           created_by?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
-          founder_testimonial_received?: boolean
           id?: string
-          is_founder?: boolean
+          is_trial?: boolean
           payment_reference?: string | null
           plan_code: string
           price_charged_dzd: number
@@ -2078,9 +2076,8 @@ export type Database = {
           created_by?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
-          founder_testimonial_received?: boolean
           id?: string
-          is_founder?: boolean
+          is_trial?: boolean
           payment_reference?: string | null
           plan_code?: string
           price_charged_dzd?: number
@@ -2446,11 +2443,9 @@ export type Database = {
         }[]
       }
       cancel_account_deletion: { Args: never; Returns: undefined }
-      claim_founder_slot: { Args: { p_company: string }; Returns: boolean }
       compute_price: {
         Args: {
           p_cycle: Database["public"]["Enums"]["billing_cycle"]
-          p_founder?: boolean
           p_plan: string
         }
         Returns: number
@@ -2465,7 +2460,6 @@ export type Database = {
         Returns: undefined
       }
       enforce_product_quota: { Args: { p_company: string }; Returns: number }
-      founder_slots_used: { Args: never; Returns: number }
       is_admin: { Args: never; Returns: boolean }
       is_member_of: { Args: { target_company: string }; Returns: boolean }
       is_owner_of: { Args: { target_company: string }; Returns: boolean }
@@ -2552,7 +2546,6 @@ export type Database = {
         Args: {
           p_company: string
           p_cycle: Database["public"]["Enums"]["billing_cycle"]
-          p_founder?: boolean
           p_plan: string
         }
         Returns: string
@@ -2570,7 +2563,12 @@ export type Database = {
         Args: { p_company: string; p_plan: string }
         Returns: undefined
       }
+      start_trial: {
+        Args: { p_company: string; p_plan: string }
+        Returns: string
+      }
       sync_subscriptions: { Args: never; Returns: number }
+      trial_slots_used: { Args: never; Returns: number }
       try_uuid: { Args: { p: string }; Returns: string }
     }
     Enums: {

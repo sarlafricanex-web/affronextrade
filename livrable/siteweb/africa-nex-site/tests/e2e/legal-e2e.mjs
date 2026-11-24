@@ -24,7 +24,7 @@ try {
   const terms = text((await page("/fr/terms")).html);
   report("CGU : professionnels majeurs, anonymat, contournement, avis, droit algerien", ["majeures", "anonymat", "contourner", "ne vérifie pas qu'une transaction", "droit algérien"].every((s) => terms.includes(s)));
   const sales = text((await page("/fr/sales")).html);
-  report("CGV : HT, virement, annuel non remboursable, fondateur, retour en gratuit, retractation", ["hors taxes", "virement", "non remboursable", "50 %", "formule gratuite", "rétractation"].every((s) => sales.includes(s)));
+  report("CGV : HT, virement, annuel -10 % non remboursable, essai gratuit, retour en gratuit, retractation, plus d'offre fondateur", ["hors taxes", "virement", "non remboursable", "10 %", "Essai gratuit", "formule gratuite", "rétractation"].every((s) => sales.includes(s)) && !sales.includes("fondateur"));
   const arPrivacy = (await page("/ar/privacy")).html;
   report("Arabe : page en RTL et traduite", arPrivacy.includes('dir="rtl"') && arPrivacy.includes("سياسة الخصوصية"));
 

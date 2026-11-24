@@ -218,18 +218,18 @@ export const fr: LegalSet = {
         },
         {
           title: "3. Souscription et paiement",
-          blocks: ["La souscription se fait depuis votre espace. Le paiement se fait par virement bancaire, au mois ou à l'année (paiement annuel d'avance, avec deux mois offerts). L'abonnement est activé par AFRICA NEX à réception du paiement ; une facture est émise."],
+          blocks: ["La souscription se fait depuis votre espace. Le paiement se fait par virement bancaire, au mois ou à l'année (paiement annuel d'avance, avec 10 % de remise). L'abonnement est activé par AFRICA NEX à réception du paiement ; une facture est émise."],
         },
         {
-          title: "4. Offre fondateur",
-          blocks: ["Les 30 premiers abonnés en paiement annuel d'avance bénéficient de 50 % de réduction, tant que l'abonnement est renouvelé sans interruption. Le tarif fondateur est définitivement perdu en cas de résiliation."],
+          title: "4. Essai gratuit",
+          blocks: ["AFRICA NEX peut proposer à des producteurs de son choix un essai gratuit d'une offre payante, d'une durée de 60 jours, une seule fois par producteur. À la fin de l'essai, le compte revient automatiquement à la formule gratuite, sans engagement ni paiement."],
         },
         {
           title: "5. Durée, renouvellement et résiliation",
           blocks: [
             [
               "Abonnement mensuel : sans engagement. Vous pouvez le résilier à tout moment ; il prend fin au terme du mois payé, sans remboursement du mois commencé.",
-              "Abonnement annuel : payé d'avance et non remboursable en cours d'année, en contrepartie des deux mois offerts, sauf manquement d'AFRICA NEX (service promis non fourni), auquel cas la période restante est remboursée au prorata.",
+              "Abonnement annuel : payé d'avance et non remboursable en cours d'année, en contrepartie de la remise de 10 %, sauf manquement d'AFRICA NEX (service promis non fourni), auquel cas la période restante est remboursée au prorata.",
               "Changement de formule : une formule supérieure s'applique dès le paiement ; une formule inférieure s'applique à la fin de la période en cours.",
             ],
           ],
