@@ -1,7 +1,7 @@
 // Test de bout en bout du lot 5f : fils de messages acheteur <-> AFRICA NEX et producteur <-> AFRICA NEX,
 // jamais acheteur <-> producteur. Garde-fous d'anonymat des messages d'AFRICA NEX, messages lus et
 // non lus (listes, menus), question sur une offre, fil ferme, cloisonnement entre producteurs.
-import { site, OUT, CHROME } from "./_guard.mjs";
+import { site, OUT, CHROME, openDispatches } from "./_guard.mjs";
 import { waitEmails, delivered } from "./_emails.mjs";
 import { createRequire } from "node:module";
 import { randomBytes } from "node:crypto";
@@ -57,6 +57,7 @@ try {
   const { data: d1, error: de } = await admin.from("rfq_dispatches").insert({ ...brief, company_id: pc.id }).select("id").single();
   if (de) throw de;
   const { data: d2 } = await admin.from("rfq_dispatches").insert({ ...brief, company_id: rc.id }).select("id").single();
+  await openDispatches(admin, [d1?.id, d2?.id]);
   await admin.from("rfqs").update({ status: "offered" }).eq("id", rfqId);
   await admin.from("offers").insert({ rfq_id: rfqId, label: "A", currency: "EUR", incoterm: "CIF", unit_price: 4.5, quantity: 2000, total_amount: 9000, status: "published", published_at: new Date().toISOString(), valid_until: day(10) });
   const msgs = async () => (await admin.from("messages").select("dispatch_id, sender_role, body, read_at").eq("rfq_id", rfqId).order("created_at")).data ?? [];

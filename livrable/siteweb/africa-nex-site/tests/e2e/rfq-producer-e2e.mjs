@@ -1,5 +1,5 @@
 // Test de bout en bout du lot 5c : demandes recues et devis cote producteur.
-import { site, OUT, CHROME } from "./_guard.mjs";
+import { site, OUT, CHROME, openDispatches } from "./_guard.mjs";
 import { waitEmails, delivered } from "./_emails.mjs";
 import { createRequire } from "node:module";
 import { randomBytes } from "node:crypto";
@@ -54,6 +54,7 @@ try {
   const { data: d1, error: de } = await admin.from("rfq_dispatches").insert({ ...brief, company_id: pc.id }).select("id, reference").single();
   if (de) throw de;
   const { data: d2 } = await admin.from("rfq_dispatches").insert({ ...brief, company_id: rc.id }).select("id").single();
+  await openDispatches(admin, [d1?.id, d2?.id]);
   await admin.from("rfqs").update({ status: "dispatched" }).eq("id", rfq.id);
 
   let target;

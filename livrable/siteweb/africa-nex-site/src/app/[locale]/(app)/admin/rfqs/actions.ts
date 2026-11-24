@@ -131,14 +131,20 @@ export async function dispatchRfq(_prev: DispatchState, formData: FormData): Pro
       respond_by: v.respondBy,
       created_by: userId,
     })),
-  ).select("id, company_id, reference");
+  ).select("id, company_id, reference, visible_from");
   if (error) {
     console.error("RFQ dispatch failed:", error.message);
     return fail({ errors: {}, formError: "rfqErrorGeneric" });
   }
-  // Email a chaque producteur consulte (brief anonymise : jamais le nom de l'acheteur).
+  // Email a chaque producteur consulte (brief anonymise : jamais le nom de l'acheteur). Passeport
+  // (migration 39) : la demande ne s'ouvre qu'apres le delai ; l'email annonce la date et propose
+  // l'Agent Export, qui recoit les demandes en premier.
+  const now = Date.now();
   for (const d of sent ?? []) {
-    notify.company(d.company_id, { kind: "new_request", rfqId: id, path: `/requests/${d.id}`, values: { title: v.briefTitle, reference: d.reference }, rows: [["rowReference", d.reference], ["rowRespondBy", frDate(v.respondBy)]] });
+    const delayed = new Date(d.visible_from).getTime() > now + 60_000;
+    notify.company(d.company_id, delayed
+      ? { kind: "new_request", variant: "delayed", rfqId: id, path: "/subscription", values: { title: v.briefTitle, reference: d.reference, date: frDate(d.visible_from.slice(0, 10)) }, rows: [["rowReference", d.reference], ["rowRespondBy", frDate(v.respondBy)]] }
+      : { kind: "new_request", rfqId: id, path: `/requests/${d.id}`, values: { title: v.briefTitle, reference: d.reference }, rows: [["rowReference", d.reference], ["rowRespondBy", frDate(v.respondBy)]] });
   }
   await Promise.all([
     supabase.from("rfqs").update({ status: "dispatched" }).eq("id", id).in("status", ["submitted", "qualified"]),

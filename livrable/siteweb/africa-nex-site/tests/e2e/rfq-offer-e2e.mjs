@@ -1,5 +1,5 @@
 // Test de bout en bout du lot 5d : comparatif des devis, saisie hors ligne et composition de l'offre.
-import { site, OUT, CHROME } from "./_guard.mjs";
+import { site, OUT, CHROME, openDispatches } from "./_guard.mjs";
 import { createRequire } from "node:module";
 import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -52,6 +52,7 @@ try {
   const brief = { rfq_id: rfq.id, brief_title: `Huile d'olive extra vierge 5 L ${TAG}`, brief_specs: "Bidons métal 5 L.", quantity: 2000, unit: "l", destination_country: "CI", requested_incoterm: "FOB", respond_by: day(5), created_by: boss.id };
   const { data: d1 } = await admin.from("rfq_dispatches").insert({ ...brief, company_id: pc.id }).select("id").single();
   const { data: d2 } = await admin.from("rfq_dispatches").insert({ ...brief, company_id: offlineId }).select("id").single();
+  await openDispatches(admin, [d1?.id, d2?.id]);
   await admin.from("rfqs").update({ status: "dispatched" }).eq("id", rfq.id);
   const { data: qA, error: qe } = await producer.client.from("quotes").insert({ dispatch_id: d1.id, company_id: pc.id, author_profile_id: producer.id, unit_price_ht: 4.7, currency: "USD", price_basis: "FOB", port_of_loading: "Béjaïa", quantity: 2000, production_lead_days: 25, payment_terms: "30 % à la commande", valid_until: day(30) }).select("id").single();
   if (qe) throw qe;

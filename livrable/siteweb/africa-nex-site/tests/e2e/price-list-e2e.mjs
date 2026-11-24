@@ -31,12 +31,18 @@ async function makeUser(role, name) {
   await client.auth.signInWithPassword({ email, password });
   return { id: data.user.id, jar, client, cookie: () => [...jar].map(([n, v]) => `${n}=${v}`).join("; ") };
 }
-async function makeProducer(name, tier) {
+// paid : offre Agent Export active (import Excel reserve aux offres payantes, migration 38).
+async function makeProducer(name, tier, paid = true) {
   const u = await makeUser("producer", name);
   await u.client.from("companies").insert({ company_name: `${name} ${TAG}`, kind: "producer", slug: `test-pl-${name}-${TAG}`.toLowerCase().replace(/\W+/g, "-"), owner_profile_id: u.id, sector: "C29", wilaya: "19", city: "Setif" });
   const { data: co } = await admin.from("companies").select("id").eq("owner_profile_id", u.id).single();
   if (tier !== "starter") await admin.from("companies").update({ subscription_tier: tier }).eq("id", co.id);
   await admin.from("profiles").update({ onboarding_completed: true }).eq("id", u.id);
+  if (paid) {
+    const day = (n) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
+    const { error } = await admin.from("subscriptions").insert({ company_id: co.id, plan_code: "agent_export", status: "active", price_charged_dzd: 36900, current_period_start: day(0), current_period_end: day(30), payment_reference: "TEST" });
+    if (error) throw error;
+  }
   return { ...u, companyId: co.id };
 }
 const download = async (u) => {
@@ -52,7 +58,7 @@ const chrome = spawn(CHROME, ["--headless=new", "--remote-debugging-port=9353", 
 try {
   const starter = await makeProducer("Filtres Setif", "starter");
   const pro = await makeProducer("Filtres Pro", "pro");
-  const rival = await makeProducer("Filtres Rival", "starter");
+  const rival = await makeProducer("Filtres Rival", "starter", false);
   const buyer = await makeUser("buyer", "Awa Buyer");
   const base = { kind: undefined, hs_code: "8421.31", currency: "EUR", price_basis: "FCA", unit: "unit", min_order_quantity: 1000, status: "draft", source: "producer" };
   delete base.kind;
@@ -275,6 +281,11 @@ try {
   await run(`[...document.querySelectorAll("main button")].find((b) => /vérifier/i.test(b.textContent)).click(); return true;`);
   report("Conditionnement vide dans le fichier : aucun effacement propose", await waitFor(`return ${count("importUpdates")} === 0 && ${count("importUnchanged")} >= 1 && ![...document.querySelectorAll("[data-change]")].some((x) => x.dataset.change.startsWith("AF-018"));`), await run(`return [${count("importUpdates")}, ${count("importUnchanged")}].join("/") + " " + [...document.querySelectorAll("[data-change]")].map((x) => x.innerText.replace(/\\s+/g, " ")).join(" | ");`));
 
+  // Passeport (rival, sans offre payante) : import Excel ferme, invitation a l'Agent Export.
+  await loginAs(rival);
+  await go("/fr/catalog/import", `return !!document.querySelector("[data-import-locked]") || !!document.querySelector("input[name=file]");`);
+  report("Passeport : import Excel ferme, lien vers l'Agent Export", await run(`return !!document.querySelector("[data-import-locked]") && !document.querySelector("input[name=file]") && !!document.querySelector('[data-import-locked] a[href$="/subscription"]');`));
+  await loginAs(starter);
   await go(`/ar/catalog/import`, `return !!document.querySelector("input[name=file]");`);
   report("Import en arabe (RTL)", await run(`return document.documentElement.dir === "rtl" && document.body.innerText.includes("استيراد قائمة أسعاري");`));
   ws.close();

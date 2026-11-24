@@ -66,7 +66,7 @@ async function deliver(to: Recipient, spec: Spec) {
     greeting: firstName ? t("greeting", { name: firstName }) : t("greetingNoName"),
     paragraphs: [t(`${k}_intro`, spec.values), ...(t.has(`${k}_note`) ? [t(`${k}_note`, spec.values)] : [])],
     rows: spec.rows?.map(([label, value]) => ({ label: t(label), value })),
-    cta: { label: t(`${spec.kind}_cta`), url: `${SITE_URL}/${spec.path.startsWith("/admin") ? "fr" : to.locale}${spec.path}` },
+    cta: { label: t.has(`${k}_cta`) ? t(`${k}_cta`) : t(`${spec.kind}_cta`), url: `${SITE_URL}/${spec.path.startsWith("/admin") ? "fr" : to.locale}${spec.path}` },
     footer: t(spec.kind.startsWith("admin_") ? "footerAdmin" : "footer"),
   });
 

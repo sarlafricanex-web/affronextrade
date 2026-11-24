@@ -1533,7 +1533,12 @@
     "importField_t3Discount": "المستوى 3 (الخصم)",
     "block3AsidePrice": "السعر دون ضرائب وشرط التسليم",
     "priceRule": "حدّد سعرك وفق شرط التسليم الذي تختاره: يشمل الشحن والتأمين عند الاقتضاء. تضيف AFRICA NEX عمولتها وتأمين التصدير للمشتري.",
-    "importTemplate": "نموذجك: السعر دون ضرائب وشرط التسليم (شروط Incoterms 2020 الإحدى عشر)"
+    "importTemplate": "نموذجك: السعر دون ضرائب وشرط التسليم (شروط Incoterms 2020 الإحدى عشر)",
+    "importLockedTitle": "الاستيراد من Excel مشمول في وكيل التصدير",
+    "importLockedText": "مع جواز السفر، تُدخل منتجاتك العشرة وأسعارها مباشرة في الكتالوج. لاستيراد تشكيلتك كاملة من ملف Excel (حتى 1000 منتج)، انتقل إلى وكيل التصدير.",
+    "importLockedCta": "اكتشف وكيل التصدير",
+    "importLockedManual": "إدخال منتجاتي",
+    "importErrorPlan": "الاستيراد من Excel مخصص للعروض المدفوعة. أدخل منتجاتك في الكتالوج، أو انتقل إلى وكيل التصدير."
   },
   "claim": {
     "eyebrow": "إجراء المطالبة بملف",
@@ -2423,7 +2428,12 @@
     "admin_deletion_request_subject": "طلب حذف حساب",
     "admin_deletion_request_title": "طلب حذف حساب",
     "admin_deletion_request_intro": "حساب ({role}) يطلب حذفه. يُعالج خلال شهر.",
-    "admin_deletion_request_cta": "عرض الطلبات"
+    "admin_deletion_request_cta": "عرض الطلبات",
+    "new_request_delayed_subject": "طلب عرض أسعار جديد لمنتجاتك: {title}",
+    "new_request_delayed_title": "طلب في انتظارك",
+    "new_request_delayed_intro": "تلقّت AFRICA NEX طلب عرض أسعار يناسب منتجاتك: {title}. مع جواز السفر، يمكنك الاطلاع عليه والرد ابتداءً من {date}.",
+    "new_request_delayed_note": "يتلقى أعضاء وكيل التصدير الطلبات قبل الحسابات المجانية بـ 48 ساعة. انتقل إلى وكيل التصدير لتراه فورًا.",
+    "new_request_delayed_cta": "اكتشف وكيل التصدير"
   },
   "account": {
     "deletionTitle": "حذف حسابي",

@@ -1533,7 +1533,12 @@
     "importField_t3Discount": "Tier 3 (discount)",
     "block3AsidePrice": "Price excl. tax and Incoterm",
     "priceRule": "Give your price under the Incoterm of your choice: any freight and insurance are included in it. AFRICA NEX adds its commission and export insurance for the buyer.",
-    "importTemplate": "Your template: price excl. tax and Incoterm (all 11 Incoterms 2020)"
+    "importTemplate": "Your template: price excl. tax and Incoterm (all 11 Incoterms 2020)",
+    "importLockedTitle": "Excel import is included in the Export Agent",
+    "importLockedText": "With the Passport, you enter your 10 products and their prices directly in the catalogue. To import your whole range from an Excel file (up to 1,000 products), move to the Export Agent.",
+    "importLockedCta": "See the Export Agent",
+    "importLockedManual": "Enter my products",
+    "importErrorPlan": "Excel import is reserved for paid plans. Enter your products in the catalogue, or move to the Export Agent."
   },
   "claim": {
     "eyebrow": "Profile claim procedure",
@@ -2423,7 +2428,12 @@
     "admin_deletion_request_subject": "Account deletion request",
     "admin_deletion_request_title": "Account deletion requested",
     "admin_deletion_request_intro": "An account ({role}) is asking to be deleted. To be processed within one month.",
-    "admin_deletion_request_cta": "See requests"
+    "admin_deletion_request_cta": "See requests",
+    "new_request_delayed_subject": "New request for quotation for your products: {title}",
+    "new_request_delayed_title": "A request is waiting for you",
+    "new_request_delayed_intro": "AFRICA NEX has received a request for quotation that matches your products: {title}. With the Passport, you can view it and answer from {date}.",
+    "new_request_delayed_note": "Export Agent members receive requests 48 h before free accounts. Move to the Export Agent to see it right away.",
+    "new_request_delayed_cta": "Discover the Export Agent"
   },
   "account": {
     "deletionTitle": "Delete my account",

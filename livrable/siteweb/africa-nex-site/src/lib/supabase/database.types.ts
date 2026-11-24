@@ -1654,6 +1654,7 @@ export type Database = {
           unit: string | null
           updated_at: string
           viewed_at: string | null
+          visible_from: string
         }
         Insert: {
           attachments?: Json
@@ -1675,6 +1676,7 @@ export type Database = {
           unit?: string | null
           updated_at?: string
           viewed_at?: string | null
+          visible_from?: string
         }
         Update: {
           attachments?: Json
@@ -1696,6 +1698,7 @@ export type Database = {
           unit?: string | null
           updated_at?: string
           viewed_at?: string | null
+          visible_from?: string
         }
         Relationships: [
           {
@@ -2519,6 +2522,7 @@ export type Database = {
         }[]
       }
       offers_overlap: { Args: { a: string; b: string }; Returns: boolean }
+      plan_of: { Args: { p_company: string }; Returns: string }
       product_prices: {
         Args: { p_company: string }
         Returns: {

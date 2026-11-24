@@ -7,6 +7,12 @@ import { mkdirSync } from "node:fs";
 
 export const site = fileURLToPath(new URL("../../", import.meta.url)).replace(/\\/g, "/").replace(/\/$/, "");
 export const OUT = `${site}/tests/e2e/.output`;
+// Passeport (gratuit) : un envoi n'est visible du producteur que 48 h apres (migration 39). Les tests
+// qui ne portent pas sur ce delai ouvrent tout de suite les envois de leurs producteurs (cle secrete).
+export const openDispatches = async (admin, ids) => {
+  const { error } = await admin.from("rfq_dispatches").update({ visible_from: new Date(Date.now() - 1000).toISOString() }).in("id", ids.filter(Boolean));
+  if (error) throw error;
+};
 export const CHROME = process.env.CHROME_PATH ?? "C:/Program Files/Google/Chrome/Application/chrome.exe";
 
 // Reference publique du projet Supabase de developpement (elle figure dans l'URL du projet).

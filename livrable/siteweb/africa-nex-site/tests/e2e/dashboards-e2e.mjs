@@ -1,6 +1,6 @@
 // Test de bout en bout de la semaine 6 : tableaux de bord producteur et acheteur (chiffres reels),
 // page Tarifs (zones et devises, pas de "success fee"), Mon abonnement, menus, telephone et arabe.
-import { site, OUT, CHROME } from "./_guard.mjs";
+import { site, OUT, CHROME, openDispatches } from "./_guard.mjs";
 import { createRequire } from "node:module";
 import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -75,6 +75,7 @@ try {
   const { data: d2 } = await admin.from("rfq_dispatches").insert({ ...brief(rAccepted), respond_by: day(5) }).select("id").single();
   const rOther = await mkRfq("Figues", "dispatched");
   const { data: d3 } = await admin.from("rfq_dispatches").insert({ ...brief(rOther), respond_by: day(5) }).select("id").single();
+  await openDispatches(admin, [d1?.id, d2?.id, d3?.id]);
   const quote = { company_id: pc.id, author_profile_id: producer.id, unit_price_ht: 4, currency: "EUR", price_basis: "FOB", quantity: 100, valid_until: day(20) };
   const { error: qe } = await admin.from("quotes").insert([{ ...quote, dispatch_id: d2.id, status: "selected" }, { ...quote, dispatch_id: d3.id, status: "submitted" }]);
   if (qe) throw qe;

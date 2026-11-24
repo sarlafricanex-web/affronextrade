@@ -45,6 +45,12 @@ export type MyCompany = NonNullable<Awaited<ReturnType<typeof getMyCompany>>>;
 // Le prix producteur n'est pas lisible dans la table (confidentiel) : chaque entreprise lit
 // les siens via la fonction product_prices(), reservee a ses membres et a l'admin.
 // Forfait de l'entreprise : decide du modele de liste de prix (Starter ou detaille).
+// Droit a une fonction de l'offre (migration 38) : import Excel, traduction... Faux si refuse.
+export async function canUse(client: Client, companyId: string, feature: string) {
+  const { data } = await client.rpc("can_use", { p_company: companyId, p_feature: feature });
+  return Boolean((data as { allowed: boolean }[] | null)?.[0]?.allowed);
+}
+
 export async function getCompanyTier(client: Client, companyId: string) {
   const { data } = await client.from("companies").select("subscription_tier").eq("id", companyId).maybeSingle();
   return data?.subscription_tier ?? "starter";

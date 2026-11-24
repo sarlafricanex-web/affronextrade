@@ -1533,7 +1533,12 @@
     "importField_t3Discount": "Palier 3 (remise)",
     "block3AsidePrice": "Prix HT et incoterm",
     "priceRule": "Indiquez votre prix dans l'incoterm de votre choix : le fret et l'assurance éventuels y sont compris. AFRICA NEX ajoute sa commission et l'assurance export pour l'acheteur.",
-    "importTemplate": "Votre modèle : prix HT et incoterm (les 11 incoterms 2020)"
+    "importTemplate": "Votre modèle : prix HT et incoterm (les 11 incoterms 2020)",
+    "importLockedTitle": "L'import Excel est inclus dans l'Agent Export",
+    "importLockedText": "Avec le Passeport, vous saisissez vos 10 produits et leurs prix directement dans le catalogue. Pour importer toute votre gamme depuis un fichier Excel (jusqu'à 1 000 produits), passez à l'Agent Export.",
+    "importLockedCta": "Voir l'Agent Export",
+    "importLockedManual": "Saisir mes produits",
+    "importErrorPlan": "L'import Excel est réservé aux offres payantes. Saisissez vos produits dans le catalogue, ou passez à l'Agent Export."
   },
   "claim": {
     "eyebrow": "Procédure de revendication de fiche",
@@ -2423,7 +2428,12 @@
     "admin_deletion_request_subject": "Demande de suppression de compte",
     "admin_deletion_request_title": "Suppression de compte demandée",
     "admin_deletion_request_intro": "Un compte ({role}) demande sa suppression. À traiter sous un mois.",
-    "admin_deletion_request_cta": "Voir les demandes"
+    "admin_deletion_request_cta": "Voir les demandes",
+    "new_request_delayed_subject": "Nouvelle demande de devis pour vos produits : {title}",
+    "new_request_delayed_title": "Une demande vous attend",
+    "new_request_delayed_intro": "AFRICA NEX a reçu une demande de devis qui correspond à vos produits : {title}. Avec le Passeport, vous pourrez la consulter et y répondre à partir du {date}.",
+    "new_request_delayed_note": "Les membres Agent Export reçoivent les demandes 48 h avant les comptes gratuits. Passez à l'Agent Export pour la voir tout de suite.",
+    "new_request_delayed_cta": "Découvrir l'Agent Export"
   },
   "account": {
     "deletionTitle": "Supprimer mon compte",

@@ -1,7 +1,7 @@
 // Test de bout en bout de la consultation par ligne (lot 6d) : une ligne sans prix est envoyee aux
 // producteurs, leurs devis entrent dans le calcul (le moins cher d'office, ou celui retenu par AFRICA NEX),
 // le devis utilise suit la publication et le retrait de l'offre, confidentialite.
-import { site, OUT, CHROME } from "./_guard.mjs";
+import { site, OUT, CHROME, openDispatches } from "./_guard.mjs";
 import { createRequire } from "node:module";
 import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -104,6 +104,7 @@ try {
 
   // 3. Les producteurs repondent avec le formulaire de devis habituel (ici par leur session)
   const dA = dispatches.find((d) => d.company_id === coA), dB = dispatches.find((d) => d.company_id === coB);
+  await openDispatches(admin, (dispatches ?? []).map((d) => d.id));
   const { data: seenByA } = await prodA.client.from("rfq_dispatches").select("id, brief_title");
   report("Producteur A : voit son seul brief, sans l'acheteur", seenByA?.length === 1 && seenByA[0].id === dA.id && !JSON.stringify(seenByA).includes("Acheteur"));
   const quoteOf = (u, co, d, price) => u.client.from("quotes").insert({ dispatch_id: d.id, company_id: co, author_profile_id: u.id, unit_price_ht: price, currency: "EUR", price_basis: "FOB", port_of_loading: "Oran", quantity: 50, production_lead_days: 15, valid_until: day(30) }).select("id").single();

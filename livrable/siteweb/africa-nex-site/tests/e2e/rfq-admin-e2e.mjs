@@ -1,5 +1,5 @@
 // Test de bout en bout du lot 5b : console AFRICA NEX des demandes (qualification, brief anonymise, envoi).
-import { site, OUT, CHROME } from "./_guard.mjs";
+import { site, OUT, CHROME, openDispatches } from "./_guard.mjs";
 import { waitEmails, delivered } from "./_emails.mjs";
 import { createRequire } from "node:module";
 import { randomBytes } from "node:crypto";
@@ -122,6 +122,13 @@ try {
   report("Envoi trace dans le journal", audit === 1);
   report("Producteurs deja consultes : cases desactivees", await run(`return document.querySelector("input[name=companies][value='${pc.id}']")?.disabled === true;`));
   await shot("rfq-admin-detail");
+
+  // Passeport : la demande n'est visible du producteur que 48 h apres l'envoi.
+  const { data: early } = await producer.client.from("rfq_dispatches").select("id");
+  report("Passeport : demande pas encore visible du producteur gratuit", (early ?? []).length === 0, String(early?.length));
+  const { data: timing } = await admin.from("rfq_dispatches").select("id, created_at, visible_from").eq("rfq_id", rfq.id);
+  report("En base : visible 48 h apres l'envoi", timing?.length === 2 && timing.every((d) => Math.abs(new Date(d.visible_from) - new Date(d.created_at) - 48 * 3600e3) < 120e3), JSON.stringify(timing?.[0]));
+  await openDispatches(admin, (timing ?? []).map((d) => d.id));
 
   // Ce que voit chaque partie
   const { data: mine } = await producer.client.from("rfq_dispatches").select("id, brief_title, brief_specs, company_id");

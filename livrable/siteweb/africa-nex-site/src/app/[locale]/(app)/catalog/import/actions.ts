@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { updateTag } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { resolveLocale } from "@/lib/auth/next-path";
-import { getMyCompanyId, listProducts } from "@/lib/data/company";
+import { canUse, getMyCompanyId, listProducts } from "@/lib/data/company";
 import { UNITS } from "@/lib/onboarding/reference";
 import { PACK_FIELDS, PRICE_FIELDS, packagingValues, readPackagingInput, readPriceInput, todayIso, type PackField, type PriceField } from "@/lib/catalog/price-list";
 import { readPriceListWorkbook } from "@/lib/catalog/price-list-excel";
@@ -49,6 +49,8 @@ export async function importPriceList(_prev: ImportState, formData: FormData): P
   if (!companyId) redirect(`/${locale}/onboarding`);
   const supabase = user.supabase;
   const fail = (formError: string): ImportState => ({ formError, attempt: Date.now() });
+  // Import Excel : offres payantes seulement (Passeport : saisie a la main, decision du 24 novembre 2026).
+  if (!(await canUse(supabase, companyId, "excel_import"))) return fail("importErrorPlan");
 
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) return fail("importErrorNoFile");

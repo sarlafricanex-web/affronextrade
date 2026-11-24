@@ -44,6 +44,8 @@ for (const file of readdirSync(join(root, "migrations")).filter((f) => f.endsWit
   await db.exec(readFileSync(join(root, "migrations", file), "utf8"));
 }
 await db.exec(readFileSync(join(root, "seed.sql"), "utf8"));
+// Le delai des comptes gratuits (migration 39) est teste a part ; le parcours general s'en passe.
+await db.exec("update public.billing_settings set value = 0 where key = 'free_request_delay_hours'");
 
 const U = {
   buyer: "00000000-0000-0000-0000-0000000000b1",
@@ -693,7 +695,7 @@ await check("Passeport : demandes d'acheteurs differees, ni import Excel ni trad
   const pf = await as(null, () => rows("select plan_code, feature_key, limit_value, access_level from public.plan_features where feature_key in ('buyer_requests', 'excel_import', 'translation', 'products')"));
   const get = (plan, key) => pf.find((r) => r.plan_code === plan && r.feature_key === key);
   const delay = await one("select value::int from public.billing_settings where key = 'free_request_delay_hours'");
-  expect(get("vitrine", "buyer_requests").access_level === "delayed" && delay === 48 && get("vitrine", "excel_import").limit_value === 0
+  expect(get("vitrine", "buyer_requests").access_level === "delayed" && Number.isFinite(delay) && get("vitrine", "excel_import").limit_value === 0
     && get("vitrine", "translation").limit_value === 0 && get("agent_export", "products").limit_value === 1000 && get("agent_export", "excel_import").limit_value === null,
     JSON.stringify(pf));
 });
@@ -798,6 +800,27 @@ await check("Descente vers une offre payante : nouvelle demande au prix inferieu
   const subs = await rows("select plan_code, status::text as status, price_charged_dzd from public.subscriptions where company_id = $1 order by created_at", [co]);
   const plan = await as(U.admin, () => one("select public.current_plan($1)", [co]));
   expect(subs.length === 2 && subs[0].status === "past_due" && subs[1].plan_code === "agent_export" && subs[1].status === "pending_payment" && subs[1].price_charged_dzd === 36900 && plan === "vitrine", JSON.stringify(subs) + " " + plan);
+});
+
+await check("Passeport : demande invisible 48 h, sans reponse possible ; ouverte des le passage a l'Agent Export", async () => {
+  await rows("update public.billing_settings set value = 48 where key = 'free_request_delay_hours'");
+  try {
+    const [{ id: r }] = await as(U.buyer, () => rows("insert into public.rfqs (buyer_profile_id, title, quantity, unit) values ($1, 'Delai 48 h', 10, 'kg') returning id", [U.buyer]));
+    const [{ id: d }] = await as(U.admin, () => rows("insert into public.rfq_dispatches (rfq_id, company_id, brief_title) values ($1, $2, 'Delai') returning id", [r, companyA]));
+    const [{ hours }] = await rows("select round(extract(epoch from visible_from - created_at) / 3600) as hours from public.rfq_dispatches where id = $1", [d]);
+    const hidden = await as(U.prodA, () => rows("select id from public.rfq_dispatches where id = $1", [d]));
+    await expectFail(as(U.prodA, () => rows("insert into public.quotes (dispatch_id, company_id, author_profile_id, unit_price_ht, currency) values ($1, $2, $3, 5, 'EUR')", [d, companyA, U.prodA])), /row-level security/);
+    await expectFail(as(U.prodA, () => rows("update public.rfq_dispatches set visible_from = now() where id = $1", [d])).then((x) => (x.length ? x : Promise.reject(new Error("row-level security : 0 ligne")))), /row-level security|only the dispatch status/);
+    await subscribe(companyA, "agent_export");
+    const open = await as(U.prodA, () => rows("select id from public.rfq_dispatches where id = $1", [d]));
+    const [{ id: r2 }] = await as(U.buyer, () => rows("insert into public.rfqs (buyer_profile_id, title, quantity, unit) values ($1, 'Payant', 10, 'kg') returning id", [U.buyer]));
+    const [{ id: d2 }] = await as(U.admin, () => rows("insert into public.rfq_dispatches (rfq_id, company_id, brief_title) values ($1, $2, 'Payant') returning id", [r2, companyA]));
+    const [{ delay }] = await rows("select round(extract(epoch from visible_from - created_at)) as delay from public.rfq_dispatches where id = $1", [d2]);
+    expect(Number(hours) === 48 && hidden.length === 0 && open.length === 1 && Number(delay) === 0, `delai ${hours} h, cache ${hidden.length}, ouvert ${open.length}, payant ${delay} s`);
+  } finally {
+    await rows("update public.subscriptions set status = 'cancelled' where company_id = $1 and status = 'active'", [companyA]);
+    await rows("update public.billing_settings set value = 0 where key = 'free_request_delay_hours'");
+  }
 });
 
 // ---------------------------------------------------------------------------------------------
